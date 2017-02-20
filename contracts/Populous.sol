@@ -2,7 +2,7 @@ pragma solidity ^0.4.8;
 
 import "./CurrencyToken.sol";
 
-contract Populous {
+contract Populous is Owned, SafeMath {
     uint constant TX_EXECUTE_GAS_STOP_AMOUNT = 10000;
     string constant LEDGER_SYSTEM_NAME = "Populous";
 
@@ -10,7 +10,6 @@ contract Populous {
     event EventCanceledTransaction(uint index, string currency, string from, string to, int amount);
     event EventExecutedTransaction(uint index, string currency, string from, string to, int amount);
 
-    address owner;
     mapping(string => int) ledger;
     mapping(string => int) pendingAmounts;
     mapping(string => address) currencies;
@@ -26,32 +25,35 @@ contract Populous {
     }
     
     mapping(uint => Transaction) public pendingTx;
-    uint public front = 0;
-    uint public back = 0;
+    uint public queueFrontIndex = 0;
+    uint public queueBackIndex = 0;
 
-    function Populous() {
-        owner = msg.sender;
+    function Populous() Owned() {
     }
 
-    modifier onlyOwner() {
-        if (msg.sender != owner) { throw; }
-        _;
-    }
+    function mintTokens(string symbol, int amount) onlyOwner returns (bool success) {
+        if (currencies[symbol] != 0x0) {
+            CurrencyToken(currencies[symbol]).mintTokens(amount);
+            ledger[LEDGER_SYSTEM_NAME] = safeAdd(ledger[LEDGER_SYSTEM_NAME], amount);
 
-    function changeOwner(address _owner) onlyOwner {
-        owner = _owner;
-    }
-
-    function mintTokens(string symbol, int amount) onlyOwner {
-        CurrencyToken(currencies[symbol]).mintTokens(amount);
-        ledger[LEDGER_SYSTEM_NAME] += amount;
+            return true;
+        } else {
+            return false;
+        }
     }
     
     function destroyTokens(string symbol, int amount) onlyOwner returns (bool success) {
-        success = CurrencyToken(currencies[symbol]).destroyTokens(amount);
+        if (currencies[symbol] != 0x0) {
+            success = CurrencyToken(currencies[symbol]).destroyTokens(amount);
         
-        if (success == true) {
-            ledger[LEDGER_SYSTEM_NAME] -= amount;
+            if (success == true) {
+                ledger[LEDGER_SYSTEM_NAME] = safeSub(ledger[LEDGER_SYSTEM_NAME], amount);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
     }
 
@@ -63,15 +65,15 @@ contract Populous {
         }
     }
     
-    function getLedger(string client) returns (int) {
+    function getLedgerEntry(string client) constant returns (int) {
         return ledger[client];
     }
     
-    function getPending(string client) returns (int) {
+    function getPendingLedgerEntry(string client) constant returns (int) {
         return pendingAmounts[client];
     }
 
-    function getCurrency(string currency) returns (address) {
+    function getCurrency(string currency) constant returns (address) {
         return currencies[currency];
     }
     
@@ -84,12 +86,12 @@ contract Populous {
         if (ledger[from] + pendingAmounts[from] < amount) {
             return false;
         } else {
-            pendingAmounts[from] -= amount;
-            pendingAmounts[to] += amount;
+            pendingAmounts[from] = safeSub(pendingAmounts[from], amount);
+            pendingAmounts[to] = safeAdd(pendingAmounts[to], amount);
 
-            pendingTx[back] = Transaction(currency, from, to, amount, txStates.Pending);
-            EventPendingTransaction(back, currency, from, to, amount);
-            back++;
+            pendingTx[queueBackIndex] = Transaction(currency, from, to, amount, txStates.Pending);
+            EventPendingTransaction(queueBackIndex, currency, from, to, amount);
+            queueBackIndex++;
 
             return true;
         }
@@ -98,17 +100,17 @@ contract Populous {
     function txExecuteLoop()
         onlyOwner
     {
-        while(front <= back) {
-            if (pendingTx[front].status == txStates.Pending) {
-                executeTx(front);
+        while(queueFrontIndex <= queueBackIndex) {
+            if (pendingTx[queueFrontIndex].status == txStates.Pending) {
+                executeTx(queueFrontIndex);
             }
             if (msg.gas < TX_EXECUTE_GAS_STOP_AMOUNT) {
                 return;
             }
-            front++;
+            queueFrontIndex++;
         }
-        front = 0;
-        back = 0;        
+        queueFrontIndex = 0;
+        queueBackIndex = 0;        
     }
     
     function executeTx(uint index)
@@ -120,10 +122,10 @@ contract Populous {
         if (tx.amount == 0 || ledger[tx.from] + pendingAmounts[tx.from] < 0) {
             return false;
         } else {
-            ledger[tx.from] -= tx.amount;
-            pendingAmounts[tx.from] += tx.amount;
-            ledger[tx.to] += tx.amount;
-            pendingAmounts[tx.to] -= tx.amount;
+            ledger[tx.from] = safeSub(ledger[tx.from], tx.amount);
+            pendingAmounts[tx.from] = safeAdd(pendingAmounts[tx.from], tx.amount);
+            ledger[tx.to] = safeAdd(ledger[tx.to], tx.amount);
+            pendingAmounts[tx.to] = safeSub(pendingAmounts[tx.to], tx.amount);
 
             tx.status = txStates.Executed;
             EventExecutedTransaction(index, tx.currency, tx.from, tx.to, tx.amount);
@@ -142,8 +144,8 @@ contract Populous {
             return false;
         }
 
-        pendingAmounts[tx.from] += tx.amount;
-        pendingAmounts[tx.to] -= tx.amount;
+        pendingAmounts[tx.from] = safeAdd(pendingAmounts[tx.from], tx.amount);
+        pendingAmounts[tx.to] = safeSub(pendingAmounts[tx.to], tx.amount);
         
         tx.status = txStates.Canceled;
         EventCanceledTransaction(index, tx.currency, tx.from, tx.to, tx.amount);
