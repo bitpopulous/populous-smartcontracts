@@ -1,6 +1,7 @@
 pragma solidity ^0.4.8;
 
-import "./CurrencyToken.sol";
+import "./SafeMath.sol";
+import "./Owned.sol";
 
 contract Crowdsale is Owned, SafeMath {
 
@@ -11,7 +12,7 @@ contract Crowdsale is Owned, SafeMath {
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
 
     States status;
-    CurrencyToken CurrencyTokenInstance;
+    address currency;
 
     // late interest cap at 7% (7 days 1%)
     uint public latePaymentInterest = 0;
@@ -47,15 +48,17 @@ contract Crowdsale is Owned, SafeMath {
 
     //Constructor
     function Crowdsale(
-            address _currencyToken,
+            address _guardian,
+            address _currency,
             string _borrowerId,
             string _borrowerName,
             string _buyerName,
             string _invoiceId,
             uint _invoiceAmount,
-            uint _fundingGoal
-        )
+            uint _fundingGoal)
+        Owned(_guardian)
     {
+        currency = _currency;
         borrowerId = _borrowerId;
         borrowerName = _borrowerName;
         buyerName = _buyerName;
@@ -103,7 +106,7 @@ contract Crowdsale is Owned, SafeMath {
         }
     }
 
-    function sendBid(uint groupId , string bidderId, string name, uint value)
+    function bid(uint groupId , string bidderId, string name, uint value)
         onlyOpenAuction
         returns (uint finalValue)
     {
