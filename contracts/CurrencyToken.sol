@@ -4,7 +4,7 @@ import "./StandardToken.sol";
 import "./SafeMath.sol";
 import "./Owned.sol";
 
-contract CurrencyToken is StandardToken, SafeMath, Owned {
+contract CurrencyToken is StandardToken, Owned {
     string public name;
     uint8 public decimals;                //How many decimals to show. ie. There could 1000 base units with 3 decimals. Meaning 0.980 SBX = 980 base units. It's like comparing 1 wei to 1 ether.
     string public symbol;                 //An identifier: eg SBX
@@ -21,16 +21,16 @@ contract CurrencyToken is StandardToken, SafeMath, Owned {
     }
 
     function mintTokens(int amount) onlyOwner returns (bool success) {
-        balances[owner] = safeAdd(balances[owner], uint(amount));
-        totalSupply = safeAdd(totalSupply, uint(amount));
+        balances[owner] = SafeMath.safeAdd(balances[owner], uint(amount));
+        totalSupply = SafeMath.safeAdd(totalSupply, uint(amount));
     }
 
     function destroyTokens(int amount) onlyOwner returns (bool success) {
         if (balances[owner] < uint(amount)) {
             return false;
         } else {
-            balances[owner] = safeSub(balances[owner], uint(amount));
-            totalSupply = safeSub(totalSupply, uint(amount));
+            balances[owner] = SafeMath.safeSub(balances[owner], uint(amount));
+            totalSupply = SafeMath.safeSub(totalSupply, uint(amount));
             
             return true;
         }

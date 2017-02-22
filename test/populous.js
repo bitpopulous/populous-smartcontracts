@@ -22,56 +22,54 @@ contract('Populous', function(accounts) {
         });
     });
 
-    /**
-        it("should mint 1000 USD tokens", function(done) {
-            var mintAmount = 1000;
-            var P;
+    it("should mint 1000 USD tokens", function(done) {
+        var mintAmount = 1000;
+        var P;
 
-            Populous.deployed().then(function(instance) {
-                P = instance;
+        Populous.deployed().then(function(instance) {
+            P = instance;
 
-                return P.mintTokens('USD', mintAmount);
-            }).then(function() {
-                return P.getLedgerEntry.call("USD", LEDGER_SYSTEM_NAME);
-            }).then(function(amount) {
-                assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
-                done();
-            });
+            return P.mintTokens('USD', mintAmount);
+        }).then(function() {
+            return P.getLedgerEntry.call("USD", LEDGER_SYSTEM_NAME);
+        }).then(function(amount) {
+            assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
+            done();
         });
+    });
 
-        it("should transfer 100 USD tokens to accounts A and B", function(done) {
-            var mintAmount = 100;
-            var P;
+    it("should transfer 100 USD tokens to accounts A and B", function(done) {
+        var mintAmount = 100;
+        var P;
 
-            Populous.deployed().then(function(instance) {
-                P = instance;
+        Populous.deployed().then(function(instance) {
+            P = instance;
 
-                return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "A", mintAmount);
-            }).then(function() {
-                return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "B", mintAmount);
-            }).then(function() {
-                return P.queueBackIndex.call();
-            }).then(function(value) {
-                assert.notEqual(value.toNumber(), 0, "Failed adding transactions");
-                done();
-            });
+            return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "A", mintAmount);
+        }).then(function() {
+            return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "B", mintAmount);
+        }).then(function() {
+            return P.queueBackIndex.call();
+        }).then(function(value) {
+            assert.notEqual(value.toNumber(), 0, "Failed adding transactions");
+            done();
         });
+    });
 
-        it("should execute transactions", function(done) {
-            var P;
+    it("should execute transactions", function(done) {
+        var P;
 
-            Populous.deployed().then(function(instance) {
-                P = instance;
+        Populous.deployed().then(function(instance) {
+            P = instance;
 
-                return P.txExecuteLoop();
-            }).then(function() {
-                return P.queueBackIndex.call();
-            }).then(function(value) {
-                assert.equal(value.toNumber(), 0, "Failed executing transactions");
-                done();
-            });
+            return P.txExecuteLoop();
+        }).then(function() {
+            return P.queueBackIndex.call();
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 0, "Failed executing transactions");
+            done();
         });
-     */
+    });
 
     it("should create crowdsale", function(done) {
         var P;

@@ -7,6 +7,8 @@ contract CrowdsaleManager is Owned {
     function CrowdsaleManager(address _guardian) Owned(_guardian) {} 
 
     function createCrowdsale(
+            address _owner,
+            address _guardian,
             address _currency,
             string _borrowerId,
             string _borrowerName,
@@ -19,7 +21,8 @@ contract CrowdsaleManager is Owned {
         returns (address crowdsaleAddr)
     {
         crowdsaleAddr = new Crowdsale(
-            tx.origin,
+            _owner,
+            _guardian,
             _currency,
             _borrowerId,
             _borrowerName,
@@ -29,5 +32,4 @@ contract CrowdsaleManager is Owned {
             _fundingGoal            
         );
     }
-
 }

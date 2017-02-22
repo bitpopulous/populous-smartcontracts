@@ -2,6 +2,18 @@ pragma solidity ^0.4.8;
 
 import "./CurrencyToken.sol";
 
+contract Crowdsale {
+    function isDeadlineReached() returns(bool);
+    function openAuction() returns (bool success);
+    function bid(uint groupId , string bidderId, string name, uint value) returns (uint finalValue) ;
+    function createGroup(string _name, uint _goal) returns (bool success);
+    function getAmountForBeneficiary() returns (uint);
+    function setGroupRefunded(groupId) returns (bool);
+    function setSentToBeneficiary();
+    function setSentToLosingGroups();
+    function setSentToWinnerGroup();
+}
+
 contract CrowdsaleManager {
     function createCrowdsale(
             address _currency,
@@ -13,7 +25,7 @@ contract CrowdsaleManager {
             uint _fundingGoal) returns (address);
 }
 
-contract Populous is Owned, SafeMath {
+contract Populous is Owned {
 
     uint constant TX_EXECUTE_GAS_STOP_AMOUNT = 100000;
     string constant LEDGER_SYSTEM_NAME = "Populous";
@@ -45,7 +57,7 @@ contract Populous is Owned, SafeMath {
     uint public queueBackIndex = 0;
 
     // @TODO change msg.sender to address _guardian
-    function Populous() Owned(msg.sender) { }
+    function Populous() Owned(msg.sender, msg.sender) { }
 
     function setCM(address _crowdsaleManager) {
         CM = CrowdsaleManager(_crowdsaleManager);
@@ -79,7 +91,7 @@ contract Populous is Owned, SafeMath {
     {
         if (currencies[currency] != 0x0) {
             CurrencyToken(currencies[currency]).mintTokens(amount);
-            ledger[currency][LEDGER_SYSTEM_NAME] = safeAdd(ledger[currency][LEDGER_SYSTEM_NAME], amount);
+            ledger[currency][LEDGER_SYSTEM_NAME] = SafeMath.safeAdd(ledger[currency][LEDGER_SYSTEM_NAME], amount);
 
             return true;
         } else {
@@ -95,7 +107,7 @@ contract Populous is Owned, SafeMath {
             success = CurrencyToken(currencies[currency]).destroyTokens(amount);
         
             if (success == true) {
-                ledger[currency][LEDGER_SYSTEM_NAME] = safeSub(ledger[currency][LEDGER_SYSTEM_NAME], amount);
+                ledger[currency][LEDGER_SYSTEM_NAME] = SafeMath.safeSub(ledger[currency][LEDGER_SYSTEM_NAME], amount);
                 return true;
             } else {
                 return false;
@@ -114,8 +126,8 @@ contract Populous is Owned, SafeMath {
         if (ledger[currency][from] + pendingAmounts[currency][from] < amount) {
             return false;
         } else {
-            pendingAmounts[currency][from] = safeSub(pendingAmounts[currency][from], amount);
-            pendingAmounts[currency][to] = safeAdd(pendingAmounts[currency][to], amount);
+            pendingAmounts[currency][from] = SafeMath.safeSub(pendingAmounts[currency][from], amount);
+            pendingAmounts[currency][to] = SafeMath.safeAdd(pendingAmounts[currency][to], amount);
 
             pendingTx[queueBackIndex] = Transaction(currency, from, to, amount, txStates.Pending);
             EventPendingTransaction(queueBackIndex, currency, from, to, amount);
@@ -150,10 +162,10 @@ contract Populous is Owned, SafeMath {
         if (tx.amount == 0 || ledger[tx.currency][tx.from] + pendingAmounts[tx.currency][tx.from] < 0) {
             return false;
         } else {
-            ledger[tx.currency][tx.from] = safeSub(ledger[tx.currency][tx.from], tx.amount);
-            pendingAmounts[tx.currency][tx.from] = safeAdd(pendingAmounts[tx.currency][tx.from], tx.amount);
-            ledger[tx.currency][tx.to] = safeAdd(ledger[tx.currency][tx.to], tx.amount);
-            pendingAmounts[tx.currency][tx.to] = safeSub(pendingAmounts[tx.currency][tx.to], tx.amount);
+            ledger[tx.currency][tx.from] = SafeMath.safeSub(ledger[tx.currency][tx.from], tx.amount);
+            pendingAmounts[tx.currency][tx.from] = SafeMath.safeAdd(pendingAmounts[tx.currency][tx.from], tx.amount);
+            ledger[tx.currency][tx.to] = SafeMath.safeAdd(ledger[tx.currency][tx.to], tx.amount);
+            pendingAmounts[tx.currency][tx.to] = SafeMath.safeSub(pendingAmounts[tx.currency][tx.to], tx.amount);
 
             tx.status = txStates.Executed;
             EventExecutedTransaction(index, tx.currency, tx.from, tx.to, tx.amount);
@@ -172,8 +184,8 @@ contract Populous is Owned, SafeMath {
             return false;
         }
 
-        pendingAmounts[tx.currency][tx.from] = safeAdd(pendingAmounts[tx.currency][tx.from], tx.amount);
-        pendingAmounts[tx.currency][tx.to] = safeSub(pendingAmounts[tx.currency][tx.to], tx.amount);
+        pendingAmounts[tx.currency][tx.from] = SafeMath.safeAdd(pendingAmounts[tx.currency][tx.from], tx.amount);
+        pendingAmounts[tx.currency][tx.to] = SafeMath.safeSub(pendingAmounts[tx.currency][tx.to], tx.amount);
         
         tx.status = txStates.Canceled;
         EventCanceledTransaction(index, tx.currency, tx.from, tx.to, tx.amount);
@@ -192,6 +204,8 @@ contract Populous is Owned, SafeMath {
         onlyGuardian
     {
         address crowdsaleAddr = CM.createCrowdsale(
+            owner,
+            this,
             _currency,
             _borrowerId,
             _borrowerName,
@@ -202,5 +216,17 @@ contract Populous is Owned, SafeMath {
         );
 
         EventNewCrowdsale(crowdsaleAddr);
+    }
+
+    function refundLosingGroup() {
+        uint groupsCount = groups.length;
+
+        for (uint groupId = 0; i < groupsCount; groupId++) {
+            if (groupId != winnerGroupId && groups[groupId].isRefunded == false) {
+
+            }
+        }
+
+        losingGroupsRefunded = true;        
     }
 }

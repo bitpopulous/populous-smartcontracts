@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 
-contract SafeMath {
+library SafeMath {
   //internals
 
   function safeMul(uint a, uint b) internal returns (uint) {

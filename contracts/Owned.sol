@@ -4,8 +4,8 @@ contract Owned {
     address public owner;
     address public guardian;
 
-    function Owned(address _guardian) {
-        owner = msg.sender;
+    function Owned(address _owner, address _guardian) {
+        owner = _owner;
         guardian = _guardian;
     }
 
@@ -19,7 +19,7 @@ contract Owned {
         _;
     }    
 
-    function changeOwner(address _owner) onlyGuardian {
+    function changeOwner(address _owner) onlyOwner {
         owner = _owner;
     }
 

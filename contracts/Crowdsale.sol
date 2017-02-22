@@ -3,7 +3,13 @@ pragma solidity ^0.4.8;
 import "./SafeMath.sol";
 import "./Owned.sol";
 
-contract Crowdsale is Owned, SafeMath {
+/**
+    The platform address is owner;
+    Populous contract address is guardian;
+    Functions, which don't require token transfers are onlyOwner;
+    Functions, which do token transfers are onlyGuardian
+*/
+contract Crowdsale is Owned {
 
     event EventGroupCreated(uint256 groupId, string name, uint256 goal);
     event EventGroupGoalReached(uint256 groupId, string _name, uint256 goal);
@@ -39,15 +45,19 @@ contract Crowdsale is Owned, SafeMath {
         uint goal;
         mapping(string => bidder) bidders;
         uint amountRaised;
-        bool isWinner;
         bool isRefunded;
     }
 
     //Groups
     group[] public groups;
+    uint public winnerGroupId;
+    bool public sentToBeneficiary;
+    bool public sentToLosingGroups;
+    bool public sentToWinnerGroup;
 
     //Constructor
-    function Crowdsale(
+    function Crowdsale
+            address _owner,
             address _guardian,
             address _currency,
             string _borrowerId,
@@ -56,7 +66,7 @@ contract Crowdsale is Owned, SafeMath {
             string _invoiceId,
             uint _invoiceAmount,
             uint _fundingGoal)
-        Owned(_guardian)
+        Owned(_owner, _guardian)
     {
         currency = _currency;
         borrowerId = _borrowerId;
@@ -83,7 +93,11 @@ contract Crowdsale is Owned, SafeMath {
         return false;
     }
 
-    function openAuction() onlyOwner returns (bool success) {
+    function getGroup(groupId) returns (uint groupId, string groupName, uint goal, mapping(string => bidder) bidders, uint amountRaised, bool isRefunded) {
+
+    }
+
+    function openAuction() onlyGuardian returns (bool success) {
         if (status == States.Pending) {
             status = States.Open;
             return true;
@@ -115,18 +129,18 @@ contract Crowdsale is Owned, SafeMath {
         if(isDeadlineReached() == true || value == 0 || G.goal == 0) { throw; }
         
         if (G.amountRaised + value > G.goal) {
-            value = safeSub(G.goal, G.amountRaised);
+            value = SafeMath.safeSub(G.goal, G.amountRaised);
         }
 
         G.bidders[bidderId].name = name;
-        G.bidders[bidderId].bidAmount = safeAdd(G.bidders[bidderId].bidAmount, value);
+        G.bidders[bidderId].bidAmount = SafeMath.safeAdd(G.bidders[bidderId].bidAmount, value);
 
-        G.amountRaised = safeAdd(G.amountRaised, value);
+        G.amountRaised = SafeMath.safeAdd(G.amountRaised, value);
 
         EventNewBid(groupId, bidderId, name, value);
 
         if (G.amountRaised == G.goal) {
-            G.isWinner = true;
+            winnerGroupId = groupId;
             status = States.Closed;
 
             EventGroupGoalReached(groupId, G.groupName, G.goal);
@@ -135,7 +149,7 @@ contract Crowdsale is Owned, SafeMath {
         return value;
     }
 
-    function auctionEnd() returns(bool) {
+    function endAuction() onlyOwner returns(bool) {
         if (status == States.Closed) {
             // Send tokens to beneficiary
             // Send tokens back to loser groups
@@ -144,12 +158,40 @@ contract Crowdsale is Owned, SafeMath {
         }
     }
 
+    function getAmountForBeneficiary() onlyGuardian returns (uint) {
+        if (status == States.WaitingForInvoicePayment && sentToBeneficiary == false) {
+            return groups[winnerGroupId].amountRaised;
+        }
+    }
+
+    function setSentToBeneficiary() onlyGuardian {
+        sentToBeneficiary = true;
+    }
+
+    function setGroupRefunded(groupId) onlyGuardian returns (bool) {
+        if (groupId != winnerGroupId) {
+            groups[groupId].isRefunded = true;
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function setSentToLosingGroups() onlyGuardian {
+        sentToLosingGroups = true;
+    }
+
     function invoicePaymentReceived() onlyOwner {
         if (status == States.WaitingForInvoicePayment) {
             // Send tokens to winner group
 
             status = States.Completed;
         }
+    }
+
+    function setSentToWinnerGroup() onlyGuardian {
+        sentToWinnerGroup = true;
     }
 
 }
