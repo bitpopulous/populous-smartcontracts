@@ -4,7 +4,8 @@ import "./Crowdsale.sol";
 
 contract CrowdsaleManager is Owned {
 
-    function CrowdsaleManager(address _guardian) Owned(_guardian) {} 
+    function CrowdsaleManager(address _guardian)
+        withAccessControl(_server, _guardian, _populous) {} 
 
     function createCrowdsale(
             address _owner,
