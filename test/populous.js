@@ -3,10 +3,10 @@ var Populous = artifacts.require("Populous");
 contract('Populous', function(accounts) {
     var LEDGER_SYSTEM_NAME = "Populous";
     var USD;
+    var P;
+    var crowdsale;
 
     it("should create currency token American Dollar", function(done) {
-        var P;
-
         Populous.deployed().then(function(instance) {
             P = instance;
             console.log('Populous', P.address);
@@ -24,13 +24,8 @@ contract('Populous', function(accounts) {
 
     it("should mint 1000 USD tokens", function(done) {
         var mintAmount = 1000;
-        var P;
 
-        Populous.deployed().then(function(instance) {
-            P = instance;
-
-            return P.mintTokens('USD', mintAmount);
-        }).then(function() {
+        P.mintTokens('USD', mintAmount).then(function() {
             return P.getLedgerEntry.call("USD", LEDGER_SYSTEM_NAME);
         }).then(function(amount) {
             assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
@@ -40,13 +35,8 @@ contract('Populous', function(accounts) {
 
     it("should transfer 100 USD tokens to accounts A and B", function(done) {
         var mintAmount = 100;
-        var P;
 
-        Populous.deployed().then(function(instance) {
-            P = instance;
-
-            return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "A", mintAmount);
-        }).then(function() {
+        P.addTransaction("USD", LEDGER_SYSTEM_NAME, "A", mintAmount).then(function() {
             return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "B", mintAmount);
         }).then(function() {
             return P.queueBackIndex.call();
@@ -57,13 +47,7 @@ contract('Populous', function(accounts) {
     });
 
     it("should execute transactions", function(done) {
-        var P;
-
-        Populous.deployed().then(function(instance) {
-            P = instance;
-
-            return P.txExecuteLoop();
-        }).then(function() {
+        P.txExecuteLoop().then(function() {
             return P.queueBackIndex.call();
         }).then(function(value) {
             assert.equal(value.toNumber(), 0, "Failed executing transactions");
@@ -72,24 +56,37 @@ contract('Populous', function(accounts) {
     });
 
     it("should create crowdsale", function(done) {
-        var P;
-
         assert(USD, "Currency required.");
 
-        Populous.deployed().then(function(instance) {
-            P = instance;
+        P.createCrowdsale(
+            USD,
+            "borrower001",
+            "John Borrow",
+            "Lisa Buyer",
+            "invoice001",
+            1000,
+            900).then(function(result) {
+            console.log(result);
+            assert(result.logs.length, "Failed creating crowdsale");
+            if (result.logs) {
+                crowdsale = result.logs[0].args.crowdsale;
+            }
+            done();
+        });
+    });
 
-            return P.createCrowdsale(
-                USD,
-                "borrower001",
-                "John Borrow",
-                "Lisa Buyer",
-                "invoice001",
-                1000,
-                900);
-        }).then(function(result) {
+    it("should create bidding group", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+
+        var groupName = 'test group';
+        var groupGoal = 909;
+
+        P.createGroup(crowdsale, groupName, groupGoal).then(function(result) {
             console.log(result);
             assert(result.logs, "Failed creating crowdsale");
+            if (result.logs) {
+                crowdsale = result.logs[0].args.crowdsale;
+            }
             done();
         });
     });

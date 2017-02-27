@@ -2,34 +2,35 @@ pragma solidity ^0.4.8;
 
 import "./StandardToken.sol";
 import "./SafeMath.sol";
-import "./Owned.sol";
+import "./withAccessManager.sol";
 
-contract CurrencyToken is StandardToken, Owned {
-    string public name;
+contract CurrencyToken is StandardToken, withAccessManager {
+    bytes32 public name;
     uint8 public decimals;                //How many decimals to show. ie. There could 1000 base units with 3 decimals. Meaning 0.980 SBX = 980 base units. It's like comparing 1 wei to 1 ether.
-    string public symbol;                 //An identifier: eg SBX
+    bytes32 public symbol;                 //An identifier: eg SBX
 
     function CurrencyToken (
-        string _tokenName,
+        address _accessManager,
+        bytes32 _tokenName,
         uint8 _decimalUnits,
-        string _tokenSymbol)
-        Owned(msg.sender)
+        bytes32 _tokenSymbol)
+        withAccessManager(_accessManager)
     {
         name = _tokenName;                                   // Set the name for display purposes
         decimals = _decimalUnits;                            // Amount of decimals for display purposes
         symbol = _tokenSymbol;                               // Set the symbol for display purposes
     }
 
-    function mintTokens(int amount) onlyOwner returns (bool success) {
-        balances[owner] = SafeMath.safeAdd(balances[owner], uint(amount));
+    function mintTokens(int amount) onlyPopulous returns (bool success) {
+        balances[AM.populous()] = SafeMath.safeAdd(balances[AM.populous()], uint(amount));
         totalSupply = SafeMath.safeAdd(totalSupply, uint(amount));
     }
 
-    function destroyTokens(int amount) onlyOwner returns (bool success) {
-        if (balances[owner] < uint(amount)) {
+    function destroyTokens(int amount) onlyPopulous returns (bool success) {
+        if (balances[AM.populous()] < uint(amount)) {
             return false;
         } else {
-            balances[owner] = SafeMath.safeSub(balances[owner], uint(amount));
+            balances[AM.populous()] = SafeMath.safeSub(balances[AM.populous()], uint(amount));
             totalSupply = SafeMath.safeSub(totalSupply, uint(amount));
             
             return true;

@@ -2,29 +2,28 @@ pragma solidity ^0.4.8;
 
 import "./Crowdsale.sol";
 
-contract CrowdsaleManager is Owned {
+contract CrowdsaleManager is withAccessManager {
 
-    function CrowdsaleManager(address _guardian)
-        withAccessControl(_server, _guardian, _populous) {} 
+    function CrowdsaleManager(address _accessManager)
+        withAccessManager(_accessManager) {} 
 
     function createCrowdsale(
-            address _owner,
-            address _guardian,
             address _currency,
-            string _borrowerId,
-            string _borrowerName,
-            string _buyerName,
-            string _invoiceId,
-            uint _invoiceAmount,
-            uint _fundingGoal)
-        //onlyGuardian
+            bytes32 _currencySymbol,
+            bytes32 _borrowerId,
+            bytes32 _borrowerName,
+            bytes32 _buyerName,
+            bytes32 _invoiceId,
+            int _invoiceAmount,
+            int _fundingGoal)
+        onlyPopulous
 
         returns (address crowdsaleAddr)
     {
         crowdsaleAddr = new Crowdsale(
-            _owner,
-            _guardian,
+            address(AM),
             _currency,
+            _currencySymbol,
             _borrowerId,
             _borrowerName,
             _buyerName,

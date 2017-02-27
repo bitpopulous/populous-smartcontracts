@@ -2,7 +2,7 @@ pragma solidity ^0.4.8;
 
 import "./SafeMath.sol";
 import "./StringUtils.sol";
-import "./withAccessControl.sol";
+import "./withAccessManager.sol";
 
 /**
     The platform address is owner;
@@ -10,46 +10,45 @@ import "./withAccessControl.sol";
     Functions, which don't require token transfers are onlyOwner;
     Functions, which do token transfers are onlyGuardian
 */
-contract Crowdsale is withAccessControl {
+contract Crowdsale is withAccessManager {
 
-    event EventGroupCreated(uint256 groupIndex, string name, uint256 goal);
-    event EventGroupGoalReached(uint256 groupIndex, string _name, uint256 goal);
-    event EventNewBid(uint256 groupIndex, string bidderId, string name, uint256 value);
+    event EventGroupCreated(uint groupIndex, bytes32 name, int goal);
+    event EventGroupGoalReached(uint groupIndex, bytes32 _name, int goal);
+    event EventNewBid(uint groupIndex, bytes32 bidderId, bytes32 name, int value);
 
-    enum SuccessFlag { Success, Fail }
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
 
     States status;
     address public currency;
-    string public currencySymbol;
+    bytes32 public currencySymbol;
 
     // late interest cap at 7% (7 days 1%)
-    uint public latePaymentInterest = 0;
+    int public latePaymentInterest = 0;
 
-    string public invoiceId;
-    string public borrowerId;
-    string public borrowerName;
-    string public buyerName;
+    bytes32 public invoiceId;
+    bytes32 public borrowerId;
+    bytes32 public borrowerName;
+    bytes32 public buyerName;
 
-    uint public invoiceAmount;
-    uint public fundingGoal;
+    int public invoiceAmount;
+    int public fundingGoal;
 
     uint public deadline;
 
     struct Bidder {
         uint bidderIndex;
-        string bidderId;
-        string name;
-        uint bidAmount;
+        bytes32 bidderId;
+        bytes32 name;
+        int bidAmount;
         bool hasReceivedTokensBack; // This flag is set when losing group receives its tokens back or when winner group gets its winnings
     }
 
     struct Group {
         uint groupIndex;
-        string name;
-        uint goal;
+        bytes32 name;
+        int goal;
         Bidder[] bidders;
-        uint amountRaised;
+        int amountRaised;
         bool hasReceivedTokensBack; // This is set to true when the flag hasReceivedTokensBack is set to true for all bidders in the group
     }
 
@@ -61,19 +60,17 @@ contract Crowdsale is withAccessControl {
     bool public sentToWinnerGroup;
 
     //Constructor
-    function Crowdsale
-            address _server,
-            address _guardian,
-            address _populous,
+    function Crowdsale(
+            address _accessManager,
             address _currency,
-            string _currencySymbol,
-            string _borrowerId,
-            string _borrowerName,
-            string _buyerName,
-            string _invoiceId,
-            uint _invoiceAmount,
-            uint _fundingGoal)
-        withAccessControl(_server, _guardian, _populous)
+            bytes32 _currencySymbol,
+            bytes32 _borrowerId,
+            bytes32 _borrowerName,
+            bytes32 _buyerName,
+            bytes32 _invoiceId,
+            int _invoiceAmount,
+            int _fundingGoal)
+            withAccessManager(_accessManager)
     {
         currency = _currency;
         currencySymbol = _currencySymbol;
@@ -107,7 +104,7 @@ contract Crowdsale is withAccessControl {
 
     function getGroup(uint groupIndex)
         public constant
-        returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack)
+        returns (bytes32 name, int goal, uint biddersCount, int amountRaised, bool hasReceivedTokensBack)
     {
         Group g = groups[groupIndex];
 
@@ -115,12 +112,12 @@ contract Crowdsale is withAccessControl {
     }
 
     function setGroupHasReceivedTokensBack(uint groupIndex) {
-        CS.groups[groupIndex].hasReceivedTokensBack = true;
+        groups[groupIndex].hasReceivedTokensBack = true;
     }
 
     function getGroupBidder(uint groupIndex, uint bidderIndex)
         public constant
-        returns (string bidderId, string name, uint bidAmount, bool hasReceivedTokensBack)
+        returns (bytes32 bidderId, bytes32 name, int bidAmount, bool hasReceivedTokensBack)
     {
         Bidder b = groups[groupIndex].bidders[bidderIndex];
 
@@ -128,7 +125,7 @@ contract Crowdsale is withAccessControl {
     }
 
     function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex) {
-        CS.groups[groupIndex].bidders[bidderIndex].hasReceivedTokensBack = true;
+        groups[groupIndex].bidders[bidderIndex].hasReceivedTokensBack = true;
     }    
 
     function openAuction() onlyGuardian returns (bool success) {
@@ -140,35 +137,39 @@ contract Crowdsale is withAccessControl {
         }
     }
 
-    function createGroup(string _name, uint _goal)
+    function createGroup(bytes32 _name, int _goal)
         onlyOpenAuction
-        returns (bool success)
+        returns (uint8 err, uint groupIndex)
     {
         if(isDeadlineReached() == false && _goal >= fundingGoal && _goal <= invoiceAmount) {
-            groups.push(Group({groupIndex: groups.length, name: _name, amountRaised: 0, goal: _goal, isWinner: false, isRefunded: false}));
-            EventGroupCreated(groups.length - 1, _name, _goal);
+            groupIndex = groups.length++;
+            groups[groupIndex].groupIndex = groupIndex;
+            groups[groupIndex].name = _name;
+            groups[groupIndex].goal = _goal;
 
-            return true;
+            EventGroupCreated(groupIndex, _name, _goal);
+
+            return (0, groupIndex);
         } else {
-            return false;
+            return (1, 0);
         }
     }
 
-    function findBidder(uint groupIndex, string bidderId) constant returns (SuccessFlag found, uint bidderIndex) {
+    function findBidder(uint groupIndex, bytes32 bidderId) constant returns (uint8 err, uint bidderIndex) {
         for(uint i = 0; i < groups[groupIndex].bidders.length; i++) {
             if (StringUtils.equal(groups[groupIndex].bidders[i].bidderId, bidderId) == true) {
-                return (SuccessFlag.Success, i);
+                return (0, i);
             }
         }
-        return (SuccessFlag.Fail, 0);
+        return (1, 0);
     }
 
-    function bid(uint groupIndex, string bidderId, string name, uint value)
+    function bid(uint groupIndex, bytes32 bidderId, bytes32 name, int value)
         onlyOpenAuction
-        onlyGuardian
-        returns (uint finalValue)
+        onlyPopulous
+        returns (int finalValue, int groupGoal, bool goalReached)
     {
-        group G = groups[groupIndex];
+        Group G = groups[groupIndex];
 
         if(isDeadlineReached() == true || value == 0 || G.goal == 0) { throw; }
         
@@ -176,12 +177,12 @@ contract Crowdsale is withAccessControl {
             value = SafeMath.safeSub(G.goal, G.amountRaised);
         }
 
+        uint8 err;
         uint bidderIndex;
-        SuccessFlag found;
 
-        (found, bidderIndex) = findBidder(groupIndex, bidderId);
+        (err, bidderIndex) = findBidder(groupIndex, bidderId);
 
-        if (found == SuccessFlag.Success) {
+        if (err == 0) {
             G.bidders[bidderIndex].bidAmount = SafeMath.safeAdd(G.bidders[bidderIndex].bidAmount, value);
         } else {
             G.bidders.push(Bidder(G.bidders.length, bidderId, name, value, false));
@@ -191,17 +192,17 @@ contract Crowdsale is withAccessControl {
 
         EventNewBid(groupIndex, bidderId, name, value);
 
-        if (G.amountRaised == G.goal) {
+        if (goalReached == true) {
             winnergroupIndex = groupIndex;
             status = States.Closed;
 
             EventGroupGoalReached(groupIndex, G.name, G.goal);
         }
 
-        return value;
+        return (value, G.goal, goalReached);
     }
 
-    function endAuction() onlyOwner returns(bool) {
+    function endAuction() onlyServer returns(bool) {
         if (status == States.Closed) {
             // Send tokens to beneficiary
             // Send tokens back to loser groups
@@ -210,7 +211,7 @@ contract Crowdsale is withAccessControl {
         }
     }
 
-    function getAmountForBeneficiary() onlyGuardian returns (uint) {
+    function getAmountForBeneficiary() onlyGuardian returns (int) {
         if (status == States.WaitingForInvoicePayment && sentToBeneficiary == false) {
             return groups[winnergroupIndex].amountRaised;
         }
@@ -220,7 +221,7 @@ contract Crowdsale is withAccessControl {
         sentToBeneficiary = true;
     }
 
-    function setGroupRefunded(groupIndex) onlyGuardian returns (bool) {
+    function setGroupRefunded(uint groupIndex) onlyGuardian returns (bool) {
         if (groupIndex != winnergroupIndex) {
             groups[groupIndex].hasReceivedTokensBack = true;
 
@@ -234,7 +235,7 @@ contract Crowdsale is withAccessControl {
         sentToLosingGroups = true;
     }
 
-    function invoicePaymentReceived() onlyOwner {
+    function invoicePaymentReceived() onlyGuardian {
         if (status == States.WaitingForInvoicePayment) {
             // Send tokens to winner group
 

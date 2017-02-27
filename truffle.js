@@ -1,6 +1,6 @@
 module.exports = {
     networks: {
-        "development": {
+        "ropsten": {
             network_id: 3,
             host: "localhost",
             port: 8545,

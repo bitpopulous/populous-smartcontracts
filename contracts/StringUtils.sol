@@ -1,4 +1,6 @@
 // https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol
+pragma solidity ^0.4.8;
+
 library StringUtils {
     /// @dev Does a byte-by-byte lexicographical comparison of two strings.
     /// @return a negative number if `_a` is smaller, zero if they are equal
@@ -25,6 +27,14 @@ library StringUtils {
     function equal(string _a, string _b) returns (bool) {
         return compare(_a, _b) == 0;
     }
+    function equal(bytes32 a, bytes32 b) returns (bool) {
+        if (a.length != b.length)
+        return false;
+        for (uint i = 0; i < a.length; i ++)
+        if (a[i] != b[i])
+        return false;
+        return true;
+    }    
     /// @dev Finds the index of the first occurrence of _needle in _haystack
     function indexOf(string _haystack, string _needle) returns (int)
     {
