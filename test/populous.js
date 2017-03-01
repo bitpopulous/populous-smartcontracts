@@ -1,10 +1,13 @@
 var Populous = artifacts.require("Populous");
+var Crowdsale = artifacts.require("Crowdsale");
 
 contract('Populous', function(accounts) {
-    var LEDGER_SYSTEM_NAME = "Populous";
-    var USD;
-    var P;
-    var crowdsale;
+    var
+        LEDGER_SYSTEM_NAME = "Populous",
+        ACC_BORROW = 'borrower001',
+        ACC1 = 'A',
+        ACC2 = 'B',
+        USD, P, crowdsale;
 
     it("should create currency token American Dollar", function(done) {
         Populous.deployed().then(function(instance) {
@@ -22,8 +25,8 @@ contract('Populous', function(accounts) {
         });
     });
 
-    it("should mint 1000 USD tokens", function(done) {
-        var mintAmount = 1000;
+    it("should mint 10000 USD tokens", function(done) {
+        var mintAmount = 10000;
 
         P.mintTokens('USD', mintAmount).then(function() {
             return P.getLedgerEntry.call("USD", LEDGER_SYSTEM_NAME);
@@ -33,46 +36,45 @@ contract('Populous', function(accounts) {
         });
     });
 
-    it("should transfer 100 USD tokens to accounts A and B", function(done) {
-        var mintAmount = 100;
+    it("should transfer 1000 USD tokens to accounts A and B", function(done) {
+        var sendAmount = 1000;
 
-        P.addTransaction("USD", LEDGER_SYSTEM_NAME, "A", mintAmount).then(function() {
-            return P.addTransaction("USD", LEDGER_SYSTEM_NAME, "B", mintAmount);
+        P.transfer("USD", LEDGER_SYSTEM_NAME, ACC1, sendAmount).then(function() {
+            return P.transfer("USD", LEDGER_SYSTEM_NAME, ACC2, sendAmount);
         }).then(function() {
-            return P.queueBackIndex.call();
+            return P.getLedgerEntry.call("USD", ACC1);
         }).then(function(value) {
-            assert.notEqual(value.toNumber(), 0, "Failed adding transactions");
+            assert.equal(value.toNumber(), sendAmount, "Failed transfer 1");
+
+            return P.getLedgerEntry.call("USD", ACC2);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), sendAmount, "Failed transfer 2");
             done();
         });
     });
 
-    it("should execute transactions", function(done) {
-        P.txExecuteLoop().then(function() {
-            return P.queueBackIndex.call();
-        }).then(function(value) {
-            assert.equal(value.toNumber(), 0, "Failed executing transactions");
-            done();
-        });
-    });
-
-    it("should create crowdsale", function(done) {
+    it("should create crowdsale and start auction", function(done) {
         assert(USD, "Currency required.");
 
         P.createCrowdsale(
-            USD,
-            "borrower001",
-            "John Borrow",
-            "Lisa Buyer",
-            "invoice001",
-            1000,
-            900).then(function(result) {
-            console.log(result);
-            assert(result.logs.length, "Failed creating crowdsale");
-            if (result.logs) {
-                crowdsale = result.logs[0].args.crowdsale;
-            }
-            done();
-        });
+                USD,
+                ACC_BORROW,
+                "John Borrow",
+                "Lisa Buyer",
+                "invoice001",
+                1000,
+                900)
+            .then(function(createCS) {
+                assert(createCS.logs.length, "Failed creating crowdsale");
+
+                crowdsale = createCS.logs[0].args.crowdsale;
+                console.log('Crowdsale', crowdsale);
+
+                return Crowdsale.at(crowdsale).openAuction();
+            }).then(function(startAuction) {
+                assert(startAuction.logs.length, "Failed starting auction");
+                done();
+            });
     });
 
     it("should create bidding group", function(done) {
@@ -81,12 +83,32 @@ contract('Populous', function(accounts) {
         var groupName = 'test group';
         var groupGoal = 909;
 
-        P.createGroup(crowdsale, groupName, groupGoal).then(function(result) {
-            console.log(result);
-            assert(result.logs, "Failed creating crowdsale");
-            if (result.logs) {
-                crowdsale = result.logs[0].args.crowdsale;
-            }
+        Crowdsale.at(crowdsale).createGroup(groupName, groupGoal).then(function(result) {
+            assert(result.logs.length, "Failed creating crowdsale");
+            done();
+        });
+    });
+
+    it("should bid", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+
+        P.bid(crowdsale, 0, ACC1, "AA007", 910).then(function(result) {
+            assert(result.receipt.logs.length, "Failed bidding");
+
+            return P.getLedgerEntry.call("USD", ACC1);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 1000 - 909, "Failed bidding");
+            done();
+        });
+    });
+
+    it("should fund beneficiary", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+
+        P.fundBeneficiary(crowdsale).then(function(result) {
+            return P.getLedgerEntry.call("USD", ACC_BORROW);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 909, "Failed funding beneficiary");
             done();
         });
     });

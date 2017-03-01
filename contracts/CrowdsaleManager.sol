@@ -14,8 +14,8 @@ contract CrowdsaleManager is withAccessManager {
             bytes32 _borrowerName,
             bytes32 _buyerName,
             bytes32 _invoiceId,
-            int _invoiceAmount,
-            int _fundingGoal)
+            uint _invoiceAmount,
+            uint _fundingGoal)
         onlyPopulous
 
         returns (address crowdsaleAddr)

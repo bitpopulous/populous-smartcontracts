@@ -12,26 +12,27 @@ import "./withAccessManager.sol";
 */
 contract Crowdsale is withAccessManager {
 
-    event EventGroupCreated(uint groupIndex, bytes32 name, int goal);
-    event EventGroupGoalReached(uint groupIndex, bytes32 _name, int goal);
-    event EventNewBid(uint groupIndex, bytes32 bidderId, bytes32 name, int value);
+    event EventGroupCreated(uint groupIndex, bytes32 name, uint goal);
+    event EventGroupGoalReached(uint groupIndex, bytes32 _name, uint goal);
+    event EventNewBid(uint groupIndex, bytes32 bidderId, bytes32 name, uint value);
+    event EventAuctionStarted();
 
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
 
-    States status;
+    States public status;
     address public currency;
     bytes32 public currencySymbol;
 
     // late interest cap at 7% (7 days 1%)
-    int public latePaymentInterest = 0;
+    uint public latePaymentInterest = 0;
 
     bytes32 public invoiceId;
     bytes32 public borrowerId;
     bytes32 public borrowerName;
     bytes32 public buyerName;
 
-    int public invoiceAmount;
-    int public fundingGoal;
+    uint public invoiceAmount;
+    uint public fundingGoal;
 
     uint public deadline;
 
@@ -39,22 +40,22 @@ contract Crowdsale is withAccessManager {
         uint bidderIndex;
         bytes32 bidderId;
         bytes32 name;
-        int bidAmount;
+        uint bidAmount;
         bool hasReceivedTokensBack; // This flag is set when losing group receives its tokens back or when winner group gets its winnings
     }
 
     struct Group {
         uint groupIndex;
         bytes32 name;
-        int goal;
+        uint goal;
         Bidder[] bidders;
-        int amountRaised;
+        uint amountRaised;
         bool hasReceivedTokensBack; // This is set to true when the flag hasReceivedTokensBack is set to true for all bidders in the group
     }
 
     //Groups
     Group[] public groups;
-    uint public winnergroupIndex;
+    uint public winnerGroupIndex;
     bool public sentToBeneficiary;
     bool public sentToLosingGroups;
     bool public sentToWinnerGroup;
@@ -68,8 +69,8 @@ contract Crowdsale is withAccessManager {
             bytes32 _borrowerName,
             bytes32 _buyerName,
             bytes32 _invoiceId,
-            int _invoiceAmount,
-            int _fundingGoal)
+            uint _invoiceAmount,
+            uint _fundingGoal)
             withAccessManager(_accessManager)
     {
         currency = _currency;
@@ -104,7 +105,7 @@ contract Crowdsale is withAccessManager {
 
     function getGroup(uint groupIndex)
         public constant
-        returns (bytes32 name, int goal, uint biddersCount, int amountRaised, bool hasReceivedTokensBack)
+        returns (bytes32 name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack)
     {
         Group g = groups[groupIndex];
 
@@ -117,7 +118,7 @@ contract Crowdsale is withAccessManager {
 
     function getGroupBidder(uint groupIndex, uint bidderIndex)
         public constant
-        returns (bytes32 bidderId, bytes32 name, int bidAmount, bool hasReceivedTokensBack)
+        returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack)
     {
         Bidder b = groups[groupIndex].bidders[bidderIndex];
 
@@ -128,16 +129,19 @@ contract Crowdsale is withAccessManager {
         groups[groupIndex].bidders[bidderIndex].hasReceivedTokensBack = true;
     }    
 
-    function openAuction() onlyGuardian returns (bool success) {
+    function openAuction() public returns (bool) {
         if (status == States.Pending) {
             status = States.Open;
+              
+            EventAuctionStarted();
+
             return true;
         } else {
             return false;
         }
     }
 
-    function createGroup(bytes32 _name, int _goal)
+    function createGroup(bytes32 _name, uint _goal)
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
     {
@@ -164,10 +168,10 @@ contract Crowdsale is withAccessManager {
         return (1, 0);
     }
 
-    function bid(uint groupIndex, bytes32 bidderId, bytes32 name, int value)
+    function bid(uint groupIndex, bytes32 bidderId, bytes32 name, uint value)
         onlyOpenAuction
-        onlyPopulous
-        returns (int finalValue, int groupGoal, bool goalReached)
+        
+        returns (uint finalValue, uint groupGoal, bool goalReached)
     {
         Group G = groups[groupIndex];
 
@@ -192,8 +196,10 @@ contract Crowdsale is withAccessManager {
 
         EventNewBid(groupIndex, bidderId, name, value);
 
+        goalReached = G.amountRaised == G.goal;
+
         if (goalReached == true) {
-            winnergroupIndex = groupIndex;
+            winnerGroupIndex = groupIndex;
             status = States.Closed;
 
             EventGroupGoalReached(groupIndex, G.name, G.goal);
@@ -202,7 +208,7 @@ contract Crowdsale is withAccessManager {
         return (value, G.goal, goalReached);
     }
 
-    function endAuction() onlyServer returns(bool) {
+    function endAuction() onlyPopulous returns(bool) {
         if (status == States.Closed) {
             // Send tokens to beneficiary
             // Send tokens back to loser groups
@@ -211,18 +217,20 @@ contract Crowdsale is withAccessManager {
         }
     }
 
-    function getAmountForBeneficiary() onlyGuardian returns (int) {
+    function getAmountForBeneficiary() public constant returns (uint8 err, uint amount) {
         if (status == States.WaitingForInvoicePayment && sentToBeneficiary == false) {
-            return groups[winnergroupIndex].amountRaised;
+            return (0, groups[winnerGroupIndex].amountRaised);
+        } else {
+            return (1, 0);
         }
     }
 
-    function setSentToBeneficiary() onlyGuardian {
+    function setSentToBeneficiary() onlyPopulous {
         sentToBeneficiary = true;
     }
 
     function setGroupRefunded(uint groupIndex) onlyGuardian returns (bool) {
-        if (groupIndex != winnergroupIndex) {
+        if (groupIndex != winnerGroupIndex) {
             groups[groupIndex].hasReceivedTokensBack = true;
 
             return true;

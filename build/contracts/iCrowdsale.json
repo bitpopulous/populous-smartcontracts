@@ -7,7 +7,7 @@
       "name": "openAuction",
       "outputs": [
         {
-          "name": "success",
+          "name": "",
           "type": "bool"
         }
       ],
@@ -23,10 +23,80 @@
       "type": "function"
     },
     {
+      "constant": true,
+      "inputs": [],
+      "name": "status",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "setGroupRefunded",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_name",
+          "type": "bytes32"
+        },
+        {
+          "name": "_goal",
+          "type": "uint256"
+        }
+      ],
+      "name": "createGroup",
+      "outputs": [
+        {
+          "name": "err",
+          "type": "uint8"
+        },
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
       "constant": false,
       "inputs": [],
       "name": "setSentToLosingGroups",
       "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "winnerGroupIndex",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "payable": false,
       "type": "function"
     },
@@ -45,32 +115,24 @@
     },
     {
       "constant": true,
-      "inputs": [
-        {
-          "name": "groupIndex",
-          "type": "int256"
-        }
-      ],
-      "name": "getGroup",
+      "inputs": [],
+      "name": "borrowerId",
       "outputs": [
         {
-          "name": "name",
+          "name": "",
           "type": "bytes32"
-        },
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "sentToBeneficiary",
+      "outputs": [
         {
-          "name": "goal",
-          "type": "int256"
-        },
-        {
-          "name": "biddersCount",
-          "type": "int256"
-        },
-        {
-          "name": "amountRaised",
-          "type": "int256"
-        },
-        {
-          "name": "hasReceivedTokensBack",
+          "name": "",
           "type": "bool"
         }
       ],
@@ -90,7 +152,7 @@
       "inputs": [
         {
           "name": "groupIndex",
-          "type": "int256"
+          "type": "uint256"
         },
         {
           "name": "bidderId",
@@ -102,39 +164,21 @@
         },
         {
           "name": "value",
-          "type": "int256"
+          "type": "uint256"
         }
       ],
       "name": "bid",
       "outputs": [
         {
           "name": "finalValue",
-          "type": "int256"
+          "type": "uint256"
         },
         {
           "name": "groupGoal",
-          "type": "int256"
+          "type": "uint256"
         },
         {
           "name": "goalReached",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "groupIndex",
-          "type": "int256"
-        }
-      ],
-      "name": "setGroupRefunded",
-      "outputs": [
-        {
-          "name": "",
           "type": "bool"
         }
       ],
@@ -148,7 +192,75 @@
       "outputs": [
         {
           "name": "",
-          "type": "int256"
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "getGroup",
+      "outputs": [
+        {
+          "name": "name",
+          "type": "bytes32"
+        },
+        {
+          "name": "goal",
+          "type": "uint256"
+        },
+        {
+          "name": "biddersCount",
+          "type": "uint256"
+        },
+        {
+          "name": "amountRaised",
+          "type": "uint256"
+        },
+        {
+          "name": "hasReceivedTokensBack",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        },
+        {
+          "name": "bidderIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "getGroupBidder",
+      "outputs": [
+        {
+          "name": "bidderId",
+          "type": "bytes32"
+        },
+        {
+          "name": "name",
+          "type": "bytes32"
+        },
+        {
+          "name": "bidAmount",
+          "type": "uint256"
+        },
+        {
+          "name": "hasReceivedTokensBack",
+          "type": "bool"
         }
       ],
       "payable": false,
@@ -174,67 +286,7 @@
       "outputs": [
         {
           "name": "",
-          "type": "int256"
-        }
-      ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_name",
-          "type": "bytes32"
-        },
-        {
-          "name": "_goal",
-          "type": "int256"
-        }
-      ],
-      "name": "createGroup",
-      "outputs": [
-        {
-          "name": "err",
-          "type": "int8"
-        },
-        {
-          "name": "groupIndex",
-          "type": "int256"
-        }
-      ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "name": "groupIndex",
-          "type": "int256"
-        },
-        {
-          "name": "bidderIndex",
-          "type": "int256"
-        }
-      ],
-      "name": "getGroupBidder",
-      "outputs": [
-        {
-          "name": "bidderId",
-          "type": "bytes32"
-        },
-        {
-          "name": "name",
-          "type": "bytes32"
-        },
-        {
-          "name": "bidAmount",
-          "type": "int256"
-        },
-        {
-          "name": "hasReceivedTokensBack",
-          "type": "bool"
+          "type": "uint256"
         }
       ],
       "payable": false,
@@ -243,5 +295,5 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1488213491322
+  "updated_at": 1488380939209
 }

@@ -7,6 +7,14 @@ module.exports = {
             before_timeout: 200000, //  <=== NEW
             test_timeout: 300000, //  <=== NEW
             gas: 4712388
+        },
+        "testrpc": {
+            network_id: "*",
+            host: "localhost",
+            port: 8545,
+            before_timeout: 200000, //  <=== NEW
+            test_timeout: 300000, //  <=== NEW
+            gas: 4712388
         }
     }
 };

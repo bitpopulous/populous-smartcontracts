@@ -4,15 +4,21 @@ import "./CurrencyToken.sol";
 
 contract iCrowdsale {
     address public currency;
+    bytes32 public borrowerId;
+    uint8 public status;
+    
+    uint public winnerGroupIndex;
+    bool public sentToBeneficiary;
+
     function isDeadlineReached() returns(bool);
-    function getGroupsCount() public constant returns (int);
-    function getGroup(int groupIndex) public constant returns (bytes32 name, int goal, int biddersCount, int amountRaised, bool hasReceivedTokensBack);
-    function getGroupBidder(int groupIndex, int bidderIndex) public constant returns (bytes32 bidderId, bytes32 name, int bidAmount, bool hasReceivedTokensBack);        
-    function openAuction() returns (bool success);
-    function bid(int groupIndex , bytes32 bidderId, bytes32 name, int value) returns (int finalValue, int groupGoal, bool goalReached);
-    function createGroup(bytes32 _name, int _goal) returns (int8 err, int groupIndex);
-    function getAmountForBeneficiary() returns (int);
-    function setGroupRefunded(int groupIndex) returns (bool);
+    function getGroupsCount() public constant returns (uint);
+    function getGroup(uint groupIndex) public constant returns (bytes32 name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack);
+    function getGroupBidder(uint groupIndex, uint bidderIndex) public constant returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack);        
+    function openAuction() public returns (bool);
+    function bid(uint groupIndex , bytes32 bidderId, bytes32 name, uint value) returns (uint finalValue, uint groupGoal, bool goalReached);
+    function createGroup(bytes32 _name, uint _goal) returns (uint8 err, uint groupIndex);
+    function getAmountForBeneficiary() public constant returns (uint8 err, uint amount);
+    function setGroupRefunded(uint groupIndex) returns (bool);
     function setSentToBeneficiary();
     function setSentToLosingGroups();
     function setSentToWinnerGroup();
@@ -26,29 +32,28 @@ contract iCrowdsaleManager {
             bytes32 _borrowerName,
             bytes32 _buyerName,
             bytes32 _invoiceId,
-            int _invoiceAmount,
-            int _fundingGoal) returns (address);
+            uint _invoiceAmount,
+            uint _fundingGoal) returns (address);
 }
 
 contract Populous is withAccessManager {
+    // This has to be the same one as in Crowdsale
+    enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
 
     bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
 
     uint constant TX_EXECUTE_GAS_STOP_AMOUNT = 100000;
 
-    event EventPendingTransaction(int index, bytes32 currency, bytes32 from, bytes32 to, int amount);
-    event EventCanceledTransaction(int index, bytes32 currency, bytes32 from, bytes32 to, int amount);
-    event EventExecutedTransaction(int index, bytes32 currency, bytes32 from, bytes32 to, int amount);
+    event EventPendingTransaction(uint index, bytes32 currency, bytes32 from, bytes32 to, uint amount);
+    event EventCanceledTransaction(uint index, bytes32 currency, bytes32 from, bytes32 to, uint amount);
+    event EventExecutedTransaction(uint index, bytes32 currency, bytes32 from, bytes32 to, uint amount);
 
     event EventNewCrowdsale(address crowdsale);
-    event EventGroupCreated(int256 groupIndex, bytes32 name, int256 goal);
-    event EventGroupGoalReached(int256 groupIndex, bytes32 _name, int256 goal);
-    event EventNewBid(int256 groupIndex, bytes32 bidderId, bytes32 name, int256 value);    
     
     iCrowdsaleManager public CM;
     // currency => (accountName => amount)
-    mapping(bytes32 => mapping(bytes32 => int)) ledger;
-    mapping(bytes32 => mapping(bytes32 => int)) pendingAmounts;
+    mapping(bytes32 => mapping(bytes32 => uint)) ledger;
+    mapping(bytes32 => mapping(bytes32 => uint)) pendingAmounts;
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
 
@@ -58,13 +63,13 @@ contract Populous is withAccessManager {
         bytes32 currency;
         bytes32 from;
         bytes32 to;
-        int amount;
+        uint amount;
         txStates status;
     }
     
-    mapping(int => Transaction) public pendingTx;
-    int public queueFrontIndex = 0;
-    int public queueBackIndex = 0;
+    mapping(uint => Transaction) public pendingTx;
+    uint public queueFrontIndex = 0;
+    uint public queueBackIndex = 0;
 
     address[] public crowdsales;
 
@@ -74,11 +79,11 @@ contract Populous is withAccessManager {
         CM = iCrowdsaleManager(_crowdsaleManager);
     }
 
-    function getLedgerEntry(bytes32 currency, bytes32 client) constant returns (int) {
+    function getLedgerEntry(bytes32 currency, bytes32 client) constant returns (uint) {
         return ledger[currency][client];
     }
     
-    function getPendingLedgerEntry(bytes32 currency, bytes32 client) constant returns (int) {
+    function getPendingLedgerEntry(bytes32 currency, bytes32 client) constant returns (uint) {
         return pendingAmounts[currency][client];
     }
 
@@ -86,17 +91,21 @@ contract Populous is withAccessManager {
         return currencies[currency];
     }
 
+    function getCurrencySymbol(address currency) constant returns (bytes32) {
+        return currenciesSymbols[currency];
+    }
+
     function createCurrency(bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
         onlyGuardian
     {
         currencies[_tokenSymbol] = new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol);
         
-        if (currencies[_tokenSymbol] == 0x0) {
-            throw;
-        }
+        if (currencies[_tokenSymbol] == 0x0) { throw; }
+        
+        currenciesSymbols[currencies[_tokenSymbol]] = _tokenSymbol;
     }
 
-    function mintTokens(bytes32 currency, int amount)
+    function mintTokens(bytes32 currency, uint amount)
         onlyGuardian
         returns (bool success)
     {
@@ -110,7 +119,7 @@ contract Populous is withAccessManager {
         }
     }
     
-    function destroyTokens(bytes32 currency, int amount)
+    function destroyTokens(bytes32 currency, uint amount)
         onlyGuardian
         returns (bool success)
     {
@@ -128,80 +137,15 @@ contract Populous is withAccessManager {
         }
     }
 
-    function addTransaction(bytes32 currency, bytes32 from, bytes32 to, int amount)
-        onlyServer
-        returns (bool success)
-    {
-        if (currencies[currency] == 0x0) { throw; }
-        
-        if (ledger[currency][from] + pendingAmounts[currency][from] < amount) {
-            return false;
-        } else {
-            pendingAmounts[currency][from] = SafeMath.safeSub(pendingAmounts[currency][from], amount);
-            pendingAmounts[currency][to] = SafeMath.safeAdd(pendingAmounts[currency][to], amount);
-
-            pendingTx[queueBackIndex] = Transaction(currency, from, to, amount, txStates.Pending);
-            EventPendingTransaction(queueBackIndex, currency, from, to, amount);
-            queueBackIndex++;
-
-            return true;
-        }
+    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) onlyServer {
+        _transfer(currency, from, to, amount);
     }
 
-    function txExecuteLoop()
-        onlyGuardian
-    {
-        while(queueFrontIndex <= queueBackIndex) {
-            if (pendingTx[queueFrontIndex].status == txStates.Pending) {
-                executeTx(queueFrontIndex);
-            }
-            if (msg.gas < TX_EXECUTE_GAS_STOP_AMOUNT) {
-                return;
-            }
-            queueFrontIndex++;
-        }
-        queueFrontIndex = 0;
-        queueBackIndex = 0;        
-    }
+    function _transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) private {
+        if (ledger[currency][from] < amount) { throw; }
     
-    function executeTx(int index)
-        onlyGuardian
-        returns (bool success)
-    {
-        Transaction tx = pendingTx[index];
-
-        if (tx.amount == 0 || ledger[tx.currency][tx.from] + pendingAmounts[tx.currency][tx.from] < 0) {
-            return false;
-        } else {
-            ledger[tx.currency][tx.from] = SafeMath.safeSub(ledger[tx.currency][tx.from], tx.amount);
-            pendingAmounts[tx.currency][tx.from] = SafeMath.safeAdd(pendingAmounts[tx.currency][tx.from], tx.amount);
-            ledger[tx.currency][tx.to] = SafeMath.safeAdd(ledger[tx.currency][tx.to], tx.amount);
-            pendingAmounts[tx.currency][tx.to] = SafeMath.safeSub(pendingAmounts[tx.currency][tx.to], tx.amount);
-
-            tx.status = txStates.Executed;
-            EventExecutedTransaction(index, tx.currency, tx.from, tx.to, tx.amount);
-
-            return true;
-        }
-    }
-
-    function cancelTransaction(int index)
-        onlyGuardian
-        returns (bool success)    
-    {
-        Transaction tx = pendingTx[index];
-        
-        if (tx.status != txStates.Pending) {
-            return false;
-        }
-
-        pendingAmounts[tx.currency][tx.from] = SafeMath.safeAdd(pendingAmounts[tx.currency][tx.from], tx.amount);
-        pendingAmounts[tx.currency][tx.to] = SafeMath.safeSub(pendingAmounts[tx.currency][tx.to], tx.amount);
-        
-        tx.status = txStates.Canceled;
-        EventCanceledTransaction(index, tx.currency, tx.from, tx.to, tx.amount);
-
-        return true;
+        ledger[currency][from] = SafeMath.safeSub(ledger[currency][from], amount);
+        ledger[currency][to] = SafeMath.safeAdd(ledger[currency][to], amount);
     }
 
     function createCrowdsale(
@@ -210,8 +154,8 @@ contract Populous is withAccessManager {
             bytes32 _borrowerName,
             bytes32 _buyerName,
             bytes32 _invoiceId,
-            int _invoiceAmount,
-            int _fundingGoal)
+            uint _invoiceAmount,
+            uint _fundingGoal)
         onlyServer
     {
         if (currenciesSymbols[_currency].length == 0) { throw; }
@@ -231,36 +175,30 @@ contract Populous is withAccessManager {
 
         EventNewCrowdsale(crowdsaleAddr);
     }
-    
-    function createGroup(address crowdsaleAddr, bytes32 _name, int _goal) returns (int8 err, int groupIndex) {
+
+    function bid(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 name, uint value) {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
-        (err, groupIndex) = CS.createGroup(_name, _goal);
-
-        if (err == 0) {
-            EventGroupCreated(groupIndex, _name, _goal);
-        }
-    }
-
-    function bid(address crowdsaleAddr, int groupIndex, bytes32 bidderId, bytes32 name, int value) {
-        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-        bytes32 currency = currenciesSymbols[CS.currency()];
-
-        int finalValue;
-        int groupGoal;
+        uint finalValue;
+        uint groupGoal;
         bool goalReached;
         (finalValue, groupGoal, goalReached) = CS.bid(groupIndex, bidderId, name, value);
 
-        if (ledger[currency][bidderId] < finalValue) { throw; }
+        _transfer(currenciesSymbols[CS.currency()], bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
+    }
 
-        EventNewBid(groupIndex, bidderId, name, finalValue);
-    
-        if (goalReached == true) {
-            EventGroupGoalReached(groupIndex, name, groupGoal);
-        }
+    function fundBeneficiary(address crowdsaleAddr) {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
-        ledger[currency][bidderId] = SafeMath.safeSub(ledger[currency][bidderId], finalValue);
-        ledger[currency][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeAdd(ledger[currency][LEDGER_SYSTEM_ACCOUNT], finalValue);
+        uint8 err;
+        uint amount;
+
+        (err, amount) = CS.getAmountForBeneficiary();
+        if (err != 0) { throw; }
+
+        _transfer(currenciesSymbols[CS.currency()], LEDGER_SYSTEM_ACCOUNT, CS.borrowerId(), goal);
+
+        CS.setSentToBeneficiary();
     }
 
     /**
@@ -269,17 +207,17 @@ contract Populous is withAccessManager {
     // function refundLosingGroup(address crowdsaleAddr) {
     //     iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
-    //     int groupsCount = CS.getGroupsCount();
+    //     uint groupsCount = CS.getGroupsCount();
 
     //     // Loop all groups
-    //     for (int groupIndex = 0; groupIndex < groupsCount; groupIndex++) {
+    //     for (uint groupIndex = 0; groupIndex < groupsCount; groupIndex++) {
             
     //         // Check if group has already been refunded
     //         if (groupIndex != CS.winnerGroupIndex() && CS.groups[groupIndex].hasReceivedTokensBack == false) {
-    //             int biddersCount = CS.groups[groupIndex].bidders.length;
+    //             uint biddersCount = CS.groups[groupIndex].bidders.length;
 
     //             // Loop all bidders
-    //             for (int bidderIndex = 0; bidderIndex < biddersCount; bidderIndex++) {
+    //             for (uint bidderIndex = 0; bidderIndex < biddersCount; bidderIndex++) {
     //                 // Check if bidder has already been refunded
     //                 if (CS.groups[groupIndex].bidders[bidderIndex].hasReceivedTokensBack == false) {
     //                     // Refund bidder

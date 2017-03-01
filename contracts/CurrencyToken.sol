@@ -21,17 +21,17 @@ contract CurrencyToken is StandardToken, withAccessManager {
         symbol = _tokenSymbol;                               // Set the symbol for display purposes
     }
 
-    function mintTokens(int amount) onlyPopulous returns (bool success) {
-        balances[AM.populous()] = SafeMath.safeAdd(balances[AM.populous()], uint(amount));
-        totalSupply = SafeMath.safeAdd(totalSupply, uint(amount));
+    function mintTokens(uint amount) onlyPopulous returns (bool success) {
+        balances[AM.populous()] = SafeMath.safeAdd(balances[AM.populous()], amount);
+        totalSupply = SafeMath.safeAdd(totalSupply, amount);
     }
 
-    function destroyTokens(int amount) onlyPopulous returns (bool success) {
-        if (balances[AM.populous()] < uint(amount)) {
+    function destroyTokens(uint amount) onlyPopulous returns (bool success) {
+        if (balances[AM.populous()] < amount) {
             return false;
         } else {
-            balances[AM.populous()] = SafeMath.safeSub(balances[AM.populous()], uint(amount));
-            totalSupply = SafeMath.safeSub(totalSupply, uint(amount));
+            balances[AM.populous()] = SafeMath.safeSub(balances[AM.populous()], amount);
+            totalSupply = SafeMath.safeSub(totalSupply, amount);
             
             return true;
         }
