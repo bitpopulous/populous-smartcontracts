@@ -16,6 +16,7 @@ contract Crowdsale is withAccessManager {
     event EventGroupGoalReached(uint groupIndex, bytes32 _name, uint goal);
     event EventNewBid(uint groupIndex, bytes32 bidderId, bytes32 name, uint value);
     event EventAuctionStarted();
+    event EventAuctionClosed();
 
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
 
@@ -99,6 +100,10 @@ contract Crowdsale is withAccessManager {
         return false;
     }
 
+    function getStatus() public constant returns (uint8) {
+        return uint8(status);
+    }
+
     function getGroupsCount() public constant returns (uint) {
         return groups.length;
     }
@@ -170,7 +175,7 @@ contract Crowdsale is withAccessManager {
 
     function bid(uint groupIndex, bytes32 bidderId, bytes32 name, uint value)
         onlyOpenAuction
-        
+        onlyPopulous
         returns (uint finalValue, uint groupGoal, bool goalReached)
     {
         Group G = groups[groupIndex];
@@ -208,12 +213,14 @@ contract Crowdsale is withAccessManager {
         return (value, G.goal, goalReached);
     }
 
-    function endAuction() onlyPopulous returns(bool) {
+    function endAuction() onlyServer returns(bool) {
         if (status == States.Closed) {
             // Send tokens to beneficiary
             // Send tokens back to loser groups
 
             status = States.WaitingForInvoicePayment;
+
+            EventAuctionClosed();
         }
     }
 
@@ -229,21 +236,11 @@ contract Crowdsale is withAccessManager {
         sentToBeneficiary = true;
     }
 
-    function setGroupRefunded(uint groupIndex) onlyGuardian returns (bool) {
-        if (groupIndex != winnerGroupIndex) {
-            groups[groupIndex].hasReceivedTokensBack = true;
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function setSentToLosingGroups() onlyGuardian {
+    function setSentToLosingGroups() onlyPopulous {
         sentToLosingGroups = true;
     }
 
-    function invoicePaymentReceived() onlyGuardian {
+    function invoicePaymentReceived() onlyPopulous {
         if (status == States.WaitingForInvoicePayment) {
             // Send tokens to winner group
 
@@ -251,8 +248,9 @@ contract Crowdsale is withAccessManager {
         }
     }
 
-    function setSentToWinnerGroup() onlyGuardian {
+    function setSentToWinnerGroup() onlyPopulous {
         sentToWinnerGroup = true;
+        setGroupHasReceivedTokensBack(winnerGroupIndex);
     }
 
 }

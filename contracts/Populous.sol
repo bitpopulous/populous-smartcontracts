@@ -4,13 +4,18 @@ import "./CurrencyToken.sol";
 
 contract iCrowdsale {
     address public currency;
+    uint public invoiceAmount;
     bytes32 public borrowerId;
     uint8 public status;
+    uint public latePaymentInterest = 0;
     
     uint public winnerGroupIndex;
     bool public sentToBeneficiary;
+    bool public sentToLosingGroups;
+    bool public sentToWinnerGroup;
 
     function isDeadlineReached() returns(bool);
+    function getStatus() public constant returns (uint8);
     function getGroupsCount() public constant returns (uint);
     function getGroup(uint groupIndex) public constant returns (bytes32 name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack);
     function getGroupBidder(uint groupIndex, uint bidderIndex) public constant returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack);        
@@ -18,10 +23,12 @@ contract iCrowdsale {
     function bid(uint groupIndex , bytes32 bidderId, bytes32 name, uint value) returns (uint finalValue, uint groupGoal, bool goalReached);
     function createGroup(bytes32 _name, uint _goal) returns (uint8 err, uint groupIndex);
     function getAmountForBeneficiary() public constant returns (uint8 err, uint amount);
-    function setGroupRefunded(uint groupIndex) returns (bool);
+    function setGroupHasReceivedTokensBack(uint groupIndex);
+    function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex);
     function setSentToBeneficiary();
     function setSentToLosingGroups();
     function setSentToWinnerGroup();
+    function invoicePaymentReceived();
 }
 
 contract iCrowdsaleManager {
@@ -42,12 +49,6 @@ contract Populous is withAccessManager {
 
     bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
 
-    uint constant TX_EXECUTE_GAS_STOP_AMOUNT = 100000;
-
-    event EventPendingTransaction(uint index, bytes32 currency, bytes32 from, bytes32 to, uint amount);
-    event EventCanceledTransaction(uint index, bytes32 currency, bytes32 from, bytes32 to, uint amount);
-    event EventExecutedTransaction(uint index, bytes32 currency, bytes32 from, bytes32 to, uint amount);
-
     event EventNewCrowdsale(address crowdsale);
     
     iCrowdsaleManager public CM;
@@ -56,20 +57,6 @@ contract Populous is withAccessManager {
     mapping(bytes32 => mapping(bytes32 => uint)) pendingAmounts;
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
-
-    enum txStates { Unset, Pending, Canceled, Executed }
-
-    struct Transaction {
-        bytes32 currency;
-        bytes32 from;
-        bytes32 to;
-        uint amount;
-        txStates status;
-    }
-    
-    mapping(uint => Transaction) public pendingTx;
-    uint public queueFrontIndex = 0;
-    uint public queueBackIndex = 0;
 
     address[] public crowdsales;
 
@@ -190,13 +177,15 @@ contract Populous is withAccessManager {
     function fundBeneficiary(address crowdsaleAddr) {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
+        if (States(CS.getStatus()) != States.Closed) { return; }
+
         uint8 err;
         uint amount;
 
         (err, amount) = CS.getAmountForBeneficiary();
         if (err != 0) { throw; }
 
-        _transfer(currenciesSymbols[CS.currency()], LEDGER_SYSTEM_ACCOUNT, CS.borrowerId(), goal);
+        _transfer(currenciesSymbols[CS.currency()], LEDGER_SYSTEM_ACCOUNT, CS.borrowerId(), amount);
 
         CS.setSentToBeneficiary();
     }
@@ -204,37 +193,91 @@ contract Populous is withAccessManager {
     /**
         @dev This function has to be split, because it might exceed the gas limit, if the groups and bidders are too many.
     */
-    // function refundLosingGroup(address crowdsaleAddr) {
-    //     iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+    function refundLosingGroup(address crowdsaleAddr) {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
-    //     uint groupsCount = CS.getGroupsCount();
+        if (States(CS.getStatus()) != States.Closed) { return; }
 
-    //     // Loop all groups
-    //     for (uint groupIndex = 0; groupIndex < groupsCount; groupIndex++) {
-            
-    //         // Check if group has already been refunded
-    //         if (groupIndex != CS.winnerGroupIndex() && CS.groups[groupIndex].hasReceivedTokensBack == false) {
-    //             uint biddersCount = CS.groups[groupIndex].bidders.length;
+        bytes32 currency = currenciesSymbols[CS.currency()];
+        uint groupsCount = CS.getGroupsCount();
+        uint winnerGroupIndex = CS.winnerGroupIndex();
 
-    //             // Loop all bidders
-    //             for (uint bidderIndex = 0; bidderIndex < biddersCount; bidderIndex++) {
-    //                 // Check if bidder has already been refunded
-    //                 if (CS.groups[groupIndex].bidders[bidderIndex].hasReceivedTokensBack == false) {
-    //                     // Refund bidder
-    //                     ledger[CS.currencySymbol][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeSub(ledger[CS.currencySymbol][LEDGER_SYSTEM_ACCOUNT], CS.groups[groupIndex].bidders[bidderIndex].bidAmount);
-    //                     ledger[CS.currencySymbol][CS.groups[groupIndex].bidders[bidderIndex].bidderId] = SafeMath.safeAdd(ledger[CS.currencySymbol][CS.groups[groupIndex].bidders[bidderIndex].bidderId], CS.groups[groupIndex].bidders[bidderIndex].bidAmount);
+        // Loop all groups
+        for (uint groupIndex = 0; groupIndex < groupsCount; groupIndex++) {
+            uint biddersCount;
+            bool hasReceivedTokensBack;
+            ( , , biddersCount, , hasReceivedTokensBack) = CS.getGroup(groupIndex);
+
+            // Check if group is not winner group and has not already been refunded
+            if (groupIndex != winnerGroupIndex && hasReceivedTokensBack == false) {
+                // Loop all bidders
+                for (uint bidderIndex = 0; bidderIndex < biddersCount; bidderIndex++) {
+                    bytes32 bidderId;
+                    uint bidAmount;
+                    bool bidderHasReceivedTokensBack;
+                    (bidderId, , bidAmount, bidderHasReceivedTokensBack) = CS.getGroupBidder(groupIndex, bidderIndex);
+
+                    // Check if bidder has already been refunded
+                    if (bidderHasReceivedTokensBack == false) {
+                        // Refund bidder
+                        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, bidAmount);
                         
-    //                     // Save bidder refund in Crowdsale contract
-    //                     CS.setBidderHasReceivedTokensBack();
-    //                 }
-    //             }
+                        // Save bidder refund in Crowdsale contract
+                        CS.setBidderHasReceivedTokensBack(groupIndex, bidderIndex);
+                    }
+                }
 
-    //             // Save group refund in Crowdsale contract
-    //             CS.setGroupHasReceivedTokensBack();
-    //         }
-    //     }
+                // Save group refund in Crowdsale contract
+                CS.setGroupHasReceivedTokensBack(groupIndex);
+            }
+        }
 
-    //     // Save losing groups refund in Crowdsale contract
-    //     CS.setSentToLosingGroups();
-    // }
+        // Save losing groups refund in Crowdsale contract
+        CS.setSentToLosingGroups();
+    }
+
+    /**
+        @dev This function has to be split, because it might exceed the gas limit, if the bidders are too many.
+    */
+    function fundWinnerGroup(address crowdsaleAddr) onlyServer {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+
+        if (States(CS.getStatus()) != States.WaitingForInvoicePayment || CS.sentToWinnerGroup() == true) { return; }
+
+        uint winnerGroupIndex = CS.winnerGroupIndex();
+        uint biddersCount;
+        uint amountRaised;
+        bool hasReceivedTokensBack;
+
+        (, , biddersCount, amountRaised, hasReceivedTokensBack) = CS.getGroup(winnerGroupIndex);
+
+        if (hasReceivedTokensBack == true) { return; }
+
+        bytes32 currency = currenciesSymbols[CS.currency()];
+        uint invoiceAmount = CS.invoiceAmount();
+        uint latePaymentInterest = CS.latePaymentInterest();
+
+        for (uint bidderIndex = 0; bidderIndex < biddersCount; bidderIndex++) {
+            bytes32 bidderId;
+            uint bidAmount;
+            bool bidderHasReceivedTokensBack;
+            (bidderId, , bidAmount, bidderHasReceivedTokensBack) = CS.getGroupBidder(winnerGroupIndex, bidderIndex);
+
+            // Check if bidder has already been funded
+            if (bidderHasReceivedTokensBack == true) { continue; }
+
+            // Fund winning bidder based on his contribution
+            uint benefitsAmount = bidAmount * invoiceAmount / amountRaised;
+            if (latePaymentInterest != 0) {
+                benefitsAmount += latePaymentInterest * invoiceAmount / 100;
+            }
+
+            _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, benefitsAmount);
+            
+            // Save bidder refund in Crowdsale contract
+            CS.setBidderHasReceivedTokensBack(winnerGroupIndex, bidderIndex);
+        }
+        
+        CS.setSentToWinnerGroup();
+    }
 }

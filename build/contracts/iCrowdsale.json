@@ -23,6 +23,23 @@
       "type": "function"
     },
     {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        },
+        {
+          "name": "bidderIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "setBidderHasReceivedTokensBack",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
       "constant": true,
       "inputs": [],
       "name": "status",
@@ -36,18 +53,13 @@
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "groupIndex",
-          "type": "uint256"
-        }
-      ],
-      "name": "setGroupRefunded",
+      "constant": true,
+      "inputs": [],
+      "name": "latePaymentInterest",
       "outputs": [
         {
           "name": "",
-          "type": "bool"
+          "type": "uint256"
         }
       ],
       "payable": false,
@@ -88,6 +100,40 @@
       "type": "function"
     },
     {
+      "constant": false,
+      "inputs": [],
+      "name": "invoicePaymentReceived",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getStatus",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "sentToLosingGroups",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
       "constant": true,
       "inputs": [],
       "name": "winnerGroupIndex",
@@ -95,6 +141,19 @@
         {
           "name": "",
           "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "sentToWinnerGroup",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
         }
       ],
       "payable": false,
@@ -121,6 +180,19 @@
         {
           "name": "",
           "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "invoiceAmount",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
         }
       ],
       "payable": false,
@@ -233,6 +305,19 @@
       "type": "function"
     },
     {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "setGroupHasReceivedTokensBack",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
       "constant": true,
       "inputs": [
         {
@@ -280,12 +365,16 @@
       "type": "function"
     },
     {
-      "constant": false,
+      "constant": true,
       "inputs": [],
       "name": "getAmountForBeneficiary",
       "outputs": [
         {
-          "name": "",
+          "name": "err",
+          "type": "uint8"
+        },
+        {
+          "name": "amount",
           "type": "uint256"
         }
       ],
@@ -295,5 +384,5 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1488380939209
+  "updated_at": 1488462196753
 }
