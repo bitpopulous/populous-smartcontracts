@@ -4,6 +4,18 @@ import "./Crowdsale.sol";
 
 contract CrowdsaleManager is withAccessManager {
 
+    struct CrowdsaleEntry {
+        address addr;
+        bytes32 borrowerId;
+        bytes32 invoiceId;
+        bytes32 invoiceNumber;
+        uint invoiceAmount;
+        uint fundingGoal;
+    }
+
+    CrowdsaleEntry[] crowdsales;
+    mapping(bytes32 => mapping(string => uint)) invoicesIndex;
+
     function CrowdsaleManager(address _accessManager)
         withAccessManager(_accessManager) {} 
 
@@ -11,15 +23,19 @@ contract CrowdsaleManager is withAccessManager {
             address _currency,
             bytes32 _currencySymbol,
             bytes32 _borrowerId,
-            bytes32 _borrowerName,
-            bytes32 _buyerName,
+            string _borrowerName,
+            string _buyerName,
             bytes32 _invoiceId,
+            string _invoiceNumber,
             uint _invoiceAmount,
             uint _fundingGoal)
         onlyPopulous
 
         returns (address crowdsaleAddr)
     {
+        if (invoicesIndex[_borrowerId][_invoiceNumber] == _invoiceAmount) { throw; }
+        invoicesIndex[_borrowerId][_invoiceNumber] = _invoiceAmount;
+
         crowdsaleAddr = new Crowdsale(
             address(AM),
             _currency,
@@ -28,6 +44,7 @@ contract CrowdsaleManager is withAccessManager {
             _borrowerName,
             _buyerName,
             _invoiceId,
+            _invoiceNumber,
             _invoiceAmount,
             _fundingGoal            
         );

@@ -1,5 +1,5 @@
 var
-    StringUtils = artifacts.require("StringUtils"),
+    Utils = artifacts.require("Utils"),
     SafeMath = artifacts.require("SafeMath"),
     Crowdsale = artifacts.require("Crowdsale"),
     CrowdsaleManager = artifacts.require("CrowdsaleManager"),
@@ -10,7 +10,8 @@ module.exports = function(deployer) {
     deployer.link(SafeMath, Populous);
     deployer.link(SafeMath, CrowdsaleManager);
 
-    deployer.deploy(StringUtils);
-    deployer.link(StringUtils, Crowdsale);
-    deployer.link(StringUtils, CrowdsaleManager);
+    deployer.deploy(Utils);
+    deployer.link(Utils, Crowdsale);
+    deployer.link(Utils, CrowdsaleManager);
+    console.log('Finished deploying libs');
 };

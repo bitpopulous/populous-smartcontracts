@@ -3,10 +3,15 @@ var Crowdsale = artifacts.require("Crowdsale");
 
 contract('Populous', function(accounts) {
     var
-        LEDGER_SYSTEM_NAME = "Populous",
-        ACC_BORROW = 'borrower001',
-        ACC1 = 'A',
-        ACC2 = 'B',
+        LEDGER_ACC = "Populous",
+        BORROWER_ACC = 'borrower001',
+        INVESTOR1_ACC = 'A',
+        INVESTOR2_ACC = 'B',
+        ACCOUNTS_BALANCE = 2000,
+        INVOICE_AMOUNT = 1000,
+        INVOICE_FUNDING_GOAL = 900,
+        INVESTOR_GROUP1_GOAL = 900,
+        INVESTOR_GROUP2_GOAL = 999,
         USD, P, crowdsale;
 
     it("should create currency token American Dollar", function(done) {
@@ -31,26 +36,24 @@ contract('Populous', function(accounts) {
         var mintAmount = 10000;
 
         P.mintTokens('USD', mintAmount).then(function() {
-            return P.getLedgerEntry.call("USD", LEDGER_SYSTEM_NAME);
+            return P.getLedgerEntry.call("USD", LEDGER_ACC);
         }).then(function(amount) {
             assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
             done();
         });
     });
 
-    it("should transfer 1000 USD tokens to each acc1 and acc2", function(done) {
-        var sendAmount = 1000;
-
-        P.transfer("USD", LEDGER_SYSTEM_NAME, ACC1, sendAmount).then(function() {
-            return P.transfer("USD", LEDGER_SYSTEM_NAME, ACC2, sendAmount);
+    it("should transfer 2000 USD tokens to each INVESTOR1_ACC and INVESTOR2_ACC", function(done) {
+        P.transfer("USD", LEDGER_ACC, INVESTOR1_ACC, ACCOUNTS_BALANCE).then(function() {
+            return P.transfer("USD", LEDGER_ACC, INVESTOR2_ACC, ACCOUNTS_BALANCE);
         }).then(function() {
-            return P.getLedgerEntry.call("USD", ACC1);
+            return P.getLedgerEntry.call("USD", INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), sendAmount, "Failed transfer 1");
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE, "Failed transfer 1");
 
-            return P.getLedgerEntry.call("USD", ACC2);
+            return P.getLedgerEntry.call("USD", INVESTOR2_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), sendAmount, "Failed transfer 2");
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE, "Failed transfer 2");
             done();
         });
     });
@@ -60,12 +63,13 @@ contract('Populous', function(accounts) {
 
         P.createCrowdsale(
                 USD,
-                ACC_BORROW,
+                BORROWER_ACC,
                 "John Borrow",
                 "Lisa Buyer",
-                "invoice001",
-                1000,
-                900)
+                "internalsystemid",
+                "#001",
+                INVOICE_AMOUNT,
+                INVOICE_FUNDING_GOAL)
             .then(function(createCS) {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 
@@ -84,74 +88,75 @@ contract('Populous', function(accounts) {
 
         var
             groupName1 = 'test group',
-            groupGoal1 = 900,
+            groupGoal1 = INVESTOR_GROUP1_GOAL,
             groupName2 = 'massive group',
-            groupGoal2 = 999;
+            groupGoal2 = INVESTOR_GROUP2_GOAL;
 
         Crowdsale.at(crowdsale).createGroup(groupName1, groupGoal1).then(function(result) {
             assert(result.logs.length, "Failed creating group 1");
 
-            console.log('Created group 1 with goal 900');
+            console.log('Created group 1 with goal', INVESTOR_GROUP1_GOAL);
 
             return Crowdsale.at(crowdsale).createGroup(groupName2, groupGoal2);
         }).then(function(result) {
             assert(result.logs.length, "Failed creating group 2");
-            console.log('Created group 2 with goal 999');
+            console.log('Created group 2 with goal', INVESTOR_GROUP2_GOAL);
             done();
         });
     });
 
-    it("should bid to group 1 from acc1 with 450", function(done) {
+    it("should bid to group 1 from INVESTOR1_ACC with 450", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
-        P.bid(crowdsale, 0, ACC1, "AA007", 450).then(function(result) {
+        P.bid(crowdsale, 0, INVESTOR1_ACC, "AA007", 450).then(function(result) {
             assert(result.receipt.logs.length, "Failed bidding");
 
-            return P.getLedgerEntry.call("USD", ACC1);
+            return P.getLedgerEntry.call("USD", INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 1000 - 450, "Failed bidding");
-        }).then(function(result) {
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE - 450, "Failed bidding");
             done();
         });
     });
 
-    it("should bid to group 2 from acc1 with 10", function(done) {
+    it("should bid to group 2 from INVESTOR1_ACC two times with 10", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
-        P.bid(crowdsale, 1, ACC1, "AA007", 10).then(function(result) {
+        P.bid(crowdsale, 1, INVESTOR1_ACC, "AA007", 10).then(function(result) {
             assert(result.receipt.logs.length, "Failed bidding");
 
-            return P.getLedgerEntry.call("USD", ACC1);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), 1000 - 450 - 10, "Failed bidding");
+            return P.bid(crowdsale, 1, INVESTOR1_ACC, "AA007", 10);
         }).then(function(result) {
+            assert(result.receipt.logs.length, "Failed bidding");
+
+            return P.getLedgerEntry.call("USD", INVESTOR1_ACC);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE - 450 - 20, "Failed bidding");
             done();
         });
     });
 
-    it("should bid to group 1 from acc2 with 500 and reach group goal", function(done) {
+    it("should bid to group 1 from INVESTOR2_ACC with 500 and reach group goal", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
-        P.bid(crowdsale, 0, ACC2, "BB007", 450).then(function(result) {
-            console.log(result);
-            assert.equal(result.receipt.logs.length, 2, "Failed bidding");
+        P.bid(crowdsale, 0, INVESTOR2_ACC, "BB007", 500).then(function(result) {
+            // Three events should be fired - bid, goal reached, auction closed:
+            assert.equal(result.receipt.logs.length, 3, "Failed bidding");
 
-            return P.getLedgerEntry.call("USD", ACC2);
+            return P.getLedgerEntry.call("USD", INVESTOR2_ACC);
         }).then(function(value) {
             // Group goal is 900 and the amount raised can't be more than this.
-            assert.equal(value.toNumber(), 1000 - 450, "Failed bidding");
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE - 450, "Failed bidding");
             done();
         });
     });
-
 
     it("should fund beneficiary", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
         P.fundBeneficiary(crowdsale).then(function(result) {
-            return P.getLedgerEntry.call("USD", ACC_BORROW);
+            return P.getLedgerEntry.call("USD", BORROWER_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 900, "Failed funding beneficiary");
+            assert.equal(value.toNumber(), INVESTOR_GROUP1_GOAL, "Failed funding beneficiary");
             done();
         });
     });
@@ -160,9 +165,9 @@ contract('Populous', function(accounts) {
         assert(crowdsale, "Crowdsale required.");
 
         P.refundLosingGroup(crowdsale).then(function(result) {
-            return P.getLedgerEntry.call("USD", ACC1);
+            return P.getLedgerEntry.call("USD", INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 1000 - 450, "Failed refunding losing group");
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE - 450, "Failed refunding losing group");
             done();
         });
     });
@@ -170,7 +175,7 @@ contract('Populous', function(accounts) {
     it("should change crowdsale status to waiting for invoice payment", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
-        Crowdsale.at(crowdsale).endAuction().then(function(result) {
+        Crowdsale.at(crowdsale).waitingForPayment().then(function(result) {
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(value) {
             assert.equal(value.toNumber(), 3, "Failed changing crowdsale status");
@@ -178,27 +183,20 @@ contract('Populous', function(accounts) {
         });
     });
 
-    it("should change crowdsale status to completed", function(done) {
-        assert(crowdsale, "Crowdsale required.");
-
-        Crowdsale.at(crowdsale).invoicePaymentReceived().then(function(result) {
-            return Crowdsale.at(crowdsale).status.call();
-        }).then(function(value) {
-            assert.equal(value.toNumber(), 4, "Failed changing crowdsale status");
-            done();
-        });
-    });
-
     it("should fund winner group", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
-        P.fundWinnerGroup(crowdsale).then(function(result) {
-            return P.getLedgerEntry.call("USD", ACC1);
+        P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT).then(function(result) {
+            return P.getLedgerEntry.call("USD", INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 1050, "Failed funding winner group");
-            return P.getLedgerEntry.call("USD", ACC2);
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE + 50, "Failed funding winner group");
+            return P.getLedgerEntry.call("USD", INVESTOR2_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 1050, "Failed funding winner group");
+            assert.equal(value.toNumber(), ACCOUNTS_BALANCE + 50, "Failed funding winner group");
+
+            return Crowdsale.at(crowdsale).status.call();
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 4, "Failed changing crowdsale status");
             done();
         });
     });

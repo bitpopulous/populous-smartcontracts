@@ -17,6 +17,8 @@ module.exports = function(deployer) {
             return CrowdsaleManager.deployed();
         }).then(function(CM) {
             return P.setCM(CM.address);
+        }).then(function() {
+            console.log('Finished deploying CM');
         });
     });
 };

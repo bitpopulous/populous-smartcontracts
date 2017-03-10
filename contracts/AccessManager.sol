@@ -5,10 +5,9 @@ contract AccessManager {
     address public guardian; // Address of the guardian, who confirms actions.
     address public populous; // Address of the Populous bank contract.
 
-    function AccessManager(address _server, address _guardian, address _populous) {
+    function AccessManager(address _server, address _guardian) {
         server = _server;
         guardian = _guardian;
-        populous = _populous;
     }
 
     function isServer(address sender) public constant returns (bool) {

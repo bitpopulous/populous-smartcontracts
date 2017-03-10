@@ -21,7 +21,7 @@ contract CurrencyToken is StandardToken, withAccessManager {
         symbol = _tokenSymbol;                               // Set the symbol for display purposes
     }
 
-    function mintTokens(uint amount) onlyPopulous returns (bool success) {
+    function mintTokens(uint amount) onlyPopulous {
         balances[AM.populous()] = SafeMath.safeAdd(balances[AM.populous()], amount);
         totalSupply = SafeMath.safeAdd(totalSupply, amount);
     }

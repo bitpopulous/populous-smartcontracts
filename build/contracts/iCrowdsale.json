@@ -53,56 +53,9 @@
       "type": "function"
     },
     {
-      "constant": true,
-      "inputs": [],
-      "name": "latePaymentInterest",
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_name",
-          "type": "bytes32"
-        },
-        {
-          "name": "_goal",
-          "type": "uint256"
-        }
-      ],
-      "name": "createGroup",
-      "outputs": [
-        {
-          "name": "err",
-          "type": "uint8"
-        },
-        {
-          "name": "groupIndex",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "type": "function"
-    },
-    {
       "constant": false,
       "inputs": [],
       "name": "setSentToLosingGroups",
-      "outputs": [],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "invoicePaymentReceived",
       "outputs": [],
       "payable": false,
       "type": "function"
@@ -220,44 +173,6 @@
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "groupIndex",
-          "type": "uint256"
-        },
-        {
-          "name": "bidderId",
-          "type": "bytes32"
-        },
-        {
-          "name": "name",
-          "type": "bytes32"
-        },
-        {
-          "name": "value",
-          "type": "uint256"
-        }
-      ],
-      "name": "bid",
-      "outputs": [
-        {
-          "name": "finalValue",
-          "type": "uint256"
-        },
-        {
-          "name": "groupGoal",
-          "type": "uint256"
-        },
-        {
-          "name": "goalReached",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "type": "function"
-    },
-    {
       "constant": true,
       "inputs": [],
       "name": "getGroupsCount",
@@ -282,7 +197,7 @@
       "outputs": [
         {
           "name": "name",
-          "type": "bytes32"
+          "type": "string"
         },
         {
           "name": "goal",
@@ -352,6 +267,32 @@
       "type": "function"
     },
     {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "name": "_goal",
+          "type": "uint256"
+        }
+      ],
+      "name": "createGroup",
+      "outputs": [
+        {
+          "name": "err",
+          "type": "uint8"
+        },
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
       "constant": true,
       "inputs": [],
       "name": "currency",
@@ -359,6 +300,48 @@
         {
           "name": "",
           "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "groupIndex",
+          "type": "uint256"
+        },
+        {
+          "name": "bidderId",
+          "type": "bytes32"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "bid",
+      "outputs": [
+        {
+          "name": "err",
+          "type": "uint8"
+        },
+        {
+          "name": "finalValue",
+          "type": "uint256"
+        },
+        {
+          "name": "groupGoal",
+          "type": "uint256"
+        },
+        {
+          "name": "goalReached",
+          "type": "bool"
         }
       ],
       "payable": false,
@@ -384,5 +367,5 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1488462196753
+  "updated_at": 1489161720322
 }
