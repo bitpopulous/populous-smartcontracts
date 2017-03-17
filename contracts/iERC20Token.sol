@@ -3,7 +3,7 @@
 // https://github.com/ethereum/EIPs/issues/20
 pragma solidity ^0.4.8;
 
-contract Token {
+contract iERC20Token {
     uint256 public totalSupply = 0;
     /// @param _owner The address from which the balance will be retrieved
     /// @return The balance

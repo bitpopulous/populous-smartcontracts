@@ -1,10 +1,10 @@
 pragma solidity ^0.4.8;
 
-import "./StandardToken.sol";
+import "./ERC23Token.sol";
 import "./SafeMath.sol";
 import "./withAccessManager.sol";
 
-contract CurrencyToken is StandardToken, withAccessManager {
+contract CurrencyToken is ERC23Token, withAccessManager {
     bytes32 public name;
     uint8 public decimals;                //How many decimals to show. ie. There could 1000 base units with 3 decimals. Meaning 0.980 SBX = 980 base units. It's like comparing 1 wei to 1 ether.
     bytes32 public symbol;                 //An identifier: eg SBX

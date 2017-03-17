@@ -88,7 +88,7 @@ contract Crowdsale is withAccessManager {
         fundingGoal = _fundingGoal;
 
         deadline = now + 24 hours;
-        status = States.Pending;
+        status = States.Open;
     }
 
     modifier afterDeadline() { if (now >= deadline) _; }
@@ -143,18 +143,6 @@ contract Crowdsale is withAccessManager {
         IPFSDocumentHash = _hash;
     }
 
-    function openAuction() public returns (bool) {
-        if (status == States.Pending) {
-            status = States.Open;
-              
-            EventAuctionOpen();
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     function createGroup(string _name, uint _goal)
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
@@ -173,10 +161,21 @@ contract Crowdsale is withAccessManager {
         }
     }
 
+    function findBidder(bytes32 bidderId) constant returns (uint8 err, uint groupIndex, uint bidderIndex) {
+        for(groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+            for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
+                if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+                    return (0, groupIndex, bidderIndex);
+                }
+            }
+        }
+        return (1, 0, 0);
+    }
+
     function findBidder(uint groupIndex, bytes32 bidderId) constant returns (uint8 err, uint bidderIndex) {
-        for(uint i = 0; i < groups[groupIndex].bidders.length; i++) {
-            if (Utils.equal(groups[groupIndex].bidders[i].bidderId, bidderId) == true) {
-                return (0, i);
+        for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
+            if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+                return (0, bidderIndex);
             }
         }
         return (1, 0);

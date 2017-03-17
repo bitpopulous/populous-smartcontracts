@@ -57,7 +57,9 @@ contract Populous is withAccessManager {
 
     bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
 
+    event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewCrowdsale(address crowdsale);
+    event EventDeposit(address from, bytes32 clientId, bytes32 currency, uint amount);
     
     // This has to be the same one as in Crowdsale
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
@@ -84,8 +86,10 @@ contract Populous is withAccessManager {
         currencies[_tokenSymbol] = new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol);
         
         if (currencies[_tokenSymbol] == 0x0) { throw; }
-        
+
         currenciesSymbols[currencies[_tokenSymbol]] = _tokenSymbol;
+
+        EventNewCurrency(_tokenName, _decimalUnits, _tokenSymbol, currencies[_tokenSymbol]);
     }
 
     function getCurrency(bytes32 currency) constant returns (address) {
@@ -96,14 +100,19 @@ contract Populous is withAccessManager {
         return currenciesSymbols[currency];
     }
 
-    function deposit(address clientExternal, bytes32 client, bytes32 currency, uint amount) onlyGuardian {
-        if (currencies[currency] == 0x0) { throw; }
+    // Deposit function called by our external ERC23 tokens upon transfer to the contract
+    function tokenFallback(address from, uint amount, bytes data) {
+        bytes32 currencySymbol = currenciesSymbols[msg.sender];
+        if (currencySymbol.length == 0) { throw; }
 
-        if (CurrencyToken(currencies[currency]).allowance(clientExternal, address(this)) < amount) { throw; }
-        if (CurrencyToken(currencies[currency]).transferFrom(clientExternal, address(this), amount) == false) { throw; }
-        if (CurrencyToken(currencies[currency]).destroyTokens(amount) == false) { throw; }
+        bytes32 clientId;
+        assembly {
+            clientId := mload(add(data, 32))
+        }
+        if (CurrencyToken(msg.sender).destroyTokens(amount) == false) { throw; }
         
-        ledger[currency][client] = SafeMath.safeAdd(ledger[currency][client], amount);
+        ledger[currencySymbol][clientId] = SafeMath.safeAdd(ledger[currencySymbol][clientId], amount);
+        EventDeposit(from, clientId, currencySymbol, amount);
     }
 
     function withdraw(address clientExternal, bytes32 client, bytes32 currency, uint amount) onlyGuardian {
@@ -175,7 +184,7 @@ contract Populous is withAccessManager {
     AUCTION MODULE
     */
     function createCrowdsale(
-            address _currency,
+            bytes32 _currencySymbol,
             bytes32 _borrowerId,
             string _borrowerName,
             string _buyerName,
@@ -185,11 +194,11 @@ contract Populous is withAccessManager {
             uint _fundingGoal)
         onlyServer
     {
-        if (currenciesSymbols[_currency].length == 0) { throw; }
+        if (currencies[_currencySymbol] == 0x0) { throw; }
 
         address crowdsaleAddr = CM.createCrowdsale(
-            _currency,
-            currenciesSymbols[_currency],
+            currencies[_currencySymbol],
+            _currencySymbol,
             _borrowerId,
             _borrowerName,
             _buyerName,
