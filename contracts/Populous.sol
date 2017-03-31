@@ -10,43 +10,44 @@ pragma solidity ^0.4.8;
 import "./CurrencyToken.sol";
 
 contract iCrowdsale {
-    address public currency;
+    bytes32 public currencySymbol;
     uint public invoiceAmount;
     bytes32 public borrowerId;
     uint8 public status;
+    uint public platformTaxPercent;
     
     uint public winnerGroupIndex;
     bool public sentToBeneficiary;
     bool public sentToLosingGroups;
     bool public sentToWinnerGroup;
+    uint public paidAmount;
 
     function isDeadlineReached() returns(bool);
     function getStatus() public constant returns (uint8);
+    
+    function createGroup(string _name, uint _goal) returns (uint8 err, uint groupIndex);
+    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
     function getGroupsCount() public constant returns (uint);
     function getGroup(uint groupIndex) public constant returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack);
     function getGroupBidder(uint groupIndex, uint bidderIndex) public constant returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack);        
-    function openAuction() public returns (bool);
-    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
-    function createGroup(string _name, uint _goal) returns (uint8 err, uint groupIndex);
+
     function getAmountForBeneficiary() public constant returns (uint8 err, uint amount);
-    function setGroupHasReceivedTokensBack(uint groupIndex);
     function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex);
     function setSentToBeneficiary();
-    function setSentToLosingGroups();
-    function setSentToWinnerGroup();
+    function setPaidAmount(uint _paidAmount);
 }
 
 contract iCrowdsaleManager {
     function createCrowdsale(
-            address _currency,
             bytes32 _currencySymbol,
             bytes32 _borrowerId,
-            string _borrowerName,
-            string _buyerName,
             bytes32 _invoiceId,
             string _invoiceNumber,
             uint _invoiceAmount,
-            uint _fundingGoal) returns (address);
+            uint _fundingGoal,
+            uint _platformTaxPercent,
+            string _signedDocumentIPFSHash)
+            returns (address);
 }
 
 /**
@@ -55,14 +56,24 @@ contract iCrowdsaleManager {
 
 contract Populous is withAccessManager {
 
-    bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
-
+    // Bank events
     event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
-    event EventNewCrowdsale(address crowdsale);
+    event EventMintTokens(bytes32 currency, uint amount);
+    event EventDestroyTokens(bytes32 currency, uint amount);
+    event EventInternalTransfer(bytes32 currency, bytes32 fromId, bytes32 toId, uint amount);
+    event EventWithdrawal(address to, bytes32 clientId, bytes32 currency, uint amount);
     event EventDeposit(address from, bytes32 clientId, bytes32 currency, uint amount);
-    
+
+    // Auction events
+    event EventNewCrowdsale(address crowdsale);
+    event EventBeneficiaryFunded(address crowdsaleAddr, bytes32 borrowerId, bytes32 currency, uint amount);
+    event EventLosingGroupBidderRefunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint amount);
+    event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
+    event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
+
+    bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
     // This has to be the same one as in Crowdsale
-    enum States { Pending, Open, Closed, WaitingForInvoicePayment, Completed }
+    enum States { Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed }
 
     iCrowdsaleManager public CM;
 
@@ -115,13 +126,15 @@ contract Populous is withAccessManager {
         EventDeposit(from, clientId, currencySymbol, amount);
     }
 
-    function withdraw(address clientExternal, bytes32 client, bytes32 currency, uint amount) onlyGuardian {
-        if (currencies[currency] == 0x0 || ledger[currency][client] < amount) { throw; }
+    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) onlyGuardian {
+        if (currencies[currency] == 0x0 || ledger[currency][clientId] < amount) { throw; }
 
-        ledger[currency][client] = SafeMath.safeSub(ledger[currency][client], amount);
+        ledger[currency][clientId] = SafeMath.safeSub(ledger[currency][clientId], amount);
 
         CurrencyToken(currencies[currency]).mintTokens(amount);
         if (CurrencyToken(currencies[currency]).transfer(clientExternal, amount) == false) { throw; }
+
+        EventWithdrawal(clientExternal, clientId, currency, amount);
     }
     
     function mintTokens(bytes32 currency, uint amount)
@@ -137,6 +150,7 @@ contract Populous is withAccessManager {
     {
         if (currencies[currency] != 0x0) {
             ledger[currency][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeAdd(ledger[currency][LEDGER_SYSTEM_ACCOUNT], amount);
+            EventMintTokens(currency, amount);
             return true;
         } else {
             return false;
@@ -156,6 +170,7 @@ contract Populous is withAccessManager {
     {
         if (currencies[currency] != 0x0) {
             ledger[currency][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeSub(ledger[currency][LEDGER_SYSTEM_ACCOUNT], amount);
+            EventDestroyTokens(currency, amount);
             return true;
         } else {
             return false;
@@ -175,6 +190,8 @@ contract Populous is withAccessManager {
     
         ledger[currency][from] = SafeMath.safeSub(ledger[currency][from], amount);
         ledger[currency][to] = SafeMath.safeAdd(ledger[currency][to], amount);
+
+        EventInternalTransfer(currency, from, to, amount);
     }
     /**
     END OF BANK MODULE
@@ -186,32 +203,34 @@ contract Populous is withAccessManager {
     function createCrowdsale(
             bytes32 _currencySymbol,
             bytes32 _borrowerId,
-            string _borrowerName,
-            string _buyerName,
             bytes32 _invoiceId,
             string _invoiceNumber,
             uint _invoiceAmount,
-            uint _fundingGoal)
+            uint _fundingGoal,
+            uint _platformTaxPercent,
+            string _signedDocumentIPFSHash)
         onlyServer
     {
         if (currencies[_currencySymbol] == 0x0) { throw; }
 
         address crowdsaleAddr = CM.createCrowdsale(
-            currencies[_currencySymbol],
             _currencySymbol,
             _borrowerId,
-            _borrowerName,
-            _buyerName,
             _invoiceId,
             _invoiceNumber,
             _invoiceAmount,
-            _fundingGoal            
+            _fundingGoal,
+            _platformTaxPercent,
+            _signedDocumentIPFSHash
         );
 
         EventNewCrowdsale(crowdsaleAddr);
     }
 
-    function bid(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, string name, uint value) returns (bool success) {
+    function bid(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, string name, uint value)
+        onlyServer
+        returns (bool success)
+    {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         uint8 err;
@@ -221,7 +240,7 @@ contract Populous is withAccessManager {
         (err, finalValue, groupGoal, goalReached) = CS.bid(groupIndex, bidderId, name, value);
 
         if (err == 0) {
-            _transfer(currenciesSymbols[CS.currency()], bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
+            _transfer(CS.currencySymbol(), bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
             return true;
         } else {
             return false;
@@ -234,22 +253,26 @@ contract Populous is withAccessManager {
         uint8 err;
         uint amount;
         (err, amount) = CS.getAmountForBeneficiary();
-        if (err != 0) { throw; }
+        if (err != 0) { return; }
 
-        _transfer(currenciesSymbols[CS.currency()], LEDGER_SYSTEM_ACCOUNT, CS.borrowerId(), amount);
+        bytes32 borrowerId = CS.borrowerId();
+        bytes32 currency = CS.currencySymbol();
+        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, borrowerId, amount);
 
         CS.setSentToBeneficiary();
+
+        EventBeneficiaryFunded(crowdsaleAddr, borrowerId, currency, amount);
     }
 
     /**
         @dev This function has to be split, because it might exceed the gas limit, if the groups and bidders are too many.
     */
-    function refundLosingGroup(address crowdsaleAddr) {
+    function refundLosingGroups(address crowdsaleAddr) {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.Closed) { return; }
 
-        bytes32 currency = currenciesSymbols[CS.currency()];
+        bytes32 currency = CS.currencySymbol();
         uint groupsCount = CS.getGroupsCount();
         uint winnerGroupIndex = CS.winnerGroupIndex();
 
@@ -275,34 +298,57 @@ contract Populous is withAccessManager {
                         
                         // Save bidder refund in Crowdsale contract
                         CS.setBidderHasReceivedTokensBack(groupIndex, bidderIndex);
+
+                        EventLosingGroupBidderRefunded(crowdsaleAddr, groupIndex, bidderId, currency, bidAmount);
                     }
                 }
-
-                // Save group refund in Crowdsale contract
-                CS.setGroupHasReceivedTokensBack(groupIndex);
             }
         }
-
-        // Save losing groups refund in Crowdsale contract
-        CS.setSentToLosingGroups();
     }
 
-    function invoicePaymentReceived(address crowdsaleAddr, uint paidAmount) {
+    function refundLosingGroupBidder(address crowdsaleAddr, uint groupIndex, uint bidderIndex) {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+
+        if (States(CS.getStatus()) != States.Closed) { return; }
+
+        uint winnerGroupIndex = CS.winnerGroupIndex();
+        if (winnerGroupIndex == groupIndex) {
+            return;
+        }
+
+        bytes32 bidderId;
+        uint bidAmount;
+        bool bidderHasReceivedTokensBack;
+        (bidderId, , bidAmount, bidderHasReceivedTokensBack) = CS.getGroupBidder(groupIndex, bidderIndex);
+
+        if (bidderHasReceivedTokensBack == false && bidderId.length != 0) {
+            bytes32 currency = CS.currencySymbol();
+            _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, bidAmount);
+            
+            // Save bidder refund in Crowdsale contract
+            CS.setBidderHasReceivedTokensBack(groupIndex, bidderIndex);
+
+            EventLosingGroupBidderRefunded(crowdsaleAddr, groupIndex, bidderId, currency, bidAmount);
+        }
+    }
+
+    function invoicePaymentReceived(address crowdsaleAddr, uint paidAmount) onlyServer {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.WaitingForInvoicePayment || CS.sentToWinnerGroup() == true) { return; }   
 
-        _mintTokens(currenciesSymbols[CS.currency()], paidAmount);
+        bytes32 currency = CS.currencySymbol();
+        _mintTokens(currency, paidAmount);
 
-        fundWinnerGroup(crowdsaleAddr, paidAmount);
+        CS.setPaidAmount(paidAmount);
+        
+        EventPaymentReceived(crowdsaleAddr, currency, paidAmount);
     }
-
-    /**
-        @dev This function has to be split, because it might exceed the gas limit, if the bidders are too many.
-        Platform profit has to be subtracted from total amount.
-    */
-    function fundWinnerGroup(address crowdsaleAddr, uint paidAmount) private {
+    
+    function fundWinnerGroup(address crowdsaleAddr) {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+
+        if (States(CS.getStatus()) != States.PaymentReceived) { return; }
 
         uint winnerGroupIndex = CS.winnerGroupIndex();
         uint biddersCount;
@@ -311,9 +357,10 @@ contract Populous is withAccessManager {
 
         (, , biddersCount, amountRaised, hasReceivedTokensBack) = CS.getGroup(winnerGroupIndex);
 
-        if (hasReceivedTokensBack == true) { throw; }
+        if (hasReceivedTokensBack == true) { return; }
 
-        bytes32 currency = currenciesSymbols[CS.currency()];
+        bytes32 currency = CS.currencySymbol();
+        uint paidAmount = CS.paidAmount();
 
         for (uint bidderIndex = 0; bidderIndex < biddersCount; bidderIndex++) {
             bytes32 bidderId;
@@ -331,10 +378,40 @@ contract Populous is withAccessManager {
             
             // Save bidder refund in Crowdsale contract
             CS.setBidderHasReceivedTokensBack(winnerGroupIndex, bidderIndex);
+
+            EventWinnerGroupBidderFunded(crowdsaleAddr, winnerGroupIndex, bidderId, currency, bidAmount, benefitsAmount);
         }
-        
-        CS.setSentToWinnerGroup();
     }
+
+    function fundWinnerGroupBidder(address crowdsaleAddr, uint bidderIndex) {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+
+        if (States(CS.getStatus()) != States.PaymentReceived) { return; }
+
+        uint winnerGroupIndex = CS.winnerGroupIndex();
+        
+        bytes32 bidderId;
+        uint bidAmount;
+        bool bidderHasReceivedTokensBack;
+        (bidderId, , bidAmount, bidderHasReceivedTokensBack) = CS.getGroupBidder(winnerGroupIndex, bidderIndex);
+
+        if (bidderHasReceivedTokensBack == false && bidderId.length != 0) {
+            uint amountRaised;
+            (, , , amountRaised, ) = CS.getGroup(winnerGroupIndex);
+
+            bytes32 currency = CS.currencySymbol();
+            uint paidAmount = CS.paidAmount();
+            // Fund winning bidder based on his contribution
+            uint benefitsAmount = bidAmount * paidAmount / amountRaised;
+
+            _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, benefitsAmount);
+            
+            // Save bidder refund in Crowdsale contract
+            CS.setBidderHasReceivedTokensBack(winnerGroupIndex, bidderIndex);
+
+            EventWinnerGroupBidderFunded(crowdsaleAddr, winnerGroupIndex, bidderId, currency, bidAmount, benefitsAmount);
+        }
+    }    
     /**
     END OF AUCTION MODULE
     */

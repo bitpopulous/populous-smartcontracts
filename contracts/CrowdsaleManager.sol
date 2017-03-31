@@ -20,15 +20,14 @@ contract CrowdsaleManager is withAccessManager {
         withAccessManager(_accessManager) {} 
 
     function createCrowdsale(
-            address _currency,
             bytes32 _currencySymbol,
             bytes32 _borrowerId,
-            string _borrowerName,
-            string _buyerName,
             bytes32 _invoiceId,
             string _invoiceNumber,
             uint _invoiceAmount,
-            uint _fundingGoal)
+            uint _fundingGoal,
+            uint _platformTaxPercent,
+            string _signedDocumentIPFSHash)
         onlyPopulous
 
         returns (address crowdsaleAddr)
@@ -38,15 +37,14 @@ contract CrowdsaleManager is withAccessManager {
 
         crowdsaleAddr = new Crowdsale(
             address(AM),
-            _currency,
             _currencySymbol,
             _borrowerId,
-            _borrowerName,
-            _buyerName,
             _invoiceId,
             _invoiceNumber,
             _invoiceAmount,
-            _fundingGoal            
+            _fundingGoal,
+            _platformTaxPercent,
+            _signedDocumentIPFSHash
         );
     }
 }

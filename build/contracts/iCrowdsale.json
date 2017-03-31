@@ -2,23 +2,15 @@
   "contract_name": "iCrowdsale",
   "abi": [
     {
-      "constant": false,
+      "constant": true,
       "inputs": [],
-      "name": "openAuction",
+      "name": "paidAmount",
       "outputs": [
         {
           "name": "",
-          "type": "bool"
+          "type": "uint256"
         }
       ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "setSentToWinnerGroup",
-      "outputs": [],
       "payable": false,
       "type": "function"
     },
@@ -49,14 +41,6 @@
           "type": "uint8"
         }
       ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [],
-      "name": "setSentToLosingGroups",
-      "outputs": [],
       "payable": false,
       "type": "function"
     },
@@ -166,9 +150,35 @@
     },
     {
       "constant": false,
+      "inputs": [
+        {
+          "name": "_paidAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "setPaidAmount",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
       "inputs": [],
       "name": "setSentToBeneficiary",
       "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "currencySymbol",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
       "payable": false,
       "type": "function"
     },
@@ -216,19 +226,6 @@
           "type": "bool"
         }
       ],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "groupIndex",
-          "type": "uint256"
-        }
-      ],
-      "name": "setGroupHasReceivedTokensBack",
-      "outputs": [],
       "payable": false,
       "type": "function"
     },
@@ -295,11 +292,11 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "currency",
+      "name": "platformTaxPercent",
       "outputs": [
         {
           "name": "",
-          "type": "address"
+          "type": "uint256"
         }
       ],
       "payable": false,
@@ -367,5 +364,5 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1489765110366
+  "updated_at": 1490975813268
 }

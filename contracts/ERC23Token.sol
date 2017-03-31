@@ -16,50 +16,53 @@ contract ERC23Token is iERC20Token {
     event ContractTransfer(address _to, uint _value, bytes _data);
 
     function transfer(address _to, uint _value, bytes _data) returns (bool success) {
-        if (balances[msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
-            //filtering if the target is a contract with bytecode inside it
-            if(isContract(_to)) {
-                transferToContract(_to, _value, _data);
-    ContractTransfer(_to, _value, _data);
-            } else {
-                transferToAddress(_to, _value);
-            }
-            return true;
+        //filtering if the target is a contract with bytecode inside it
+        if(isContract(_to)) {
+            return transferToContract(_to, _value, _data);
         } else {
-            return false;
+            return transferToAddress(_to, _value);
         }
     }
-  
+
     function transfer(address _to, uint _value) returns (bool success) {
-        if (balances[msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
-            //A standard function transfer similar to ERC20 transfer with no _data
-            if(isContract(_to)) {
-                bytes memory emptyData;
-                transferToContract(_to, _value, emptyData);
-            } else {
-                transferToAddress(_to, _value);
-            }
-            return true;
+        //A standard function transfer similar to ERC20 transfer with no _data
+        if(isContract(_to)) {
+            bytes memory emptyData;
+            return transferToContract(_to, _value, emptyData);
         } else {
-            return false;
+            return transferToAddress(_to, _value);
         }
     }
 
 //function that is called when transaction target is an address
-  function transferToAddress(address _to, uint _value) private {
-    balances[msg.sender] -= _value;
-    balances[_to] += _value;
-    Transfer(msg.sender, _to, _value);
+  function transferToAddress(address _to, uint _value) returns (bool success) {
+        if (balances[msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
+            balances[msg.sender] -= _value;
+            balances[_to] += _value;
+            Transfer(msg.sender, _to, _value);
+
+            return true;
+        } else {
+            return false;
+        }
   }
-  
+
 //function that is called when transaction target is a contract
-  function transferToContract(address _to, uint _value, bytes _data) private {
-    balances[msg.sender] -= _value;
-    balances[_to] += _value;
-    ContractReceiver reciever = ContractReceiver(_to);
-    reciever.tokenFallback(msg.sender, _value, _data);
+  function transferToContract(address _to, uint _value, bytes _data) returns (bool success) {
+        if (balances[msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
+            balances[msg.sender] -= _value;
+            balances[_to] += _value;
+            ContractReceiver reciever = ContractReceiver(_to);
+            reciever.tokenFallback(msg.sender, _value, _data);
+            Transfer(msg.sender, _to, _value);
+            ContractTransfer(_to, _value, _data);
+
+            return true;
+        } else {
+            return false;
+        }
   }
-  
+
   //assemble the given address bytecode. If bytecode exists then the _addr is a contract.
   function isContract(address _addr) constant returns (bool is_contract) {
       uint length;
