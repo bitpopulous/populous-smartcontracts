@@ -277,6 +277,12 @@ contract Crowdsale is withAccessManager {
 
     function setSentToBeneficiary() onlyPopulous {
         sentToBeneficiary = true;
+
+        // We have only 1 group (the winning group) and we set 
+        // the losing groups as refunded automatically.
+        if (groups.length == 1) {
+            setSentToLosingGroups();
+        }
     }
 
     function setSentToLosingGroups() private  {

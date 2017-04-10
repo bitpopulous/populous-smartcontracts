@@ -94,6 +94,9 @@ contract Populous is withAccessManager {
     function createCurrency(bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
         onlyGuardian
     {
+        // Check if currency already exists
+        if (currencies[_tokenSymbol] != 0x0) { throw; }
+
         currencies[_tokenSymbol] = new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol);
         
         if (currencies[_tokenSymbol] == 0x0) { throw; }

@@ -1,0 +1,9 @@
+module.exports = {
+    LEDGER_ACC: "Populous",
+    INVESTOR1_ACC: 'A',
+    INVESTOR2_ACC: 'B',
+    INVESTOR3_ACC: 'C',
+    INVESTOR1_ACC_BALANCE: 470,
+    INVESTOR2_ACC_BALANCE: 450,
+    INVESTOR3_ACC_BALANCE: 600,
+};
