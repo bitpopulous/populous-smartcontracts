@@ -50,9 +50,9 @@ contract iCrowdsaleManager {
             returns (address);
 }
 
-/**
-1 fees coming from the winner group before beneficiary
-*/
+contract iDepositContractsManager {
+    function create(bytes32 clientId) returns (address);
+}
 
 contract Populous is withAccessManager {
 
@@ -70,6 +70,9 @@ contract Populous is withAccessManager {
     event EventLosingGroupBidderRefunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint amount);
     event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
     event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
+
+    // PPT deposits events
+    event EventNewPPTDepositContract(bytes32 clientId, address depositContractAddress);
 
     bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
     // This has to be the same one as in Crowdsale
@@ -417,5 +420,39 @@ contract Populous is withAccessManager {
     }    
     /**
     END OF AUCTION MODULE
+    */
+
+    /**
+    START OF PPT DEPOSIT MODULE
+    */
+
+    function createDepositContact(bytes32 clientId) {
+        address depositContractAddress = iDepositContractsManager.create(clientId);
+
+        EventNewPPTDepositContract(clientId, depositContractAddress);
+    }
+
+    function deposit(bytes32 clientId, uint depositAmount, bytes32 receiveCurrency, uint receiveAmount) returns (bool) {
+        if (iDepositContractsManager.deposit(clientId, depositAmount)) {
+            _transfer(receiveCurrency, LEDGER_SYSTEM_ACCOUNT, clientId, receiveAmount);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function releaseDeposit(bytes32 clientId, address receiver, bytes32 releaseCurrency, uint releaseAmount) return (bool) {
+        if (iDepositContractsManager.releaseDeposit(clientId, receiver)) {
+            _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, releaseAmount);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+    END OF PPT DEPOSIT MODULE
     */
 }

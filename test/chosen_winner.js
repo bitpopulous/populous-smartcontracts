@@ -5,9 +5,6 @@ var
 
 /**
  * @TODO
- * Split into separete tests.
- * Extract the bank functionality in external file and include it in tests.
- * Make a lib with util functions.
  * Write tests for the restrictions: deadline checks, status checks, sent tokens checks, balances checks
  */
 

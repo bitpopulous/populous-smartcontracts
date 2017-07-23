@@ -2,7 +2,7 @@ module.exports = {
     networks: {
         "kovan": {
             // https://github.com/paritytech/parity/wiki/Configuring-Parity#config-file
-            // ./parity --chain "kovan" --unlock "0x004D164D39039c32cb8a268f10C430E3654d5bF1" --password "peers.txt" --jsonrpc-apis "web3,eth,net,parity,traces,rpc,personal" --jsonrpc-cors "localhost" --no-dapps
+            // ./parity --chain "kovan" --jsonrpc-apis "web3,eth,net,parity,traces,rpc,personal" --jsonrpc-cors "localhost" --no-dapps
             network_id: 42,
             host: "localhost",
             port: 8545,
@@ -17,7 +17,7 @@ module.exports = {
             port: 8545,
             before_timeout: 900000, //  <=== NEW
             test_timeout: 900000, //  <=== NEW
-            gas: 4712388
+            gas: 4512388
         },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
@@ -29,7 +29,7 @@ module.exports = {
             gas: 4712388
         },
         "private": {
-            // geth --networkid 666 --datadir H:\BulgarIT\Projects\Ethereum\Populous\testnet --rpc --rpcapi eth,web3,db,net,debug --rpccorsdomain * console
+            // geth --dev --networkid 666 --rpc --rpcapi eth,web3,db,net,debug --rpccorsdomain * console
             network_id: 666,
             host: "localhost",
             port: 8545,

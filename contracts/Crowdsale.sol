@@ -4,13 +4,6 @@ import "./SafeMath.sol";
 import "./Utils.sol";
 import "./withAccessManager.sol";
 
-/**
-    The platform address is owner;
-    Populous contract address is guardian;
-    Functions, which don't require token transfers are onlyOwner;
-    Functions, which do token transfers are onlyGuardian
-    bibby has to be signed before the beneficiary can receive the funds
-*/
 contract Crowdsale is withAccessManager {
 
     event EventGroupCreated(uint groupIndex, string name, uint goal);

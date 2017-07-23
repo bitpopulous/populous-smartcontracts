@@ -1,2 +1,2 @@
-# populous-smartcontracts
+# populous-smart-contracts
 Smart contracts for platform
