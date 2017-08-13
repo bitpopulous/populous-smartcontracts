@@ -5,7 +5,7 @@ It might be a good idea in the future to split the code, separate Bank
 and Auction modules into external files and have the core interact with them
 with addresses and interfaces. 
 */
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 import "./CurrencyToken.sol";
 
@@ -52,6 +52,8 @@ contract iCrowdsaleManager {
 
 contract iDepositContractsManager {
     function create(bytes32 clientId) returns (address);
+    function deposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount) returns (bool, uint);
+    function releaseDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex) returns (bool, uint, uint);
 }
 
 contract Populous is withAccessManager {
@@ -72,13 +74,16 @@ contract Populous is withAccessManager {
     event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
 
     // PPT deposits events
-    event EventNewPPTDepositContract(bytes32 clientId, address depositContractAddress);
+    event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
+    event EventNewDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint deposited, uint received, uint depositIndex);
+    event EventDepositReleased(bytes32 clientId, address tokenContract, bytes32 releaseCurrency, uint deposited, uint received, uint depositIndex);
 
     bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
     // This has to be the same one as in Crowdsale
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed }
 
     iCrowdsaleManager public CM;
+    iDepositContractsManager public DCM;
 
     // currencySymbol => (accountId => amount)
     mapping(bytes32 => mapping(bytes32 => uint)) ledger;
@@ -90,6 +95,9 @@ contract Populous is withAccessManager {
     function setCM(address _crowdsaleManager) {
         CM = iCrowdsaleManager(_crowdsaleManager);
     }
+    function setDCM(address _depositContractsManager) {
+        DCM = iDepositContractsManager(_depositContractsManager);
+    }
 
     /**
     BANK MODULE
@@ -98,11 +106,11 @@ contract Populous is withAccessManager {
         onlyGuardian
     {
         // Check if currency already exists
-        if (currencies[_tokenSymbol] != 0x0) { throw; }
+        require(currencies[_tokenSymbol] == 0x0);
 
         currencies[_tokenSymbol] = new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol);
         
-        if (currencies[_tokenSymbol] == 0x0) { throw; }
+        assert(currencies[_tokenSymbol] != 0x0);
 
         currenciesSymbols[currencies[_tokenSymbol]] = _tokenSymbol;
 
@@ -120,25 +128,26 @@ contract Populous is withAccessManager {
     // Deposit function called by our external ERC23 tokens upon transfer to the contract
     function tokenFallback(address from, uint amount, bytes data) {
         bytes32 currencySymbol = currenciesSymbols[msg.sender];
-        if (currencySymbol.length == 0) { throw; }
+
+        require(currencySymbol.length != 0);
 
         bytes32 clientId;
         assembly {
             clientId := mload(add(data, 32))
         }
-        if (CurrencyToken(msg.sender).destroyTokens(amount) == false) { throw; }
+        require(CurrencyToken(msg.sender).destroyTokens(amount) != false);
         
         ledger[currencySymbol][clientId] = SafeMath.safeAdd(ledger[currencySymbol][clientId], amount);
         EventDeposit(from, clientId, currencySymbol, amount);
     }
 
     function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) onlyGuardian {
-        if (currencies[currency] == 0x0 || ledger[currency][clientId] < amount) { throw; }
+        require(currencies[currency] != 0x0 && ledger[currency][clientId] >= amount);
 
         ledger[currency][clientId] = SafeMath.safeSub(ledger[currency][clientId], amount);
 
         CurrencyToken(currencies[currency]).mintTokens(amount);
-        if (CurrencyToken(currencies[currency]).transfer(clientExternal, amount) == false) { throw; }
+        require(CurrencyToken(currencies[currency]).transfer(clientExternal, amount) == true);
 
         EventWithdrawal(clientExternal, clientId, currency, amount);
     }
@@ -192,7 +201,10 @@ contract Populous is withAccessManager {
     }
 
     function _transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) private {
-        if (ledger[currency][from] < amount) { throw; }
+        if (amount == 0) {
+            return;
+        }
+        require(ledger[currency][from] >= amount);
     
         ledger[currency][from] = SafeMath.safeSub(ledger[currency][from], amount);
         ledger[currency][to] = SafeMath.safeAdd(ledger[currency][to], amount);
@@ -217,7 +229,7 @@ contract Populous is withAccessManager {
             string _signedDocumentIPFSHash)
         onlyServer
     {
-        if (currencies[_currencySymbol] == 0x0) { throw; }
+        require(currencies[_currencySymbol] != 0x0);
 
         address crowdsaleAddr = CM.createCrowdsale(
             _currencySymbol,
@@ -343,6 +355,8 @@ contract Populous is withAccessManager {
 
         if (States(CS.getStatus()) != States.WaitingForInvoicePayment || CS.sentToWinnerGroup() == true) { return; }   
 
+        require(CS.invoiceAmount() <= paidAmount);
+
         bytes32 currency = CS.currencySymbol();
         _mintTokens(currency, paidAmount);
 
@@ -425,30 +439,72 @@ contract Populous is withAccessManager {
     /**
     START OF PPT DEPOSIT MODULE
     */
+    function createDepositContact(bytes32 clientId) onlyServer {
+        address depositContractAddress = iDepositContractsManager(DCM).create(clientId);
 
-    function createDepositContact(bytes32 clientId) {
-        address depositContractAddress = iDepositContractsManager.create(clientId);
-
-        EventNewPPTDepositContract(clientId, depositContractAddress);
+        EventNewDepositContract(clientId, depositContractAddress);
     }
 
-    function deposit(bytes32 clientId, uint depositAmount, bytes32 receiveCurrency, uint receiveAmount) returns (bool) {
-        if (iDepositContractsManager.deposit(clientId, depositAmount)) {
+    function deposit(
+        bytes32 clientId,
+        address tokenContract,
+        bytes32 receiveCurrency,
+        uint depositAmount,
+        uint receiveAmount
+    )
+        onlyServer
+        returns (bool)
+    {
+        bool success;
+        uint depositIndex;
+
+        (success, depositIndex) = iDepositContractsManager(DCM).deposit(
+            clientId,
+            tokenContract,
+            receiveCurrency,
+            depositAmount,
+            receiveAmount
+        );
+
+        if (success) {
+            _mintTokens(receiveCurrency, receiveAmount);
             _transfer(receiveCurrency, LEDGER_SYSTEM_ACCOUNT, clientId, receiveAmount);
 
+            EventNewDeposit(clientId, tokenContract, receiveCurrency, depositAmount, receiveAmount, depositIndex);
             return true;
         }
-
         return false;
     }
 
-    function releaseDeposit(bytes32 clientId, address receiver, bytes32 releaseCurrency, uint releaseAmount) return (bool) {
-        if (iDepositContractsManager.releaseDeposit(clientId, receiver)) {
-            _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, releaseAmount);
+    function releaseDeposit(
+        bytes32 clientId, 
+        address tokenContract,
+        bytes32 releaseCurrency,
+        address receiver,
+        uint depositIndex
+    )
+        onlyServer
+        returns (bool)
+    {
+        bool success;
+        uint deposited;
+        uint received;
 
+        (success, deposited, received) = iDepositContractsManager(DCM).releaseDeposit(
+            clientId,
+            tokenContract,
+            releaseCurrency,
+            receiver,
+            depositIndex
+        );
+
+        if (success) {
+            _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
+            _destroyTokens(releaseCurrency, received);
+
+            EventDepositReleased(clientId, tokenContract, releaseCurrency, deposited, received, depositIndex);
             return true;
         }
-
         return false;
     }
 

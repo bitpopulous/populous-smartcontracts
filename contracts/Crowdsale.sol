@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 import "./SafeMath.sol";
 import "./Utils.sol";
@@ -22,7 +22,7 @@ contract Crowdsale is withAccessManager {
 
     bytes32 public currencySymbol;
     bytes32 public invoiceId;
-    string public _invoiceNumber;
+    string public invoiceNumber;
     bytes32 public borrowerId;
     uint public invoiceAmount;
     uint public fundingGoal;
@@ -36,6 +36,7 @@ contract Crowdsale is withAccessManager {
         bytes32 bidderId;
         string name;
         uint bidAmount;
+        uint lastBidAt; // Timestamp
         bool hasReceivedTokensBack; // This flag is set when losing group receives its tokens back or when winner group gets its winnings
     }
 
@@ -77,6 +78,7 @@ contract Crowdsale is withAccessManager {
         currencySymbol = _currencySymbol;
         borrowerId = _borrowerId;
         invoiceId = _invoiceId;
+        invoiceNumber = _invoiceNumber;
         invoiceAmount = _invoiceAmount;
         fundingGoal = _fundingGoal;
         platformTaxPercent = _platformTaxPercent;
@@ -111,7 +113,7 @@ contract Crowdsale is withAccessManager {
         public constant
         returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack)
     {
-        Group g = groups[groupIndex];
+        Group memory g = groups[groupIndex];
 
         return (g.name, g.goal, g.bidders.length, g.amountRaised, g.hasReceivedTokensBack);
     }
@@ -120,7 +122,7 @@ contract Crowdsale is withAccessManager {
         public constant
         returns (bytes32 bidderId, string name, uint bidAmount, bool hasReceivedTokensBack)
     {
-        Bidder b = groups[groupIndex].bidders[bidderIndex];
+        Bidder memory b = groups[groupIndex].bidders[bidderIndex];
 
         return (b.bidderId, b.name, b.bidAmount, b.hasReceivedTokensBack);
     }
@@ -211,8 +213,9 @@ contract Crowdsale is withAccessManager {
 
         if (finderErr == 0) {
             groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
+            groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
         } else {
-            groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, false));
+            groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
         }
 
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);

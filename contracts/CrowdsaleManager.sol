@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 import "./Crowdsale.sol";
 
@@ -32,7 +32,8 @@ contract CrowdsaleManager is withAccessManager {
 
         returns (address crowdsaleAddr)
     {
-        if (invoicesIndex[_borrowerId][_invoiceNumber] == _invoiceAmount) { throw; }
+        // Avoid auctioning the same invoice more than once
+        require(invoicesIndex[_borrowerId][_invoiceNumber] != _invoiceAmount);
         invoicesIndex[_borrowerId][_invoiceNumber] = _invoiceAmount;
 
         crowdsaleAddr = new Crowdsale(

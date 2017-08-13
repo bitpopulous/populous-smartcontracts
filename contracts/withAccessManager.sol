@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 import "./AccessManager.sol";
 
@@ -10,17 +10,17 @@ contract withAccessManager {
     }
 
     modifier onlyServer {
-        if (AM.isServer(msg.sender) == false) throw;
+        require(AM.isServer(msg.sender) == true);
         _;
     }
 
     modifier onlyGuardian {
-        if (AM.isGuardian(msg.sender) == false) throw;
+        require(AM.isGuardian(msg.sender) == true);
         _;
     }
 
     modifier onlyPopulous {
-        if (AM.isPopulous(msg.sender) == false) throw;
+        require(AM.isPopulous(msg.sender) == true);
         _;
     }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 contract AccessManager {
     address public server; // Address, which the platform website uses.
@@ -23,17 +23,17 @@ contract AccessManager {
     }
 
     function changeServer(address _server) {
-        if (isGuardian(msg.sender) == false) { throw; }
+        require(isGuardian(msg.sender) == true);
         server = _server;
     }
 
     function changeGuardian(address _guardian) {
-        if (isGuardian(msg.sender) == false) { throw; }
+        require(isGuardian(msg.sender) == true);
         guardian = _guardian;
     }
 
     function changePopulous(address _populous) {
-        if (isGuardian(msg.sender) == false) { throw; }
+        require(isGuardian(msg.sender) == true);
         populous = _populous;
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 library SafeMath {
   function safeMul(uint a, uint b) internal returns (uint) {
@@ -16,9 +16,5 @@ library SafeMath {
     uint c = a + b;
     assert(c>=a && c>=b);
     return c;
-  }
-
-  function assert(bool assertion) internal {
-    if (!assertion) throw;
   }
 }

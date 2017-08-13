@@ -3,7 +3,7 @@ https://github.com/ConsenSys/Tokens
 
 Implements ERC 23 Token standard: https://github.com/ethereum/EIPs/issues/223
 .*/
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 import "./iERC20Token.sol";
 
