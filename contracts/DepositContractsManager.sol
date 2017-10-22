@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./SafeMath.sol";
 import "./withAccessManager.sol";
@@ -42,14 +42,14 @@ contract DepositContractsManager is withAccessManager {
 
     // The constructor method called when this contract instance is deployed 
     // using a modifier the _accessManager address
-    function DepositContractsManager(address _accessManager)
+    function DepositContractsManager(address _accessManager) public
         withAccessManager(_accessManager) { }
 
     /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
       * @return address The address of the deployed deposit contract instance.
       */
-    function create(bytes32 clientId)
+    function create(bytes32 clientId) public
         onlyPopulous
         returns (address)
     {
@@ -69,6 +69,7 @@ contract DepositContractsManager is withAccessManager {
       * @return uint The updated number of deposits.
       */
     function deposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount)
+        public
         onlyPopulous
         returns (bool, uint)
     {
@@ -103,6 +104,7 @@ contract DepositContractsManager is withAccessManager {
       * @return uint The token amount received.
       */
     function releaseDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex)
+        public
         onlyPopulous
         returns (bool, uint, uint)
     {
@@ -140,7 +142,7 @@ contract DepositContractsManager is withAccessManager {
       * @param clientId The client ID.
       * @return address The deposit address.
       */
-    function getDepositAddress(bytes32 clientId) constant returns (address) {
+    function getDepositAddress(bytes32 clientId) public view returns (address) {
         return depositAddress[clientId];
     }
 
@@ -152,7 +154,9 @@ contract DepositContractsManager is withAccessManager {
       * @return uint The token amount deposited.
       * @return uint The token amount received.
       */
-    function getActiveDepositList(bytes32 clientId, address tokenContract, bytes32 receiveCurrency) constant returns (uint, uint, uint) {
+    function getActiveDepositList(bytes32 clientId, address tokenContract, bytes32 receiveCurrency) 
+        public 
+        view returns (uint, uint, uint) {
         return (
             deposits[clientId][tokenContract][receiveCurrency].list.length,
             deposits[clientId][tokenContract][receiveCurrency].deposited,
@@ -169,7 +173,9 @@ contract DepositContractsManager is withAccessManager {
       * @return uint Received amount.
       * @return bool Boolean value to indicate if deposit is released or not.
       */
-    function getActiveDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositIndex) constant returns (uint, uint, bool) {
+    function getActiveDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositIndex) 
+        public 
+        view returns (uint, uint, bool) {
         return (
             deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].deposited,
             deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].received,

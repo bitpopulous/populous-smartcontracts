@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 /// @title Library used when comparing pairs of strings for the condiiton of equality
 library Utils {
@@ -10,7 +10,7 @@ library Utils {
       * @param b The second string.
       * @return bool A boolean value True/False to indicate the presence or absence of equality.
       */
-    function equal(bytes32 a, bytes32 b) internal constant returns (bool) {
+    function equal(bytes32 a, bytes32 b) internal pure returns (bool) {
         if (a.length != b.length) { 
             return false;
         }

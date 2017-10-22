@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./ERC23Token.sol";
 import "./SafeMath.sol";
@@ -16,13 +16,13 @@ contract PopulousToken is ERC23Token {
 
     // NON-CONSTANT METHODS
     
-    function PopulousToken () {
+    function PopulousToken () public {
         name = "Populous Platform";
         decimals = 8;
         symbol = "PPT";
     }
 
-    function faucet(uint amount) {
+    function faucet(uint amount) public {
         balances[msg.sender] = SafeMath.safeAdd(balances[msg.sender], amount);
         totalSupply = SafeMath.safeAdd(totalSupply, amount);
     }

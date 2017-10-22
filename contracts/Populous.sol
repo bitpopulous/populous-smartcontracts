@@ -5,7 +5,7 @@ It might be a good idea in the future to split the code, separate Bank
 and Auction modules into external files and have the core interact with them
 with addresses and interfaces. 
 */
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./CurrencyToken.sol";
 
@@ -34,14 +34,14 @@ contract iCrowdsale {
     /** @dev Checks whether the invoice auction deadline has passed or not.
       * @return bool A boolean value indicating whether the deadline has passed or not.
       */
-    function isDeadlineReached() returns(bool);
+    function isDeadlineReached() public returns(bool);
     /** @dev Creates a new bidding group for bidders to bid to fund an invoice and assigns the group an index in the collection of groups.
       * @param _name The group name.
       * @param _goal The goal of the group.
       * @return err 0 or 1 implying absence or presence of error.
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
-    function createGroup(string _name, uint _goal) returns (uint8 err, uint groupIndex);
+    function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
     /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
@@ -52,36 +52,36 @@ contract iCrowdsale {
       * @return groupGoal An unsigned integer representing the group's goal.
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
-    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
+    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
     /** @dev Sets the 'hasReceivedTokensBack' for a bidder denoting they have received token refund and is restricted to populous.
       * @param groupIndex The group id in a set of groups.
       * @param bidderIndex The bidder id in a set of bidders within a group.
       */
-    function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex);
+    function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex) public;
     /** @dev Sets the 'sentToBeneficiary' boolean variable to true.
       * @dev Only populous can use this method.
       */
-    function setSentToBeneficiary();
+    function setSentToBeneficiary() public;
     /** @dev Sets the paidAmount and restricted to populous.
       * @param _paidAmount The amount paid.
       */ 
-    function setPaidAmount(uint _paidAmount);
+    function setPaidAmount(uint _paidAmount) public;
 
     // CONSTANT METHODS
 
     /** @dev Gets the current status.
       * @return uint8 The returned status.
       */
-    function getStatus() public constant returns (uint8);
+    function getStatus() public view returns (uint8);
     /** @dev Gets the number of groups in the groups array.
       * @return uint8 The returned status.
       */
-    function getGroupsCount() public constant returns (uint);
+    function getGroupsCount() public view returns (uint);
     /** @dev Gets the details of a group located by its index/location in the group array..
       * @param groupIndex The location of a group within the groups array variable.
       * @return uint8 The returned status.
       */ 
-    function getGroup(uint groupIndex) public constant returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack);
+    function getGroup(uint groupIndex) public view returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack);
     /** @dev Gets a bidders details from a group.
       * @param groupIndex The location of a group in the groups array.
       * @param bidderIndex The location of a bidder in the bidders arrays of a group
@@ -90,12 +90,12 @@ contract iCrowdsale {
       * @return bidAmount The bid amount.
       * @return hasReceivedTokensBack A boolean value to indicate whether the loosing group has received a refund of their tokens.
       */
-    function getGroupBidder(uint groupIndex, uint bidderIndex) public constant returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack);        
+    function getGroupBidder(uint groupIndex, uint bidderIndex) public view returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack);        
     /** @dev Gets beneficiary's token amount after bidding is closed.
       * @return amount The total bid amount.
       * @return err 0 or 1 implying absence or presence of error.
       */
-    function getAmountForBeneficiary() public constant returns (uint8 err, uint amount);
+    function getAmountForBeneficiary() public view returns (uint8 err, uint amount);
 
 }
 
@@ -125,6 +125,7 @@ contract iCrowdsaleManager {
             uint _fundingGoal,
             uint _platformTaxPercent,
             string _signedDocumentIPFSHash)
+            public
             returns (address);
 }
 
@@ -138,7 +139,7 @@ contract iDepositContractsManager {
       * @param clientId The bytes32 client ID
       * @return address The address of the deployed deposit contract instance.
       */
-    function create(bytes32 clientId) returns (address);
+    function create(bytes32 clientId) public returns (address);
     /** @dev Deposits an amount of tokens linked to a client ID.
       * @param clientId The client ID.
       * @param tokenContract The token contract.
@@ -148,7 +149,7 @@ contract iDepositContractsManager {
       * @return bool boolean value indicating whether or not a deposit transaction has been made with success.
       * @return uint The updated number of deposits.
       */
-    function deposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount) returns (bool, uint);
+    function deposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount) public returns (bool, uint);
     /** @dev Releases a deposit to an address/wallet.
       * @param clientId The client ID.
       * @param tokenContract The token contract.
@@ -159,7 +160,7 @@ contract iDepositContractsManager {
       * @return uint The token amount deposited.
       * @return uint The token amount received.
       */
-    function releaseDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex) returns (bool, uint, uint);
+    function releaseDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex) public returns (bool, uint, uint);
 }
 
 
@@ -217,15 +218,15 @@ contract Populous is withAccessManager {
 
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
-    function Populous(address _accessManager) withAccessManager(_accessManager) { }
+    function Populous(address _accessManager) public withAccessManager(_accessManager) { }
 
     // Sets the crowdsale manager address
-    function setCM(address _crowdsaleManager) {
+    function setCM(address _crowdsaleManager) public onlyServer {
         CM = iCrowdsaleManager(_crowdsaleManager);
     }
 
     // Sets the deposit contracts manager address
-    function setDCM(address _depositContractsManager) {
+    function setDCM(address _depositContractsManager) public onlyServer {
         DCM = iDepositContractsManager(_depositContractsManager);
     }
 
@@ -242,6 +243,7 @@ contract Populous is withAccessManager {
       * @param _tokenSymbol The cyrrency symbol, e.g., GBP
       */
     function createCurrency(bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
+        public
         onlyGuardian
     {
         // Check if currency already exists
@@ -257,7 +259,7 @@ contract Populous is withAccessManager {
     }
 
     // Deposit function called by our external ERC23 tokens upon transfer to the contract
-    function tokenFallback(address from, uint amount, bytes data) {
+    function tokenFallback(address from, uint amount, bytes data) public {
         bytes32 currencySymbol = currenciesSymbols[msg.sender];
 
         require(currencySymbol.length != 0);
@@ -278,7 +280,7 @@ contract Populous is withAccessManager {
       * @param currency The cyrrency symbol, e.g., GBP
       * @param amount The amount.
       */
-    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) onlyGuardian {
+    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) public onlyGuardian {
         require(currencies[currency] != 0x0 && ledger[currency][clientId] >= amount);
 
         ledger[currency][clientId] = SafeMath.safeSub(ledger[currency][clientId], amount);
@@ -296,6 +298,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function mintTokens(bytes32 currency, uint amount)
+        public
         onlyGuardian
         returns (bool success)
     {
@@ -327,6 +330,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function destroyTokens(bytes32 currency, uint amount)
+        public
         onlyGuardian
         returns (bool success)
     {
@@ -353,7 +357,7 @@ contract Populous is withAccessManager {
     }    
 
     // Calls the _transfer method to make a transfer on the internal ledger.
-    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) onlyServer {
+    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServer {
         _transfer(currency, from, to, amount);
     }
 
@@ -382,7 +386,7 @@ contract Populous is withAccessManager {
       * @param accountId The entry id.
       * @return uint The currency amount linked to the ledger entry
       */
-    function getLedgerEntry(bytes32 currency, bytes32 accountId) constant returns (uint) {
+    function getLedgerEntry(bytes32 currency, bytes32 accountId) public view returns (uint) {
         return ledger[currency][accountId];
     }
 
@@ -390,7 +394,7 @@ contract Populous is withAccessManager {
       * @param currency The currency.
       * @return address The currency address.
       */
-    function getCurrency(bytes32 currency) constant returns (address) {
+    function getCurrency(bytes32 currency) public view returns (address) {
         return currencies[currency];
     }
 
@@ -398,7 +402,7 @@ contract Populous is withAccessManager {
       * @param currency The currency.
       * @return bytes32 The currency sybmol, e.g., GBP.
       */
-    function getCurrencySymbol(address currency) constant returns (bytes32) {
+    function getCurrencySymbol(address currency) public view returns (bytes32) {
         return currenciesSymbols[currency];
     }
 
@@ -432,6 +436,7 @@ contract Populous is withAccessManager {
             uint _fundingGoal,
             uint _platformTaxPercent,
             string _signedDocumentIPFSHash)
+        public
         onlyServer
     {
         require(currencies[_currencySymbol] != 0x0);
@@ -459,6 +464,7 @@ contract Populous is withAccessManager {
       * @return success A boolean value indicating whether a bid has been successful.
       */
     function bid(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, string name, uint value)
+        public
         onlyServer
         returns (bool success)
     {
@@ -481,7 +487,7 @@ contract Populous is withAccessManager {
     /** @dev Funds an invoice crowdsale address with tokens
       * @param crowdsaleAddr The invoice crowdsale address to fund
       */
-    function fundBeneficiary(address crowdsaleAddr) {
+    function fundBeneficiary(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         uint8 err;
@@ -502,7 +508,7 @@ contract Populous is withAccessManager {
       * @dev This function has to be split, because it might exceed the gas limit, if the groups and bidders are too many.
       * @param crowdsaleAddr The invoice crowdsale address.
       */
-    function refundLosingGroups(address crowdsaleAddr) {
+    function refundLosingGroups(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.Closed) { return; }
@@ -547,7 +553,7 @@ contract Populous is withAccessManager {
       * @param groupIndex Group id used to find group among collection of groups.
       * @param bidderIndex Bidder id used to find bidder among collection of bidders in a group.
       */
-    function refundLosingGroupBidder(address crowdsaleAddr, uint groupIndex, uint bidderIndex) {
+    function refundLosingGroupBidder(address crowdsaleAddr, uint groupIndex, uint bidderIndex) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.Closed) { return; }
@@ -577,7 +583,7 @@ contract Populous is withAccessManager {
       * @param crowdsaleAddr The invoice crowdsale address.
       * @param paidAmount The amount to be paid.
       */
-    function invoicePaymentReceived(address crowdsaleAddr, uint paidAmount) onlyServer {
+    function invoicePaymentReceived(address crowdsaleAddr, uint paidAmount) public onlyServer {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.WaitingForInvoicePayment || CS.sentToWinnerGroup() == true) { return; }   
@@ -595,7 +601,7 @@ contract Populous is withAccessManager {
     /** @dev Transfers funds/payment to bidders in winner group based on contributions/total bid.
       * @param crowdsaleAddr The invoice crowdsale address.
       */
-    function fundWinnerGroup(address crowdsaleAddr) {
+    function fundWinnerGroup(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.PaymentReceived) { return; }
@@ -637,7 +643,7 @@ contract Populous is withAccessManager {
       * @param crowdsaleAddr The invoice crowdsale address.
       * @param bidderIndex The ID used to find the bidder among collection of bidders in the winner group  with winnerGroupIndex.
       */
-    function fundWinnerGroupBidder(address crowdsaleAddr, uint bidderIndex) {
+    function fundWinnerGroupBidder(address crowdsaleAddr, uint bidderIndex) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.PaymentReceived) { return; }
@@ -677,7 +683,7 @@ contract Populous is withAccessManager {
 
     // NON-CONSTANT METHODS
 
-    function createDepositContact(bytes32 clientId) onlyServer {
+    function createDepositContact(bytes32 clientId) public onlyServer {
         // Creates a new deposit contract linked to a client ID
         address depositContractAddress = iDepositContractsManager(DCM).create(clientId);
         // Event triggered when deposit contract is created
@@ -699,6 +705,7 @@ contract Populous is withAccessManager {
         uint depositAmount,
         uint receiveAmount
     )
+        public
         onlyServer
         returns (bool)
     {
@@ -740,6 +747,7 @@ contract Populous is withAccessManager {
         address receiver,
         uint depositIndex
     )
+        public
         onlyServer
         returns (bool)
     {

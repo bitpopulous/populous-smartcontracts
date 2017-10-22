@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 /// @title Overflow aware uint math functions.
 /// @notice Inspired by https://github.com/MakerDAO/maker-otc/blob/master/contracts/simple_market.sol
@@ -10,7 +10,7 @@ library SafeMath {
     * @param b The second number.
     * @return uint The expected result.
     */
-    function safeMul(uint a, uint b) internal returns (uint) {
+    function safeMul(uint a, uint b) internal pure returns (uint) {
       uint c = a * b;
       assert(a == 0 || c / a == b);
       return c;
@@ -22,7 +22,7 @@ library SafeMath {
     * @param b The second number.
     * @return uint The expected result.
     */
-    function safeSub(uint a, uint b) internal returns (uint) {
+    function safeSub(uint a, uint b) internal pure returns (uint) {
       assert(b <= a);
       return a - b;
     }
@@ -33,7 +33,7 @@ library SafeMath {
     * @param b The second number.
     * @return uint The expected result.
     */
-    function safeAdd(uint a, uint b) internal returns (uint) {
+    function safeAdd(uint a, uint b) internal pure returns (uint) {
       uint c = a + b;
       assert(c>=a && c>=b);
       return c;

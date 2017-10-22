@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 
 /// @title AccessManager contract
@@ -17,7 +17,7 @@ contract AccessManager {
       * @param _server The address to set as the server.
       * @param _guardian The address to set as the guardian.
       */
-    function AccessManager(address _server, address _guardian) {
+    function AccessManager(address _server, address _guardian) public {
         server = _server;
         guardian = _guardian;
     }
@@ -26,7 +26,7 @@ contract AccessManager {
       * @dev The method requires the message sender to be the set guardian.
       * @param _server The new address to be set as the server.
       */
-    function changeServer(address _server) {
+    function changeServer(address _server) public {
         require(isGuardian(msg.sender) == true);
         server = _server;
     }
@@ -35,7 +35,7 @@ contract AccessManager {
       * @dev The method requires the message sender to be the set guardian.
       * @param _guardian The new address to be set as the guardian.
       */
-    function changeGuardian(address _guardian) {
+    function changeGuardian(address _guardian) public {
         require(isGuardian(msg.sender) == true);
         guardian = _guardian;
     }
@@ -44,7 +44,7 @@ contract AccessManager {
       * @dev The method requires the message sender to be the set guardian.
       * @param _populous The address to be set as populous.
       */
-    function changePopulous(address _populous) {
+    function changePopulous(address _populous) public {
         require(isGuardian(msg.sender) == true);
         populous = _populous;
     }
@@ -55,7 +55,7 @@ contract AccessManager {
       * @param sender The address to be checked.
       * @return bool returns true or false is the address corresponds to the server or not.
       */
-    function isServer(address sender) public constant returns (bool) {
+    function isServer(address sender) public view returns (bool) {
         return sender == server;
     }
 
@@ -63,7 +63,7 @@ contract AccessManager {
       * @param sender The address to be checked.
       * @return bool returns true or false is the address corresponds to the guardian or not.
       */
-    function isGuardian(address sender) public constant returns (bool) {
+    function isGuardian(address sender) public view returns (bool) {
         return sender == guardian;
     }
 
@@ -71,7 +71,7 @@ contract AccessManager {
       * @param sender The address to be checked.
       * @return bool returns true or false is the address corresponds to populous or not.
       */
-    function isPopulous(address sender) public constant returns (bool) {
+    function isPopulous(address sender) public view returns (bool) {
         return sender == populous;
     }
 

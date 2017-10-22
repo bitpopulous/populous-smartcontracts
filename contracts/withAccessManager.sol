@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./AccessManager.sol";
 
@@ -38,14 +38,14 @@ contract withAccessManager {
     /** @dev Sets the AccessManager contract address while deploying this contract`.
       * @param _accessManager The address to set.
       */
-    function withAccessManager(address _accessManager) {
+    function withAccessManager(address _accessManager) public {
         AM = AccessManager(_accessManager);
     }
     
     /** @dev Updates the AccessManager contract address if msg.sender is guardian.
       * @param _accessManager The address to set.
       */
-    function updateAccessManager(address _accessManager) onlyGuardian {
+    function updateAccessManager(address _accessManager) public onlyGuardian {
         AM = AccessManager(_accessManager);
     }
 

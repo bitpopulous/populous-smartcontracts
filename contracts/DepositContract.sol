@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./iERC20Token.sol";
 
@@ -22,7 +22,7 @@ contract DepositContract {
       * @dev The method also sets the manager to the msg.sender.
       * @param _clientId A string of fixed length representing the client ID.
       */
-    function DepositContract(bytes32 _clientId) {
+    function DepositContract(bytes32 _clientId) public {
         clientId = _clientId;
         manager = msg.sender;
     }
@@ -33,7 +33,8 @@ contract DepositContract {
       * @param _to The address/wallet to send to.
       * @return success boolean true or false indicating whether the transfer was successful or not.
       */
-    function transfer(address tokenContract, address _to, uint256 _value) onlyManager returns (bool success) {
+    function transfer(address tokenContract, address _to, uint256 _value) public
+        onlyManager returns (bool success) {
         return iERC20Token(tokenContract).transfer(_to, _value);
     }
 
@@ -43,7 +44,7 @@ contract DepositContract {
       * @param tokenContract An address implementing the ERC20 token standard. 
       * @return uint An unsigned integer representing the returned token balance.
       */
-    function balanceOf(address tokenContract) constant returns (uint) {
+    function balanceOf(address tokenContract) public view returns (uint) {
         return iERC20Token(tokenContract).balanceOf(this);
     }
 

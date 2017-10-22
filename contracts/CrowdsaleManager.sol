@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./Crowdsale.sol";
 
@@ -33,7 +33,7 @@ contract CrowdsaleManager is withAccessManager {
 
     // The constructor method called when this contract instance is deployed 
     // using a modifier the _accessManager address
-    function CrowdsaleManager(address _accessManager)
+    function CrowdsaleManager(address _accessManager) public
         withAccessManager(_accessManager) {} 
 
     /** @dev Creates a new crowdsale for an invoice.
@@ -55,8 +55,8 @@ contract CrowdsaleManager is withAccessManager {
             uint _fundingGoal,
             uint _platformTaxPercent,
             string _signedDocumentIPFSHash)
+        public
         onlyPopulous
-
         returns (address crowdsaleAddr)
     {
         // Avoid auctioning the same invoice more than once

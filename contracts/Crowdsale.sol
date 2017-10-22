@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./SafeMath.sol";
 import "./Utils.sol";
@@ -100,6 +100,7 @@ contract Crowdsale is withAccessManager {
             uint _fundingGoal,
             uint _platformTaxPercent,
             string _signedDocumentIPFSHash)
+            public
             withAccessManager(_accessManager)
     {
         currencySymbol = _currencySymbol;
@@ -118,7 +119,7 @@ contract Crowdsale is withAccessManager {
     /** @dev Checks whether the invoice auction deadline has passed or not.
       * @return bool A boolean value indicating whether the deadline has passed or not.
       */
-    function checkDeadline() returns(bool) {
+    function checkDeadline() public returns(bool) {
         if (now > deadline) {
             if (status == States.Open) {
                 status = States.Closed;
@@ -133,7 +134,10 @@ contract Crowdsale is withAccessManager {
       * @param groupIndex The group id in a set of groups.
       * @param bidderIndex The bidder id in a set of bidders within a group.
       */
-    function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex) onlyPopulous {
+    function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex) 
+        public
+        onlyPopulous 
+    {
         groups[groupIndex].bidders[bidderIndex].hasReceivedTokensBack = true;
         groups[groupIndex].biddersReceivedTokensBack++;
 
@@ -156,7 +160,7 @@ contract Crowdsale is withAccessManager {
     /** @dev Sets the paidAmount and restricted to populous.
       * @param _paidAmount The amount paid.
       */
-    function setPaidAmount(uint _paidAmount) onlyPopulous {
+    function setPaidAmount(uint _paidAmount) public onlyPopulous {
         if (status == States.WaitingForInvoicePayment) {
             paidAmount = _paidAmount;
             status = States.PaymentReceived;
@@ -172,6 +176,7 @@ contract Crowdsale is withAccessManager {
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
     function createGroup(string _name, uint _goal)
+        public
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
     {
@@ -200,6 +205,7 @@ contract Crowdsale is withAccessManager {
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
     function bid(uint groupIndex, bytes32 bidderId, string name, uint value)
+        public
         onlyOpenAuction
         onlyPopulous
         returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
@@ -249,6 +255,7 @@ contract Crowdsale is withAccessManager {
       * @param groupIndex The selected index/location of the group in the groups array.
       */
     function borrowerChooseWinner(uint groupIndex)
+        public
         onlyOpenAuction
         onlyServer
     {
@@ -262,7 +269,7 @@ contract Crowdsale is withAccessManager {
     }
 
     // calls the _waitingForPayment method
-    function waitingForPayment() onlyServer returns(bool) {
+    function waitingForPayment() public onlyServer returns(bool) {
         return _waitingForPayment();
     }
 
@@ -282,7 +289,7 @@ contract Crowdsale is withAccessManager {
     /** @dev Sets the 'sentToBeneficiary' boolean variable to true.
       * @dev Only populous can use this method.
       */
-    function setSentToBeneficiary() onlyPopulous {
+    function setSentToBeneficiary() public onlyPopulous {
         sentToBeneficiary = true;
 
         // We have only 1 group (the winning group) and we set 
@@ -318,14 +325,14 @@ contract Crowdsale is withAccessManager {
     /** @dev Gets the current status.
       * @return uint8 The returned status.
       */
-    function getStatus() public constant returns (uint8) {
+    function getStatus() public view returns (uint8) {
         return uint8(status);
     }
 
     /** @dev Gets the number of groups in the groups array.
       * @return uint8 The returned status.
       */
-    function getGroupsCount() public constant returns (uint) {
+    function getGroupsCount() public view returns (uint) {
         return groups.length;
     }
 
@@ -334,7 +341,7 @@ contract Crowdsale is withAccessManager {
       * @return uint8 The returned status.
       */ 
     function getGroup(uint groupIndex)
-        public constant
+        public view
         returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack)
     {
         Group memory g = groups[groupIndex];
@@ -351,7 +358,7 @@ contract Crowdsale is withAccessManager {
       * @return hasReceivedTokensBack A boolean value to indicate whether the loosing group has received a refund of their tokens.
       */
     function getGroupBidder(uint groupIndex, uint bidderIndex)
-        public constant
+        public view
         returns (bytes32 bidderId, string name, uint bidAmount, bool hasReceivedTokensBack)
     {
         Bidder memory b = groups[groupIndex].bidders[bidderIndex];
@@ -365,7 +372,7 @@ contract Crowdsale is withAccessManager {
       * @return bidderIndex The location of the bidder in bidders array.
       * @return groupIndex The location of the bidders group in the groups array.
       */
-    function findBidder(bytes32 bidderId) constant returns (uint8 err, uint groupIndex, uint bidderIndex) {
+    function findBidder(bytes32 bidderId) public view returns (uint8 err, uint groupIndex, uint bidderIndex) {
         for(groupIndex = 0; groupIndex < groups.length; groupIndex++) {
             for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
                 if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
@@ -382,7 +389,7 @@ contract Crowdsale is withAccessManager {
       * @return err 0 or 1 implying absence or presence of error.
       * @return bidderIndex The location of the bidder in bidders array.
       */
-    function findBidder(uint groupIndex, bytes32 bidderId) constant returns (uint8 err, uint bidderIndex) {
+    function findBidder(uint groupIndex, bytes32 bidderId) public view returns (uint8 err, uint bidderIndex) {
         for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
             if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
                 return (0, bidderIndex);
@@ -395,7 +402,7 @@ contract Crowdsale is withAccessManager {
       * @return amount The total bid amount.
       * @return err 0 or 1 implying absence or presence of error.
       */
-    function getAmountForBeneficiary() public constant returns (uint8 err, uint amount) {
+    function getAmountForBeneficiary() public view returns (uint8 err, uint amount) {
         if (status == States.Closed && sentToBeneficiary == false) {
             return (0, groups[winnerGroupIndex].amountRaised);
         } else {

@@ -3,7 +3,7 @@ https://github.com/ConsenSys/Tokens
 
 Implements ERC 23 Token standard: https://github.com/ethereum/EIPs/issues/223
 .*/
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.17;
 
 import "./iERC20Token.sol";
 
@@ -18,7 +18,7 @@ contract ContractReceiver {
       * @param data The attached data similar to data in Ether transactions.
       * @return The function returns nothing.
       */
-    function tokenFallback(address from, uint amount, bytes data);
+    function tokenFallback(address from, uint amount, bytes data) public;
 }
 
 /// @title ERC23Token contract
@@ -42,7 +42,7 @@ contract ERC23Token is iERC20Token {
       * @param _data The payload/data that can accompany a transaction.
       * @return success A boolean value True/False to indicate a successful transfer
       */
-    function transfer(address _to, uint _value, bytes _data) returns (bool success) {
+    function transfer(address _to, uint _value, bytes _data) public returns (bool success) {
         //filtering if the target is a contract with bytecode inside it
         if(isContract(_to)) {
             return transferToContract(_to, _value, _data);
@@ -59,7 +59,7 @@ contract ERC23Token is iERC20Token {
       * @param _value The amount of tokens to transfer.
       * @return success A boolean value True/False to indicate a successful transfer
       */
-    function transfer(address _to, uint _value) returns (bool success) {
+    function transfer(address _to, uint _value) public returns (bool success) {
         //A standard function transfer similar to ERC20 transfer with no _data
         if(isContract(_to)) {
             bytes memory emptyData;
@@ -74,7 +74,7 @@ contract ERC23Token is iERC20Token {
       * @param _value The amount of tokens to transfer.
       * @return success A boolean value True/False to indicate a successful transfer
       */
-    function transferToAddress(address _to, uint _value) returns (bool success) {
+    function transferToAddress(address _to, uint _value) public returns (bool success) {
         if (balances[msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
             balances[msg.sender] -= _value;
             balances[_to] += _value;
@@ -92,7 +92,7 @@ contract ERC23Token is iERC20Token {
       * @param _data The payload/data that can accompany a transaction.
       * @return success A boolean value True/False to indicate a successful transfer
       */
-    function transferToContract(address _to, uint _value, bytes _data) returns (bool success) {
+    function transferToContract(address _to, uint _value, bytes _data) public returns (bool success) {
         if (balances[msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
             balances[msg.sender] -= _value;
             balances[_to] += _value;
@@ -111,7 +111,7 @@ contract ERC23Token is iERC20Token {
       * @param _addr The specified address to check.
       * @return is_contract A boolean value True/False to indicate whether _addr is a conract or not.
       */
-    function isContract(address _addr) constant returns (bool is_contract) {
+    function isContract(address _addr) public view returns (bool is_contract) {
         uint length;
         assembly {
             // retrieve the size of the code on target address, this needs assembly
@@ -130,7 +130,7 @@ contract ERC23Token is iERC20Token {
       * @param _value The amount to send.
       * @return success A boolean value True/False to indicate whether the transaction was successful or not.
       */
-    function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && _value > 0 && balances[_to] + _value > balances[_to]) {
             balances[_to] += _value;
             balances[_from] -= _value;
@@ -145,7 +145,7 @@ contract ERC23Token is iERC20Token {
       * @param _value The allowed amount.
       * @return success A boolean value True/False to indicate whether the transaction was successful or not.
       */
-    function approve(address _spender, uint256 _value) returns (bool success) {
+    function approve(address _spender, uint256 _value) public returns (bool success) {
         allowed[msg.sender][_spender] = _value;
         Approval(msg.sender, _spender, _value);
         return true;
@@ -157,7 +157,7 @@ contract ERC23Token is iERC20Token {
       * @param _owner The address to check.
       * @return balance An unsigned integer representing the token balance of the address.
       */
-    function balanceOf(address _owner) constant returns (uint256 balance) {
+    function balanceOf(address _owner) public view returns (uint256 balance) {
         return balances[_owner];
     }
 
@@ -166,7 +166,7 @@ contract ERC23Token is iERC20Token {
       * @param _spender The address of the allowed spender.
       * @return remaining An unsigned integer representing the remaining approved tokens.
       */
-    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
       return allowed[_owner][_spender];
     }
 
