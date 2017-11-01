@@ -238,7 +238,8 @@ contract Crowdsale is withAccessManager {
             groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
             
             // linking bidder index to bidder id for easy lookup
-            bidderIndexes[bidderId] = groups[groupIndex].bidders.length;
+            // reduced length to match above after .push increases length
+            bidderIndexes[bidderId] = SafeMath.safeSub(groups[groupIndex].bidders.length, 1);
             // using just created and linked bidder index above
             bidderIndex = bidderIndexes[bidderId];
             // linking group index to bidder index for easy lookup
