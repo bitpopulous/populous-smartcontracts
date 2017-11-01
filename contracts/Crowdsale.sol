@@ -60,6 +60,12 @@ contract Crowdsale is withAccessManager {
 
     //Groups
     Group[] public groups;
+
+    //bidderId => bidderIndex
+    mapping (bytes32 => uint) bidderIndexes;
+    //bidderIndex => groupIndex
+    mapping (uint => uint) groupIndexes;
+
     uint public groupsReceivedTokensBack;
     uint public winnerGroupIndex;
     bool public hasWinnerGroup;
@@ -230,6 +236,14 @@ contract Crowdsale is withAccessManager {
         } else {
             // adding the bidder to a group if not found
             groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
+            
+            // linking bidder index to bidder id for easy lookup
+            // reduced length to match above after .push increases length
+            bidderIndexes[bidderId] = groups[groupIndex].bidders.length - 1;
+            // using just created and linked bidder index above
+            bidderIndex = bidderIndexes[bidderId];
+            // linking group index to bidder index for easy lookup
+            groupIndexes[bidderIndex] = groupIndex;
         }
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);
@@ -373,12 +387,10 @@ contract Crowdsale is withAccessManager {
       * @return groupIndex The location of the bidders group in the groups array.
       */
     function findBidder(bytes32 bidderId) public view returns (uint8 err, uint groupIndex, uint bidderIndex) {
-        for(groupIndex = 0; groupIndex < groups.length; groupIndex++) {
-            for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
-                if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
-                    return (0, groupIndex, bidderIndex);
-                }
-            }
+        bidderIndex = bidderIndexes[bidderId];
+        groupIndex = groupIndexes[bidderIndex];
+        if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+            return (0, groupIndex, bidderIndex);
         }
         return (1, 0, 0);
     }
@@ -390,10 +402,9 @@ contract Crowdsale is withAccessManager {
       * @return bidderIndex The location of the bidder in bidders array.
       */
     function findBidder(uint groupIndex, bytes32 bidderId) public view returns (uint8 err, uint bidderIndex) {
-        for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
-            if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
-                return (0, bidderIndex);
-            }
+        bidderIndex = bidderIndexes[bidderId];
+        if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+            return (0, bidderIndex);
         }
         return (1, 0);
     }
