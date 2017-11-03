@@ -73,7 +73,7 @@ contract Crowdsale is withAccessManager {
     uint public paidAmount;
 
     bool public sentToBeneficiary;
-    bool public sentToLosingGroups;
+    bool public sentToLosingGroups; 
     bool public sentToWinnerGroup;
 
     // MODIFIERS
@@ -185,7 +185,10 @@ contract Crowdsale is withAccessManager {
         public
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
-    {
+    {   
+        // check if deadline has not reached or passed
+        // check if group goal is higher or equal to crowdsale funding goal
+        // check if group goal is less than or equal to invoice amount
         if(checkDeadline() == false && _goal >= fundingGoal && _goal <= invoiceAmount) {
             groupIndex = groups.length++;
             groups[groupIndex].groupIndex = groupIndex;
@@ -200,6 +203,10 @@ contract Crowdsale is withAccessManager {
         }
     }
 
+
+    function initialBid(string groupName, uint groupGoal, bytes32 bidderId, string name, uint value){
+
+    }
     /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
@@ -234,8 +241,15 @@ contract Crowdsale is withAccessManager {
             groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
             groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
         } else {
-            // adding the bidder to a group if not found
+            // user is not in any group so new group required at this point
+            (err, groupIndex) = createGroup(name, goal); // this function will have modifier or not because of findbidder() used above
+            if (err == 0){
+                add bidder to group with group index
+                add bidder to mapping
+            
+            // adding the bidder to a group of their choice if not found in any group
             groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
+
             
             // linking bidder index to bidder id for easy lookup
             // reduced length to match above after .push increases length
@@ -244,6 +258,7 @@ contract Crowdsale is withAccessManager {
             bidderIndex = bidderIndexes[bidderId];
             // linking group index to bidder index for easy lookup
             groupIndexes[bidderIndex] = groupIndex;
+            }        
         }
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);
