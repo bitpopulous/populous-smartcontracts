@@ -79,7 +79,7 @@ contract Crowdsale is withAccessManager {
     // MODIFIERS
 
     modifier onlyOpenAuction() { if (status == States.Open) { _; } }
-
+    
 
     // NON-CONSTANT METHODS
 
@@ -203,8 +203,55 @@ contract Crowdsale is withAccessManager {
         }
     }
 
+    /** @dev Allows a bidder to create a new group if they do not belong to a group and
+      * @dev place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
+      * @param groupName The name of the new investor group to be created.
+      * @param groupGoal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value)
+        public
+        onlyOpenAuction
+        onlyPopulous
+        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
+    {      
+        uint8 finderErr;
+        uint groupIndex;
+        uint bidderIndex;
+        // searching for bidder
+        (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
+        // check that user is in a group -> call bid
+        if (finderErr == 0) {
+            (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
+            return (err, finalValue, groupGoal, goalReached);
 
-    function initialBid(string groupName, uint groupGoal, bytes32 bidderId, string name, uint value){
+        } else {
+            // else create group - > get group index ->  call bid with group index 
+            // bidder is not in any group. New group required at this point.
+            (err, groupIndex) = createGroup(groupName, goal);
+            if (err == 0) {
+            // adding the bidder to a group of their choice if not found in any group
+            groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));        
+            // linking bidder index to bidder id for easy lookup
+            // reduced length to match above after .push increases length
+            bidderIndexes[bidderId] = groups[groupIndex].bidders.length - 1;
+            // using just created and linked bidder index above
+            bidderIndex = bidderIndexes[bidderId];
+            // linking group index to bidder index for easy lookup
+            groupIndexes[bidderIndex] = groupIndex;
+            } else {
+                return (1, 0, 0, false);
+            }
+            (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
+            return (err, finalValue, groupGoal, goalReached);        
+        }
 
     }
     /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
@@ -223,7 +270,7 @@ contract Crowdsale is withAccessManager {
         onlyPopulous
         returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
     {
-        if(checkDeadline() == true || value == 0 || groups[groupIndex].goal == 0) {
+        if (checkDeadline() == true || value == 0 || groups[groupIndex].goal == 0) {
             return (1, 0, 0, false);
         }
         // checking if amount raised by group and bid value exceed the group's goal
@@ -235,30 +282,12 @@ contract Crowdsale is withAccessManager {
         uint bidderIndex;
         // searching for bidder
         (finderErr, bidderIndex) = findBidder(groupIndex, bidderId);
-        
+        // check that user is in a group
         if (finderErr == 0) {
-            // if bidder found in a group, set timestamp of last bid and add to their bid amount
             groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
             groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
         } else {
-            // user is not in any group so new group required at this point
-            (err, groupIndex) = createGroup(name, goal); // this function will have modifier or not because of findbidder() used above
-            if (err == 0){
-                add bidder to group with group index
-                add bidder to mapping
-            
-            // adding the bidder to a group of their choice if not found in any group
-            groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
-
-            
-            // linking bidder index to bidder id for easy lookup
-            // reduced length to match above after .push increases length
-            bidderIndexes[bidderId] = groups[groupIndex].bidders.length - 1;
-            // using just created and linked bidder index above
-            bidderIndex = bidderIndexes[bidderId];
-            // linking group index to bidder index for easy lookup
-            groupIndexes[bidderIndex] = groupIndex;
-            }        
+            return (1, 0, 0, false);
         }
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);

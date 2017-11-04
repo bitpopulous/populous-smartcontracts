@@ -42,6 +42,18 @@ contract iCrowdsale {
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
     function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
+    /** @dev Allows a bidder to place a first bid and create a group.
+      * @param groupName The name of the new investor group to be created.
+      * @param groupGoal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
     /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
