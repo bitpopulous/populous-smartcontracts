@@ -254,7 +254,7 @@ contract Crowdsale is withAccessManager {
         }
 
     }
-    /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
+    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
