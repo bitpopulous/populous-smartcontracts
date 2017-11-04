@@ -83,7 +83,6 @@ contract Crowdsale is withAccessManager {
 
     // NON-CONSTANT METHODS
 
-
     //Constructor
     /** @dev Creates a new Crowdsale contract instance for an invoice auction.
       * @param _accessManager The address of an access manager contract instance.
