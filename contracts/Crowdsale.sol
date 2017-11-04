@@ -227,14 +227,14 @@ contract Crowdsale is withAccessManager {
         uint bidderIndex;
         // searching for bidder
         (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
-        // check that user is in a group -> call bid
+        // check that bidder is in a group -> call bid()
         if (finderErr == 0) {
             (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
             return (err, finalValue, groupGoal, goalReached);
 
         } else {
-            // else create group - > get group index ->  call bid with group index 
-            // bidder is not in any group. New group required at this point.
+            // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
+            // bidder is not in any group. New group can be created at this point.
             (err, groupIndex) = createGroup(groupName, goal);
             if (err == 0) {
             // adding the bidder to a group of their choice if not found in any group
@@ -250,7 +250,7 @@ contract Crowdsale is withAccessManager {
                 return (1, 0, 0, false);
             }
             (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
-            return (err, finalValue, groupGoal, goalReached);        
+            return (err, finalValue, groupGoal, goalReached);
         }
 
     }
@@ -280,10 +280,10 @@ contract Crowdsale is withAccessManager {
 
         uint8 finderErr;
         uint bidderIndex;
-        // searching for bidder
+        // direct lookup of bidderIndex to update bid amount for bidder in a group
         (finderErr, bidderIndex) = findBidder(groupIndex, bidderId);
-        // check that user is in a group
         if (finderErr == 0) {
+            // update bidder's amount and lastBid time if with bidderIndex if found
             groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
             groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
         } else {
