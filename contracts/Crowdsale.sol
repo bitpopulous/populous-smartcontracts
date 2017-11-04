@@ -203,8 +203,8 @@ contract Crowdsale is withAccessManager {
         }
     }
 
-    /** @dev Allows a bidder to create a new group if they do not belong to a group and
-      * @dev place an intial bid.
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
       * @dev This function creates a group and calls the bid() function.
       * @param groupName The name of the new investor group to be created.
       * @param groupGoal The group funding goal.
