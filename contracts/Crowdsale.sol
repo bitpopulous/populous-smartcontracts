@@ -207,7 +207,7 @@ contract Crowdsale is withAccessManager {
       * @dev and place an intial bid.
       * @dev This function creates a group and calls the bid() function.
       * @param groupName The name of the new investor group to be created.
-      * @param groupGoal The group funding goal.
+      * @param goal The group funding goal.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
       * @param value The bid value.
@@ -256,6 +256,7 @@ contract Crowdsale is withAccessManager {
       * @dev as part of an existing group within a set of groups.
       * @dev abstracts group creation from bidder to prevent creating new group
       * @dev other than already joined group per crowdsale
+      * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
       * @param value The bid value.
@@ -264,19 +265,19 @@ contract Crowdsale is withAccessManager {
       * @return groupGoal An unsigned integer representing the group's goal.
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
-    function bid(bytes32 bidderId, string name, uint value)
+    function bid(uint groupIndex, bytes32 bidderId, string name, uint value)
         public
         onlyOpenAuction
         onlyPopulous
         returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
     {
-        uint8 finderErr;
+        /* uint8 finderErr;
         uint groupIndex;
         uint bidderIndex;
         (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
         if (finderErr == 1) {
             return (1, 0, 0, false);
-        }
+        } */
         return _bid(groupIndex, bidderId, name, value);
     }
     /** @dev private bid function

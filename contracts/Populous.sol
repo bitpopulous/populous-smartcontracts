@@ -45,7 +45,7 @@ contract iCrowdsale {
     /** @dev Allows a first time bidder to create a new group if they do not belong to a group
       * @dev and place an intial bid.
       * @param groupName The name of the new investor group to be created.
-      * @param groupGoal The group funding goal.
+      * @param goal The group funding goal.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
       * @param value The bid value.
@@ -497,6 +497,35 @@ contract Populous is withAccessManager {
         }
     }
 
+    /** @dev Allows a bidder to place a bid in an invoice auction.
+      * @param groupName The name of the new investor group to be created.
+      * @param goal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @param crowdsaleAddr The address of the crowdsale contract.
+      * @return success A boolean value indicating whether a bid has been successful.
+      */
+    function initialBid(address crowdsaleAddr, string groupName, uint goal, bytes32 bidderId, string name, uint value)
+        public
+        onlyServer
+        returns (bool success)
+    {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+
+        uint8 err;
+        uint finalValue;
+        uint groupGoal;
+        bool goalReached;
+        (err, finalValue, groupGoal, goalReached) = CS.initialBid(groupName, goal, bidderId, name, value);
+
+        if (err == 0) {
+            _transfer(CS.currencySymbol(), bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
+            return true;
+        } else {
+            return false;
+        }
+    }
     /** @dev Funds an invoice crowdsale address with tokens
       * @param crowdsaleAddr The invoice crowdsale address to fund
       */
