@@ -229,14 +229,16 @@ contract Crowdsale is withAccessManager {
         (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
         // check that bidder is in a group -> call bid()
         if (finderErr == 0) {
-            (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
+            (err, finalValue, groupGoal, goalReached) = _bid(groupIndex, bidderId, name, value);
             return (err, finalValue, groupGoal, goalReached);
 
         } else {
             // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
             // bidder is not in any group. New group can be created at this point.
             (err, groupIndex) = createGroup(groupName, goal);
-            if (err == 0) {
+            if (err == 1) {
+                return (1, 0, 0, false);
+            }
             // adding the bidder to a group of their choice if not found in any group
             groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));        
             // linking bidder index to bidder id for easy lookup
@@ -246,15 +248,40 @@ contract Crowdsale is withAccessManager {
             bidderIndex = bidderIndexes[bidderId];
             // linking group index to bidder index for easy lookup
             groupIndexes[bidderIndex] = groupIndex;
-            } else {
-                return (1, 0, 0, false);
-            }
-            (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
-            return (err, finalValue, groupGoal, goalReached);
+            return _bid(groupIndex, bidderId, name, value);
         }
 
     }
-    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
+    /** @dev used in crowdsale to place a non-initial bid for a bidder 
+      * @dev as part of an existing group within a set of groups.
+      * @dev abstracts group creation from bidder to prevent creating new group
+      * @dev other than already joined group per crowdsale
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function bid(bytes32 bidderId, string name, uint value)
+        public
+        onlyOpenAuction
+        onlyPopulous
+        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
+    {
+        uint8 finderErr;
+        uint groupIndex;
+        uint bidderIndex;
+        (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
+        if (finderErr == 1) {
+            return (1, 0, 0, false);
+        }
+        return _bid(groupIndex, bidderId, name, value);
+    }
+    /** @dev private bid function
+      * @dev used in crowdsale to place a non-initial bid for a bidder 
+      * @dev as part of an existing group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
@@ -264,8 +291,8 @@ contract Crowdsale is withAccessManager {
       * @return groupGoal An unsigned integer representing the group's goal.
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
-    function bid(uint groupIndex, bytes32 bidderId, string name, uint value)
-        public
+    function _bid(uint groupIndex, bytes32 bidderId, string name, uint value)
+        private
         onlyOpenAuction
         onlyPopulous
         returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
@@ -282,13 +309,12 @@ contract Crowdsale is withAccessManager {
         uint bidderIndex;
         // direct lookup of bidderIndex to update bid amount for bidder in a group
         (finderErr, bidderIndex) = findBidder(groupIndex, bidderId);
-        if (finderErr == 0) {
-            // update bidder's amount and lastBid time if with bidderIndex if found
-            groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
-            groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
-        } else {
-            return (1, 0, 0, false);
+        if (finderErr == 1) {
+            return (1, 0, 0, false);  
         }
+        // update bidder's amount and lastBid time if with bidderIndex if found
+        groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
+        groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);
 
