@@ -44,6 +44,7 @@ contract iCrowdsale {
     function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
     /** @dev Allows a first time bidder to create a new group if they do not belong to a group
       * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
       * @param groupName The name of the new investor group to be created.
       * @param goal The group funding goal.
       * @param bidderId The bidder id/location in a set of bidders.
@@ -497,14 +498,19 @@ contract Populous is withAccessManager {
         }
     }
 
-    /** @dev Allows a bidder to place a bid in an invoice auction.
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
       * @param groupName The name of the new investor group to be created.
       * @param goal The group funding goal.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
       * @param value The bid value.
       * @param crowdsaleAddr The address of the crowdsale contract.
-      * @return success A boolean value indicating whether a bid has been successful.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
     function initialBid(address crowdsaleAddr, string groupName, uint goal, bytes32 bidderId, string name, uint value)
         public

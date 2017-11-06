@@ -225,19 +225,16 @@ contract Crowdsale is withAccessManager {
         // searching for bidder
         (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
         // check that bidder is in a group -> call bid()
-        if (finderErr == 0) {
-            return bid(groupIndex, bidderId, name, value);
-            
-        } else {
+        if (finderErr == 1) {
             // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
             // bidder is not in any group. New group can be created at this point.
             (err, groupIndex) = createGroup(groupName, goal);
             if (err == 1) {
                 return (1, 0, 0, false);
             }
-            return bid(groupIndex, bidderId, name, value);
         }
-
+        (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
+        return (err, finalValue, groupGoal, goalReached);
     }
 
     /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
