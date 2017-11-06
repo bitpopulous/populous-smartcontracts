@@ -200,43 +200,6 @@ contract Crowdsale is withAccessManager {
         }
     }
 
-    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
-      * @dev and place an intial bid.
-      * @dev This function creates a group and calls the bid() function.
-      * @param groupName The name of the new investor group to be created.
-      * @param goal The group funding goal.
-      * @param bidderId The bidder id/location in a set of bidders.
-      * @param name The bidder name.
-      * @param value The bid value.
-      * @return err 0 or 1 implying absence or presence of error.
-      * @return finalValue All bidder's bids value.
-      * @return groupGoal An unsigned integer representing the group's goal.
-      * @return goalReached A boolean value indicating whether the group goal has reached or not.
-      */
-    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value)
-        public
-        onlyOpenAuction
-        onlyPopulous
-        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
-    {      
-        uint8 finderErr;
-        uint groupIndex;
-        uint bidderIndex;
-        // searching for bidder
-        (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
-        // check that bidder is in a group -> call bid()
-        if (finderErr == 1) {
-            // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
-            // bidder is not in any group. New group can be created at this point.
-            (err, groupIndex) = createGroup(groupName, goal);
-            if (err == 1) {
-                return (1, 0, 0, false);
-            }
-        }
-        (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
-        return (err, finalValue, groupGoal, goalReached);
-    }
-
     /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
@@ -300,6 +263,43 @@ contract Crowdsale is withAccessManager {
         }
 
         return (0, value, groups[groupIndex].goal, goalReached);
+    }
+
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
+      * @param groupName The name of the new investor group to be created.
+      * @param goal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value)
+        public
+        onlyOpenAuction
+        onlyPopulous
+        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
+    {      
+        uint8 finderErr;
+        uint groupIndex;
+        uint bidderIndex;
+        // searching for bidder
+        (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
+        // check that bidder is in a group -> call bid()
+        if (finderErr == 1) {
+            // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
+            // bidder is not in any group. New group can be created at this point.
+            (err, groupIndex) = createGroup(groupName, goal);
+            if (err == 1) {
+                return (1, 0, 0, false);
+            }
+        }
+        (err, finalValue, groupGoal, goalReached) = bid(groupIndex, bidderId, name, value);
+        return (err, finalValue, groupGoal, goalReached);
     }
 
     /** @dev Allows a borrower to choose a bid winner group and checks amount raised from that group is > 0.

@@ -42,6 +42,19 @@ contract iCrowdsale {
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
     function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
+ 
+    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
+      * @param groupIndex The index/location of a group in a set of groups.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
+    
     /** @dev Allows a first time bidder to create a new group if they do not belong to a group
       * @dev and place an intial bid.
       * @dev This function creates a group and calls the bid() function.
@@ -56,17 +69,7 @@ contract iCrowdsale {
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
     function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
-    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
-      * @param groupIndex The index/location of a group in a set of groups.
-      * @param bidderId The bidder id/location in a set of bidders.
-      * @param name The bidder name.
-      * @param value The bid value.
-      * @return err 0 or 1 implying absence or presence of error.
-      * @return finalValue All bidder's bids value.
-      * @return groupGoal An unsigned integer representing the group's goal.
-      * @return goalReached A boolean value indicating whether the group goal has reached or not.
-      */
-    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
+    
     /** @dev Sets the 'hasReceivedTokensBack' for a bidder denoting they have received token refund and is restricted to populous.
       * @param groupIndex The group id in a set of groups.
       * @param bidderIndex The bidder id in a set of bidders within a group.
