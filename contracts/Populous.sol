@@ -733,6 +733,11 @@ contract Populous is withAccessManager {
     }
 
     /** @dev Deposits an amount of tokens linked to a client ID.
+      * @dev client receives the receiveAmount in the receiveCurrency
+      * @dev the amount is sent from populous and linked to clientId 
+      * @dev on the ledger in the specified currency
+      * @dev When the actor deposits funds into the platform, 
+      * @dev an equivalent amount of tokens is deposited into his account.
       * @param clientId The client ID.
       * @param tokenContract The token contract.
       * @param receiveCurrency The currency symbol.

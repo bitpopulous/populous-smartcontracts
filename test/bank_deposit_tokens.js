@@ -70,7 +70,7 @@ contract('Populous / Tokens > ', function(accounts) {
             var faucetAmount = 200;
 
             global.PPT.transferToAddress(depositAddress, faucetAmount).catch(console.log).then(function() {
-                return global.PPT.balanceOf(depositAddress);;
+                return global.PPT.balanceOf(depositAddress);
             }).then(function(amount) {
                 assert.equal(amount.toNumber(), faucetAmount, "Failed getting tokens from faucet");
                 done();
@@ -115,6 +115,25 @@ contract('Populous / Tokens > ', function(accounts) {
                 });
         });
 
+        /* it("should create bidding group and place initial bid from config.INVESTOR1_ACC with 90", function(done) {
+            assert(crowdsale, "Crowdsale required.");
+
+            var
+                CS = Crowdsale.at(crowdsale),
+                groupName1 = 'test group',
+                groupGoal1 = 90;
+
+            commonTests.initialBid(P, crowdsale, groupName1, groupGoal1, config.INVESTOR1_ACC, "AA007", 45).then(function(result) {
+                return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
+            }).then(function(value) {
+                assert.equal(value.toNumber(), 0, "Failed bidding");
+                return Crowdsale.at(crowdsale).getGroup.call(0);
+            }).then(function(group) {
+                assert.equal(group[3].toNumber(), 90, "Failed bidding");
+                done();
+            })
+        }); */
+
         it("should create bidding group", function(done) {
             assert(crowdsale, "Crowdsale required.");
 
@@ -142,6 +161,7 @@ contract('Populous / Tokens > ', function(accounts) {
                 done();
             });
         });
+        
 
         it("should fund beneficiary", function(done) {
             assert(crowdsale, "Crowdsale required.");
