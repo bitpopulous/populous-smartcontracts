@@ -73,13 +73,13 @@ contract Crowdsale is withAccessManager {
     uint public paidAmount;
 
     bool public sentToBeneficiary;
-    bool public sentToLosingGroups; 
+    bool public sentToLosingGroups;
     bool public sentToWinnerGroup;
 
     // MODIFIERS
 
     modifier onlyOpenAuction() { if (status == States.Open) { _; } }
-    
+
 
     // NON-CONSTANT METHODS
 
@@ -185,10 +185,7 @@ contract Crowdsale is withAccessManager {
         public
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
-    {   
-        // check if deadline has not reached or passed
-        // check if group goal is higher or equal to crowdsale funding goal
-        // check if group goal is less than or equal to invoice amount
+    {
         if(checkDeadline() == false && _goal >= fundingGoal && _goal <= invoiceAmount) {
             groupIndex = groups.length++;
             groups[groupIndex].groupIndex = groupIndex;
@@ -229,7 +226,7 @@ contract Crowdsale is withAccessManager {
         (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
         // check that bidder is in a group -> call bid()
         if (finderErr == 0) {
-            return _bid(groupIndex, bidderId, name, value);
+            return bid(groupIndex, bidderId, name, value);
             
         } else {
             // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
@@ -238,14 +235,12 @@ contract Crowdsale is withAccessManager {
             if (err == 1) {
                 return (1, 0, 0, false);
             }
-            return _bid(groupIndex, bidderId, name, value);
+            return bid(groupIndex, bidderId, name, value);
         }
 
     }
-    /** @dev used in crowdsale to place a non-initial bid for a bidder 
-      * @dev as part of an existing group within a set of groups.
-      * @dev abstracts group creation from bidder to prevent creating new group
-      * @dev other than already joined group per crowdsale
+
+    /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
@@ -273,12 +268,12 @@ contract Crowdsale is withAccessManager {
         uint bidderIndex;
         // searching for bidder
         (finderErr, bidderIndex) = findBidder(groupIndex, bidderId);
+        
         if (finderErr == 0) {
             // if bidder found in a group, set timestamp of last bid and add to their bid amount
             groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
             groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
         } else {
-
             // adding the bidder to a group if not found
             groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
             
@@ -290,28 +285,6 @@ contract Crowdsale is withAccessManager {
             // linking group index to bidder index for easy lookup
             groupIndexes[bidderIndex] = groupIndex;
         }
-
-
-        return _bid(groupIndex, bidderId, name, value);
-    }
-    /** @dev private bid function
-      * @dev used in crowdsale to place a non-initial bid for a bidder 
-      * @dev as part of an existing group within a set of groups.
-      * @param groupIndex The index/location of a group in a set of groups.
-      * @param bidderId The bidder id/location in a set of bidders.
-      * @param name The bidder name.
-      * @param value The bid value.
-      * @return err 0 or 1 implying absence or presence of error.
-      * @return finalValue All bidder's bids value.
-      * @return groupGoal An unsigned integer representing the group's goal.
-      * @return goalReached A boolean value indicating whether the group goal has reached or not.
-      */
-    function _bid(uint groupIndex, bytes32 bidderId, string name, uint value)
-        public
-        onlyOpenAuction
-        onlyPopulous
-        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
-    {
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);
 
