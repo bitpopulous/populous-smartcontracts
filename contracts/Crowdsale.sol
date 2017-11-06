@@ -73,13 +73,13 @@ contract Crowdsale is withAccessManager {
     uint public paidAmount;
 
     bool public sentToBeneficiary;
-    bool public sentToLosingGroups;
+    bool public sentToLosingGroups; 
     bool public sentToWinnerGroup;
 
     // MODIFIERS
 
     modifier onlyOpenAuction() { if (status == States.Open) { _; } }
-
+    
 
     // NON-CONSTANT METHODS
 
@@ -185,7 +185,10 @@ contract Crowdsale is withAccessManager {
         public
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
-    {
+    {   
+        // check if deadline has not reached or passed
+        // check if group goal is higher or equal to crowdsale funding goal
+        // check if group goal is less than or equal to invoice amount
         if(checkDeadline() == false && _goal >= fundingGoal && _goal <= invoiceAmount) {
             groupIndex = groups.length++;
             groups[groupIndex].groupIndex = groupIndex;
@@ -200,7 +203,49 @@ contract Crowdsale is withAccessManager {
         }
     }
 
-    /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
+      * @param groupName The name of the new investor group to be created.
+      * @param goal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value)
+        public
+        onlyOpenAuction
+        onlyPopulous
+        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
+    {      
+        uint8 finderErr;
+        uint groupIndex;
+        uint bidderIndex;
+        // searching for bidder
+        (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
+        // check that bidder is in a group -> call bid()
+        if (finderErr == 0) {
+            return _bid(groupIndex, bidderId, name, value);
+            
+        } else {
+            // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
+            // bidder is not in any group. New group can be created at this point.
+            (err, groupIndex) = createGroup(groupName, goal);
+            if (err == 1) {
+                return (1, 0, 0, false);
+            }
+            return _bid(groupIndex, bidderId, name, value);
+        }
+
+    }
+    /** @dev used in crowdsale to place a non-initial bid for a bidder 
+      * @dev as part of an existing group within a set of groups.
+      * @dev abstracts group creation from bidder to prevent creating new group
+      * @dev other than already joined group per crowdsale
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
@@ -212,6 +257,26 @@ contract Crowdsale is withAccessManager {
       */
     function bid(uint groupIndex, bytes32 bidderId, string name, uint value)
         public
+        onlyOpenAuction
+        onlyPopulous
+        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
+    {
+        return _bid(groupIndex, bidderId, name, value);
+    }
+    /** @dev private bid function
+      * @dev used in crowdsale to place a non-initial bid for a bidder 
+      * @dev as part of an existing group within a set of groups.
+      * @param groupIndex The index/location of a group in a set of groups.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function _bid(uint groupIndex, bytes32 bidderId, string name, uint value)
+        private
         onlyOpenAuction
         onlyPopulous
         returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
