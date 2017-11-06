@@ -139,15 +139,15 @@ describe("Deposit Tokens > ", function() {
             var
                 CS = Crowdsale.at(crowdsale),
                 groupName1 = 'test group',
-                groupGoal1 = 90;
+                groupGoal1 = 45;
 
             commonTests.initialBid(P, crowdsale, groupName1, groupGoal1, config.INVESTOR1_ACC, "AA007", 45).then(function(result) {
                 return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
             }).then(function(value) {
-                assert.equal(value.toNumber(), 0, "Failed bidding");
+                assert.equal(value.toNumber(), 45, "Failed bidding");
                 return Crowdsale.at(crowdsale).getGroup.call(0);
             }).then(function(group) {
-                assert.equal(group[3].toNumber(), 90, "Failed bidding");
+                assert.equal(group[3].toNumber(), 45, "Failed bidding");
                 done();
             })
         }); */
