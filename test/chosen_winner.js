@@ -165,14 +165,16 @@ describe("Chosen winner > ", function() {
         groupName2 = 'Losing group 1',
         groupName3 = 'Losing group 2';
         
-        Promise.all([
-            // creating three test groups 
-            // with initial bids from investor 1, 2 and 3
-            commonTests.initialBid(P, crowdsale, groupName1, INVESTOR_GROUP1_GOAL, config.INVESTOR3_ACC, 'ACC3', config.INVESTOR3_ACC_BALANCE),
-            commonTests.initialBid(P, crowdsale, groupName2, INVESTOR_GROUP2_GOAL, config.INVESTOR1_ACC, 'ACC1', 25),
-            commonTests.initialBid(P, crowdsale, groupName2, INVESTOR_GROUP2_GOAL, config.INVESTOR2_ACC, 'ACC2', 50),
+        // creating three test groups 
+        // with initial bids from investor 1, 2 and 3
+        commonTests.initialBid(P, crowdsale, groupName1, INVESTOR_GROUP1_GOAL, config.INVESTOR3_ACC, 'ACC3', config.INVESTOR3_ACC_BALANCE)
+        .then(function(){
+            return commonTests.initialBid(P, crowdsale, groupName2, INVESTOR_GROUP2_GOAL, config.INVESTOR1_ACC, 'ACC1', 25);
             
-        ]).then(function(){
+        }).then(function(){
+            return commonTests.initialBid(P, crowdsale, groupName2, INVESTOR_GROUP2_GOAL, config.INVESTOR2_ACC, 'ACC2', 50);
+            
+        }).then(function(){
             return CS.getGroupsCount();
         }).then(function(value){
             // checking group creation works with initialBid
