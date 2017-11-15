@@ -35,14 +35,16 @@ contract iCrowdsale {
       * @return bool A boolean value indicating whether the deadline has passed or not.
       */
     function isDeadlineReached() public returns(bool);
+    
     /** @dev Creates a new bidding group for bidders to bid to fund an invoice and assigns the group an index in the collection of groups.
       * @param _name The group name.
       * @param _goal The goal of the group.
       * @return err 0 or 1 implying absence or presence of error.
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
-    function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
- 
+    function createGroup(string _name, uint _goal) private returns (uint8 err, uint groupIndex);
+    
+    
     /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
@@ -471,6 +473,7 @@ contract Populous is withAccessManager {
 
         EventNewCrowdsale(crowdsaleAddr);
     }
+
 
     /** @dev Allows a bidder to place a bid in an invoice auction.
       * @param groupIndex The index/location of a group in a set of groups.
