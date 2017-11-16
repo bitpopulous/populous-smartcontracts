@@ -170,10 +170,8 @@ describe("Chosen winner > ", function() {
         commonTests.initialBid(P, crowdsale, groupName1, INVESTOR_GROUP1_GOAL, config.INVESTOR3_ACC, 'ACC3', config.INVESTOR3_ACC_BALANCE)
         .then(function(){
             return commonTests.initialBid(P, crowdsale, groupName2, INVESTOR_GROUP2_GOAL, config.INVESTOR1_ACC, 'ACC1', 25);
-            
         }).then(function(){
             return commonTests.initialBid(P, crowdsale, groupName2, INVESTOR_GROUP2_GOAL, config.INVESTOR2_ACC, 'ACC2', 50);
-            
         }).then(function(){
             return CS.getGroupsCount();
         }).then(function(value){
