@@ -19,6 +19,7 @@ contract Crowdsale is withAccessManager {
     event EventAuctionWaiting();
     event EventPaymentReceived(uint paidAmount);
     event EventAuctionCompleted();
+    event EventGroupCreationFailed();
 
 
     // FIELDS 
@@ -58,13 +59,18 @@ contract Crowdsale is withAccessManager {
         bool hasReceivedTokensBack; // This is set to true when the flag hasReceivedTokensBack is set to true for all bidders in the group
     }
 
+    struct BidderInfo {
+        uint groupIndex;
+        uint bidderIndex;
+        bool inAGroup;
+    }
+
     //Groups
     Group[] public groups;
 
-    //bidderId => bidderIndex
-    mapping (bytes32 => uint) bidderIndexes;
-    //bidderIndex => groupIndex
-    mapping (uint => uint) groupIndexes;
+    //bidderId => BidderInfo
+    mapping (bytes32 => BidderInfo) bidderGroupInfo;
+
 
     uint public groupsReceivedTokensBack;
     uint public winnerGroupIndex;
@@ -82,6 +88,7 @@ contract Crowdsale is withAccessManager {
 
 
     // NON-CONSTANT METHODS
+
 
     //Constructor
     /** @dev Creates a new Crowdsale contract instance for an invoice auction.
@@ -181,7 +188,7 @@ contract Crowdsale is withAccessManager {
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
     function createGroup(string _name, uint _goal)
-        public
+        private
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
     {
@@ -195,11 +202,13 @@ contract Crowdsale is withAccessManager {
 
             return (0, groupIndex);
         } else {
+            EventGroupCreationFailed();
             return (1, 0);
         }
     }
 
-    /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
+
+    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
@@ -232,17 +241,16 @@ contract Crowdsale is withAccessManager {
             // if bidder found in a group, set timestamp of last bid and add to their bid amount
             groups[groupIndex].bidders[bidderIndex].bidAmount = SafeMath.safeAdd(groups[groupIndex].bidders[bidderIndex].bidAmount, value);
             groups[groupIndex].bidders[bidderIndex].lastBidAt = now;
+
         } else {
+
             // adding the bidder to a group if not found
             groups[groupIndex].bidders.push(Bidder(groups[groupIndex].bidders.length, bidderId, name, value, now, false));
             
-            // linking bidder index to bidder id for easy lookup
-            // reduced length to match above after .push increases length
-            bidderIndexes[bidderId] = groups[groupIndex].bidders.length - 1;
-            // using just created and linked bidder index above
-            bidderIndex = bidderIndexes[bidderId];
-            // linking group index to bidder index for easy lookup
-            groupIndexes[bidderIndex] = groupIndex;
+            // linking bidderIndex and groupIndex to bidder id for easy lookup
+            bidderGroupInfo[bidderId].groupIndex = groupIndex;
+            bidderGroupInfo[bidderId].bidderIndex = groups[groupIndex].bidders.length - 1;
+            bidderGroupInfo[bidderId].inAGroup = true;
         }
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);
@@ -262,6 +270,44 @@ contract Crowdsale is withAccessManager {
         }
 
         return (0, value, groups[groupIndex].goal, goalReached);
+    }
+
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
+      * @param groupName The name of the new investor group to be created.
+      * @param goal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value)
+        public
+        onlyOpenAuction
+        onlyPopulous
+        returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached)
+    {      
+        uint8 finderErr;
+        uint groupIndex;
+        uint bidderIndex;
+        // searching for bidder
+        (finderErr, groupIndex, bidderIndex) = findBidder(bidderId);
+        // check that bidder is in a group -> call bid()
+        if (finderErr == 1) {
+            // if bidder is not in a group, create group - > get group index ->  call bid() with group index 
+            // bidder is not in any group. New group can be created at this point.
+            (err, groupIndex) = createGroup(groupName, goal);
+            
+            if (err == 1) {
+                return (1, 0, 0, false);
+            }
+        }
+        return bid(groupIndex, bidderId, name, value);
+        
     }
 
     /** @dev Allows a borrower to choose a bid winner group and checks amount raised from that group is > 0.
@@ -386,12 +432,22 @@ contract Crowdsale is withAccessManager {
       * @return groupIndex The location of the bidders group in the groups array.
       */
     function findBidder(bytes32 bidderId) public view returns (uint8 err, uint groupIndex, uint bidderIndex) {
-        bidderIndex = bidderIndexes[bidderId];
-        groupIndex = groupIndexes[bidderIndex];
-        if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+        bidderIndex = bidderGroupInfo[bidderId].bidderIndex;
+        groupIndex = bidderGroupInfo[bidderId].groupIndex;
+        if (!bidderGroupInfo[bidderId].inAGroup) {
+            return (1, 0, 0);
+        } else if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
             return (0, groupIndex, bidderIndex);
         }
-        return (1, 0, 0);
+        
+        /* for(groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+            for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
+                if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+                    return (0, groupIndexes[bidderIndex], bidderIndexes[bidderId]);
+                }
+            }
+        }
+        return (1, 0, 0); */
     }
 
     /** @dev Finds a bidder in a list of bidders with bidder ID and group index.
@@ -401,11 +457,19 @@ contract Crowdsale is withAccessManager {
       * @return bidderIndex The location of the bidder in bidders array.
       */
     function findBidder(uint groupIndex, bytes32 bidderId) public view returns (uint8 err, uint bidderIndex) {
-        bidderIndex = bidderIndexes[bidderId];
-        if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+        bidderIndex = bidderGroupInfo[bidderId].bidderIndex;
+        groupIndex = bidderGroupInfo[bidderId].groupIndex;
+        if (!bidderGroupInfo[bidderId].inAGroup) {
+            return (1, 0);
+        } else if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
             return (0, bidderIndex);
         }
-        return (1, 0);
+        /* for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
+            if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+                return (0, bidderIndexes[bidderId]);
+            }
+        }
+        return (1, 0);  */ 
     }
 
     /** @dev Gets beneficiary's token amount after bidding is closed.
