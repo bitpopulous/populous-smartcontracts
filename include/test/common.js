@@ -36,5 +36,16 @@ module.exports = {
                 resolve(result);
             }).catch(reject);
         });
+    },
+
+    initialBid: function(P, crowdsaleAddress, groupName, goal, investorId, investorName, bidAmount) {
+        return new Promise(function(resolve, reject) {
+            P.initialBid(crowdsaleAddress, groupName, goal, investorId, investorName, bidAmount).then(function(result) {
+                assert(result.receipt.logs.length, "Failed bidding: no bidding event");
+                console.log('Initial Bid', groupName, goal, investorId, investorName, bidAmount);
+
+                resolve(result);
+            }).catch(reject);
+        });
     }
 };
