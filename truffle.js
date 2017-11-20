@@ -37,5 +37,6 @@ module.exports = {
             test_timeout: 300000, //  <=== NEW
             gas: 4712388
         },
+        
     }
 };

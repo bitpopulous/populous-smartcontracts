@@ -72,6 +72,8 @@ contract Crowdsale is withAccessManager {
     mapping (bytes32 => BidderInfo) bidderGroupInfo;
 
 
+
+
     uint public groupsReceivedTokensBack;
     uint public winnerGroupIndex;
     bool public hasWinnerGroup;

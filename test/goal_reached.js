@@ -259,7 +259,6 @@ describe("Reach goal with bids > ", function() {
         }).then(function(value) {
             // Group goal is 900 and the amount raised can't be more than this.
             assert.equal(value.toNumber(), 0, "Failed bidding");
-
             return Crowdsale.at(crowdsale).getGroup.call(0);
         }).then(function(group) {
             assert.equal(group[3].toNumber(), 900, "Failed bidding");
