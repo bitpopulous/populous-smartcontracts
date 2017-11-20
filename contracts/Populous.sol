@@ -35,14 +35,17 @@ contract iCrowdsale {
       * @return bool A boolean value indicating whether the deadline has passed or not.
       */
     function isDeadlineReached() public returns(bool);
+    
     /** @dev Creates a new bidding group for bidders to bid to fund an invoice and assigns the group an index in the collection of groups.
       * @param _name The group name.
       * @param _goal The goal of the group.
       * @return err 0 or 1 implying absence or presence of error.
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
-    function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
-    /** @dev Allows a bidder to place a bid as part of a group with a set of groups.
+    function createGroup(string _name, uint _goal) private returns (uint8 err, uint groupIndex);
+    
+    
+    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
@@ -53,6 +56,22 @@ contract iCrowdsale {
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
     function bid(uint groupIndex , bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
+    
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
+      * @param groupName The name of the new investor group to be created.
+      * @param goal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
+    
     /** @dev Sets the 'hasReceivedTokensBack' for a bidder denoting they have received token refund and is restricted to populous.
       * @param groupIndex The group id in a set of groups.
       * @param bidderIndex The bidder id in a set of bidders within a group.
@@ -455,6 +474,7 @@ contract Populous is withAccessManager {
         EventNewCrowdsale(crowdsaleAddr);
     }
 
+
     /** @dev Allows a bidder to place a bid in an invoice auction.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
@@ -484,6 +504,40 @@ contract Populous is withAccessManager {
         }
     }
 
+    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
+      * @dev and place an intial bid.
+      * @dev This function creates a group and calls the bid() function.
+      * @param groupName The name of the new investor group to be created.
+      * @param goal The group funding goal.
+      * @param bidderId The bidder id/location in a set of bidders.
+      * @param name The bidder name.
+      * @param value The bid value.
+      * @param crowdsaleAddr The address of the crowdsale contract.
+      * @return err 0 or 1 implying absence or presence of error.
+      * @return finalValue All bidder's bids value.
+      * @return groupGoal An unsigned integer representing the group's goal.
+      * @return goalReached A boolean value indicating whether the group goal has reached or not.
+      */
+    function initialBid(address crowdsaleAddr, string groupName, uint goal, bytes32 bidderId, string name, uint value)
+        public
+        onlyServer
+        returns (bool success)
+    {
+        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+
+        uint8 err;
+        uint finalValue;
+        uint groupGoal;
+        bool goalReached;
+        (err, finalValue, groupGoal, goalReached) = CS.initialBid(groupName, goal, bidderId, name, value);
+
+        if (err == 0) {
+            _transfer(CS.currencySymbol(), bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
+            return true;
+        } else {
+            return false;
+        }
+    }
     /** @dev Funds an invoice crowdsale address with tokens
       * @param crowdsaleAddr The invoice crowdsale address to fund
       */
@@ -691,6 +745,11 @@ contract Populous is withAccessManager {
     }
 
     /** @dev Deposits an amount of tokens linked to a client ID.
+      * @dev client receives the receiveAmount in the receiveCurrency
+      * @dev the amount is sent from populous and linked to clientId 
+      * @dev on the ledger in the specified currency
+      * @dev When the actor deposits funds into the platform, 
+      * @dev an equivalent amount of tokens is deposited into his account.
       * @param clientId The client ID.
       * @param tokenContract The token contract.
       * @param receiveCurrency The currency symbol.
