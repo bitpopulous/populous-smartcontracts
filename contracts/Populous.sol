@@ -30,12 +30,7 @@ contract iCrowdsale {
     // methods that a contract of type iCrowdsale must implement to fit into the overall application framework
 
     //NON-CONSTANT METHODS
-
-    /** @dev Checks whether the invoice auction deadline has passed or not.
-      * @return bool A boolean value indicating whether the deadline has passed or not.
-      */
-    function isDeadlineReached() public returns(bool);
-    
+ 
     /** @dev Creates a new bidding group for bidders to bid to fund an invoice and assigns the group an index in the collection of groups.
       * @param _name The group name.
       * @param _goal The goal of the group.
