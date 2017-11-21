@@ -441,15 +441,6 @@ contract Crowdsale is withAccessManager {
         } else if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
             return (0, groupIndex, bidderIndex);
         }
-        
-        /* for(groupIndex = 0; groupIndex < groups.length; groupIndex++) {
-            for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
-                if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
-                    return (0, groupIndexes[bidderIndex], bidderIndexes[bidderId]);
-                }
-            }
-        }
-        return (1, 0, 0); */
     }
 
     /** @dev Finds a bidder in a list of bidders with bidder ID and group index.
@@ -466,12 +457,6 @@ contract Crowdsale is withAccessManager {
         } else if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
             return (0, bidderIndex);
         }
-        /* for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
-            if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
-                return (0, bidderIndexes[bidderId]);
-            }
-        }
-        return (1, 0);  */ 
     }
 
     /** @dev Gets beneficiary's token amount after bidding is closed.
