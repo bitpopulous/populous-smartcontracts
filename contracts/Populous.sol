@@ -8,179 +8,9 @@ with addresses and interfaces.
 pragma solidity ^0.4.17;
 
 import "./CurrencyToken.sol";
-
-/// @title iCrowdsale contract an interface contract
-contract iCrowdsale {
-
-    // FIELDS
-
-    bytes32 public currencySymbol;
-    uint public invoiceAmount;
-    bytes32 public borrowerId;
-    uint8 public status;
-    uint public platformTaxPercent;
-    
-    uint public winnerGroupIndex;
-    bool public sentToBeneficiary;
-    bool public sentToLosingGroups;
-    bool public sentToWinnerGroup;
-    uint public paidAmount;
-
-    // METHODS
-    // methods that a contract of type iCrowdsale must implement to fit into the overall application framework
-
-    //NON-CONSTANT METHODS
-
-    /** @dev Checks whether the invoice auction deadline has passed or not.
-      * @return bool A boolean value indicating whether the deadline has passed or not.
-      */
-    function isDeadlineReached() public returns(bool);
-    
-    /** @dev Creates a new bidding group for bidders to bid to fund an invoice and assigns the group an index in the collection of groups.
-      * @param _name The group name.
-      * @param _goal The goal of the group.
-      * @return err 0 or 1 implying absence or presence of error.
-      * @return groupIndex The returned group index/location in a collection of other groups.
-      */
-    function createGroup(string _name, uint _goal) private returns (uint8 err, uint groupIndex);
-    
-    
-    /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
-      * @param groupIndex The index/location of a group in a set of groups.
-      * @param bidderId The bidder id/location in a set of bidders.
-      * @param name The bidder name.
-      * @param value The bid value.
-      * @return err 0 or 1 implying absence or presence of error.
-      * @return finalValue All bidder's bids value.
-      * @return groupGoal An unsigned integer representing the group's goal.
-      * @return goalReached A boolean value indicating whether the group goal has reached or not.
-      */
-    function bid(uint groupIndex , bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
-    
-    /** @dev Allows a first time bidder to create a new group if they do not belong to a group
-      * @dev and place an intial bid.
-      * @dev This function creates a group and calls the bid() function.
-      * @param groupName The name of the new investor group to be created.
-      * @param goal The group funding goal.
-      * @param bidderId The bidder id/location in a set of bidders.
-      * @param name The bidder name.
-      * @param value The bid value.
-      * @return err 0 or 1 implying absence or presence of error.
-      * @return finalValue All bidder's bids value.
-      * @return groupGoal An unsigned integer representing the group's goal.
-      * @return goalReached A boolean value indicating whether the group goal has reached or not.
-      */
-    function initialBid(string groupName, uint goal, bytes32 bidderId, string name, uint value) public returns (uint8 err, uint finalValue, uint groupGoal, bool goalReached);
-    
-    /** @dev Sets the 'hasReceivedTokensBack' for a bidder denoting they have received token refund and is restricted to populous.
-      * @param groupIndex The group id in a set of groups.
-      * @param bidderIndex The bidder id in a set of bidders within a group.
-      */
-    function setBidderHasReceivedTokensBack(uint groupIndex, uint bidderIndex) public;
-    /** @dev Sets the 'sentToBeneficiary' boolean variable to true.
-      * @dev Only populous can use this method.
-      */
-    function setSentToBeneficiary() public;
-    /** @dev Sets the paidAmount and restricted to populous.
-      * @param _paidAmount The amount paid.
-      */ 
-    function setPaidAmount(uint _paidAmount) public;
-
-    // CONSTANT METHODS
-
-    /** @dev Gets the current status.
-      * @return uint8 The returned status.
-      */
-    function getStatus() public view returns (uint8);
-    /** @dev Gets the number of groups in the groups array.
-      * @return uint8 The returned status.
-      */
-    function getGroupsCount() public view returns (uint);
-    /** @dev Gets the details of a group located by its index/location in the group array..
-      * @param groupIndex The location of a group within the groups array variable.
-      * @return uint8 The returned status.
-      */ 
-    function getGroup(uint groupIndex) public view returns (string name, uint goal, uint biddersCount, uint amountRaised, bool hasReceivedTokensBack);
-    /** @dev Gets a bidders details from a group.
-      * @param groupIndex The location of a group in the groups array.
-      * @param bidderIndex The location of a bidder in the bidders arrays of a group
-      * @return bidderId The bidder ID.
-      * @return name The bidder name.
-      * @return bidAmount The bid amount.
-      * @return hasReceivedTokensBack A boolean value to indicate whether the loosing group has received a refund of their tokens.
-      */
-    function getGroupBidder(uint groupIndex, uint bidderIndex) public view returns (bytes32 bidderId, bytes32 name, uint bidAmount, bool hasReceivedTokensBack);        
-    /** @dev Gets beneficiary's token amount after bidding is closed.
-      * @return amount The total bid amount.
-      * @return err 0 or 1 implying absence or presence of error.
-      */
-    function getAmountForBeneficiary() public view returns (uint8 err, uint amount);
-
-}
-
-
-/// @title iCrowdsaleManager contract
-contract iCrowdsaleManager {
-
-    // NON-CONSTANT METHODS
-
-    /** @dev Creates a new Crowdsale contract instance for an invoice auction.
-      * @param _currencySymbol The currency symbol, e.g., GBP.
-      * @param _borrowerId The unique borrower ID.
-      * @param _invoiceId The unique invoice ID.
-      * @param _invoiceNumber The unique invoice number.
-      * @param _invoiceAmount The invoice amount.
-      * @param _fundingGoal The funding goal of the borrower.
-      * @param _platformTaxPercent The percentage charged by the platform
-      * @param _signedDocumentIPFSHash The hash of related invoice documentation saved on IPFS.
-      * @return address The address of deployed smart contract instance.
-      */
-    function createCrowdsale(
-            bytes32 _currencySymbol,
-            bytes32 _borrowerId,
-            bytes32 _invoiceId,
-            string _invoiceNumber,
-            uint _invoiceAmount,
-            uint _fundingGoal,
-            uint _platformTaxPercent,
-            string _signedDocumentIPFSHash)
-            public
-            returns (address);
-}
-
-
-/// @title iDepositContractsManager contract
-contract iDepositContractsManager {
-
-    // NON-CONSTANT METHODS
-
-    /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
-      * @param clientId The bytes32 client ID
-      * @return address The address of the deployed deposit contract instance.
-      */
-    function create(bytes32 clientId) public returns (address);
-    /** @dev Deposits an amount of tokens linked to a client ID.
-      * @param clientId The client ID.
-      * @param tokenContract The token contract.
-      * @param receiveCurrency The currency symbol.
-      * @param depositAmount The deposit amount.
-      * @param receiveAmount The receive amount.
-      * @return bool boolean value indicating whether or not a deposit transaction has been made with success.
-      * @return uint The updated number of deposits.
-      */
-    function deposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount) public returns (bool, uint);
-    /** @dev Releases a deposit to an address/wallet.
-      * @param clientId The client ID.
-      * @param tokenContract The token contract.
-      * @param receiveCurrency The currency symbol.
-      * @param receiver The address/wallet of the receiver.
-      * @param depositIndex The index/location of a specific deposit in the declared deposit list above.
-      * @return bool boolean value indicating whether or not a deposit has been updated with success.
-      * @return uint The token amount deposited.
-      * @return uint The token amount received.
-      */
-    function releaseDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex) public returns (bool, uint, uint);
-}
+import "./iCrowdsaleManager.sol";
+import "./iCrowdsale.sol";
+import "./iDepositContractsManager.sol";
 
 
 /// @title Populous contract
@@ -490,10 +320,7 @@ contract Populous is withAccessManager {
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
-        uint8 err;
-        uint finalValue;
-        uint groupGoal;
-        bool goalReached;
+        uint8 err; uint finalValue; uint groupGoal; bool goalReached;
         (err, finalValue, groupGoal, goalReached) = CS.bid(groupIndex, bidderId, name, value);
 
         if (err == 0) {
@@ -525,10 +352,7 @@ contract Populous is withAccessManager {
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
-        uint8 err;
-        uint finalValue;
-        uint groupGoal;
-        bool goalReached;
+        uint8 err; uint finalValue; uint groupGoal; bool goalReached;
         (err, finalValue, groupGoal, goalReached) = CS.initialBid(groupName, goal, bidderId, name, value);
 
         if (err == 0) {
