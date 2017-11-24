@@ -360,7 +360,7 @@ contract Crowdsale is withAccessManager {
         }
     }
 
-    /** @dev Sets the sent 'setSentToLosingGroups' boolean variable to true.
+    /** @dev Sets the 'setSentToLosingGroups' boolean variable to true.
       */
     function setSentToLosingGroups() private {
         sentToLosingGroups = true;
@@ -391,7 +391,7 @@ contract Crowdsale is withAccessManager {
     }
 
     /** @dev Gets the number of groups in the groups array.
-      * @return uint8 The returned status.
+      * @return uint The returned number of created groups in the crowdsale.
       */
     function getGroupsCount() public view returns (uint) {
         return groups.length;
