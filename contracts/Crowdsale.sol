@@ -397,9 +397,13 @@ contract Crowdsale is withAccessManager {
         return groups.length;
     }
 
-    /** @dev Gets the details of a group located by its index/location in the group array..
+    /** @dev Gets the details of a group located by its index/location in the group array.
       * @param groupIndex The location of a group within the groups array variable.
-      * @return uint8 The returned status.
+      * @return name The group name.
+      * @return goal The group goal.
+      * @return biddersCount The number of bidders in the group.
+      * @return amountRaised The amount raised by the group.
+      * @return hasReceivedTokensBack A boolean value to indicate whether the group has received a refund of their tokens.
       */ 
     function getGroup(uint groupIndex)
         public view
