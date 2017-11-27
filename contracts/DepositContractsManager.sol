@@ -15,6 +15,7 @@ contract DepositContractsManager is withAccessManager {
     struct Deposit {
         uint deposited;
         uint received;
+        uint releaseTime;
         bool isReleased;
     }
 
@@ -77,7 +78,7 @@ contract DepositContractsManager is withAccessManager {
 
         if (SafeMath.safeSub(o.balanceOf(tokenContract), deposits[clientId][tokenContract][receiveCurrency].deposited) == depositAmount) {
             // save new deposit info
-            deposits[clientId][tokenContract][receiveCurrency].list.push(Deposit(depositAmount, receiveAmount, false));
+            deposits[clientId][tokenContract][receiveCurrency].list.push(Deposit(depositAmount, receiveAmount, now + 30 days, false));
             
             // update totals
             deposits[clientId][tokenContract][receiveCurrency].deposited = SafeMath.safeAdd(
@@ -112,7 +113,8 @@ contract DepositContractsManager is withAccessManager {
         
         if (deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].deposited != 0 &&
             deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].isReleased == false &&
-            o.transfer(tokenContract, receiver, deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].deposited)
+            o.transfer(tokenContract, receiver, deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].deposited) &&
+            deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].releaseTime > now
         ) {
             deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].isReleased = true;
 
