@@ -21,7 +21,7 @@ describe("Init currency token", function() {
             console.log('Populous', P.address);
             // create new EUR currency token
             if (!global.currencies || !global.currencies.EUR) {
-                return commonTests.createCurrency(P, "Euros", 3, "EUR");
+                return commonTests.createCurrency(P, "EUR Pokens", 3, "EUR");
             } else {
                 return Promise.resolve();
             }
@@ -72,7 +72,7 @@ describe("Bank", function() {
         });
     });
 
-    it("should withdraw EUR tokens of config.INVESTOR1_ACC to 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
+    it("should withdraw EUR tokens of config.INVESTOR1_ACC to a given external address", function(done) {
         assert(global.currencies.EUR, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.EUR);
@@ -93,7 +93,7 @@ describe("Bank", function() {
         });
     });
 
-    it("should deposit EUR tokens of config.INVESTOR1_ACC from 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
+    it("should deposit EUR tokens of config.INVESTOR1_ACC from an external address, e.g., 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
         assert(global.currencies.EUR, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.EUR);
@@ -141,6 +141,7 @@ describe("Reach goal with bids > ", function() {
 
                 crowdsale = createCS.logs[0].args.crowdsale;
                 console.log('Crowdsale', crowdsale);
+                console.log('create crowdsale gas cost', createCS.receipt.gasUsed);
 
                 done();
             });
@@ -232,6 +233,7 @@ describe("Reach goal with bids > ", function() {
             groupGoal2 = INVESTOR_GROUP2_GOAL;
         // place initial bid and create bidding group
         commonTests.initialBid(P, crowdsale, groupName2, groupGoal2, config.INVESTOR3_ACC, "CC99", 20).then(function(result) {
+            console.log('initial bid gas cost', result.receipt.gasUsed);
             return CS.getGroupsCount();
         }).then(function(value){
             // check group count is increased
@@ -252,6 +254,7 @@ describe("Reach goal with bids > ", function() {
         assert(crowdsale, "Crowdsale required.");
 
         commonTests.bid(P, crowdsale, 0, config.INVESTOR2_ACC, "BB007", 450).then(function(result) {
+            console.log('bid gas cost', result.receipt.gasUsed);
             // Three events should be fired - bid, goal reached, auction closed:
             assert.equal(result.receipt.logs.length, 4, "Failed bidding");
 
@@ -271,6 +274,7 @@ describe("Reach goal with bids > ", function() {
         assert(crowdsale, "Crowdsale required.");
         // fund beneficiary of crowdsale
         P.fundBeneficiary(crowdsale).then(function(result) {
+            console.log('fund beneficiary gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("EUR", BORROWER_ACC);
         }).then(function(value) {
             // check beneficiary is funded with winning group's goal amount
@@ -283,6 +287,7 @@ describe("Reach goal with bids > ", function() {
         assert(crowdsale, "Crowdsale required.");
         // refund loosing groups
         P.refundLosingGroups(crowdsale).then(function(result) {
+            console.log('refund losing groups gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("EUR", config.INVESTOR1_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 450, "Failed refunding losing group");
@@ -300,7 +305,7 @@ describe("Reach goal with bids > ", function() {
         // Set payment received
         P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
-
+            console.log('invoice payment received gas cost', result.receipt.gasUsed);
             // Check paidAmount
             return Crowdsale.at(crowdsale).paidAmount.call();
         }).then(function(paidAmount) {
@@ -314,6 +319,7 @@ describe("Reach goal with bids > ", function() {
             // Fund winner group
             return P.fundWinnerGroup(crowdsale);
         }).then(function(result) {
+            console.log('fund winner group gas cost', result.receipt.gasUsed);
             assert(result.receipt.logs, "Failed funding winner group");
 
             // Check investor1 balance
