@@ -21,7 +21,7 @@ describe("Init currency token", function() {
             console.log('Populous', P.address);
             // create new EUR currency token
             if (!global.currencies || !global.currencies.EUR) {
-                return commonTests.createCurrency(P, "Euros", 3, "EUR");
+                return commonTests.createCurrency(P, "EUR Pokens", 3, "EUR");
             } else {
                 return Promise.resolve();
             }
@@ -72,7 +72,7 @@ describe("Bank", function() {
         });
     });
 
-    it("should withdraw EUR tokens of config.INVESTOR1_ACC to 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
+    it("should withdraw EUR tokens of config.INVESTOR1_ACC to a given external address", function(done) {
         assert(global.currencies.EUR, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.EUR);
@@ -93,7 +93,7 @@ describe("Bank", function() {
         });
     });
 
-    it("should deposit EUR tokens of config.INVESTOR1_ACC from 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
+    it("should deposit EUR tokens of config.INVESTOR1_ACC from an external address, e.g., 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
         assert(global.currencies.EUR, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.EUR);

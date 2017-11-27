@@ -21,7 +21,7 @@ describe("Init currency token", function() {
             console.log('Populous', P.address);
 
             if (!global.currencies || !global.currencies.CNY) {
-                return commonTests.createCurrency(P, "Chinese Yuan", 3, "CNY");
+                return commonTests.createCurrency(P, "CNY Pokens", 3, "CNY");
             } else {
                 return Promise.resolve();
             }
@@ -73,7 +73,7 @@ describe("Bank", function() {
         });
     });
 
-    it("should withdraw CNY tokens of config.INVESTOR1_ACC to 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
+    it("should withdraw CNY tokens of config.INVESTOR1_ACC to an external address, e.g., 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
         assert(global.currencies.CNY, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.CNY);
@@ -94,7 +94,7 @@ describe("Bank", function() {
         });
     });
 
-    it("should deposit CNY tokens of config.INVESTOR1_ACC from 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
+    it("should deposit CNY tokens of config.INVESTOR1_ACC from an external address, e.g., 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
         assert(global.currencies.CNY, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.CNY);
@@ -336,7 +336,6 @@ describe("Chosen winner > ", function() {
                             refundPromises.push(refundCall);
                         }
                     });
-
                     refundPromises.push(groupCall);
                 })(groupIndex);
             }

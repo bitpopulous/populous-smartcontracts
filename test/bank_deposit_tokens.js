@@ -40,7 +40,7 @@ describe("Init currency token > ", function() {
     
     it("should transfer GBP tokens to config.INVESTOR1_ACC", function(done) {
         assert(global.currencies.GBP, "Currency required.");
-        // transfer 470 GBP tokens from 'Populous' to 'A'
+        // transfer 190 GBP tokens from 'Populous' to 'A'
         P.transfer("GBP", config.LEDGER_ACC, config.INVESTOR1_ACC, 190).then(function() {
             
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
@@ -115,7 +115,7 @@ describe("Deposit Tokens > ", function() {
 
     it("should deposit PPT", function(done) {
         assert(global.PPT, "PPT required.");
-        // deposit the 200 PPT from 'A' and get 90 GBP tokens
+        // deposit the 200 PPT from 'A' and get 190 GBP Pokens
         var
             depositAmount = 200,
             receiveCurrency = 'GBP',
@@ -318,7 +318,9 @@ describe("Deposit Tokens > ", function() {
             // get investor1 account balance in GBP tokens after sending 90 to account[1]
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
-            // investor1 should have 390 - 190 = 200 GBP tokens left in GBP ledger
+            // investor1 should have 390 - 190 = 200 GBP Pokens left in GBP ledger
+            // as 190 GBP Poken received when 200 PPT was deposited will be destroyed 
+            // upon calling release deposit 
             assert.equal(value.toNumber(), 200, "Failed funding winner group");
             done();
         })
