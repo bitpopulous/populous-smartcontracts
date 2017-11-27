@@ -38,7 +38,8 @@ describe("Bank", function() {
         // amount of USD tokens to mint = 470 + 450 + 600 = 1,520
         var mintAmount = config.INVESTOR1_ACC_BALANCE + config.INVESTOR2_ACC_BALANCE + config.INVESTOR3_ACC_BALANCE;
         // mint mintAmount of USD tokens and allocate to LEDGER_ACC/"Populous"
-        P.mintTokens('USD', mintAmount).then(function() {
+        P.mintTokens('USD', mintAmount).then(function(result) {
+            console.log('mint tokens gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("USD", config.LEDGER_ACC);
         }).then(function(amount) {
             assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
@@ -49,7 +50,8 @@ describe("Bank", function() {
     it("should transfer USD tokens to config.INVESTOR1_ACC, config.INVESTOR2_ACC, config.INVESTOR3_ACC_BALANCE", function(done) {
         assert(global.currencies.USD, "Currency required.");
         // transfer 470 USD tokens from 'Populous' to 'A'
-        P.transfer("USD", config.LEDGER_ACC, config.INVESTOR1_ACC, config.INVESTOR1_ACC_BALANCE).then(function() {
+        P.transfer("USD", config.LEDGER_ACC, config.INVESTOR1_ACC, config.INVESTOR1_ACC_BALANCE).then(function(result) {
+            console.log('transfer pokens gas cost', result.receipt.gasUsed);
             // transfer 450 USD tokens from 'Populous' to 'B'
             return P.transfer("USD", config.LEDGER_ACC, config.INVESTOR2_ACC, config.INVESTOR2_ACC_BALANCE);
         }).then(function() {
@@ -80,7 +82,8 @@ describe("Bank", function() {
         var withdrawalAmount = 8;
 
         // withdraw withdrawal amount of USD tokens from 'A' and send to externalAddress
-        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'USD', withdrawalAmount).then(function() {
+        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'USD', withdrawalAmount).then(function(result) {
+            console.log('withdraw pokens gas cost', result.receipt.gasUsed);
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
             // check withdrawal amount of USD tokens was allocated externalAddress
@@ -101,6 +104,7 @@ describe("Bank", function() {
         var depositAmount = 8;
         // deposit USD tokens from externalAddress to 'A'
         CT.transferToContract(P.address, depositAmount, config.INVESTOR1_ACC, { from: externalAddress }).then(function(result) {
+            console.log('transfer to contract gas cost', result.receipt.gasUsed);
             // check that depositAmount is deducted from externalAddress account
             return CT.balanceOf(externalAddress);
         }).then(function(value) {

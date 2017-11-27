@@ -18,7 +18,6 @@ describe("Init currency token > ", function() {
             console.log('Populous', P.address);
             // creating a new currency GBP for which to mint and use tokens
             return commonTests.createCurrency(P, "GBP Pokens", 3, "GBP");
-            
         }).then(function() {
             done();
         });
@@ -30,7 +29,8 @@ describe("Init currency token > ", function() {
         // amount of USD tokens to mint = 470 + 450 + 600 = 1,520
         var mintAmount = config.INVESTOR1_ACC_BALANCE;
         // mint mintAmount of USD tokens and allocate to LEDGER_ACC/"Populous"
-        P.mintTokens('GBP', mintAmount).then(function() {
+        P.mintTokens('GBP', mintAmount).then(function(result) {
+            console.log('mint tokens gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("GBP", config.LEDGER_ACC);
         }).then(function(amount) {
             assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
@@ -41,8 +41,8 @@ describe("Init currency token > ", function() {
     it("should transfer GBP tokens to config.INVESTOR1_ACC", function(done) {
         assert(global.currencies.GBP, "Currency required.");
         // transfer 190 GBP tokens from 'Populous' to 'A'
-        P.transfer("GBP", config.LEDGER_ACC, config.INVESTOR1_ACC, 190).then(function() {
-            
+        P.transfer("GBP", config.LEDGER_ACC, config.INVESTOR1_ACC, 190).then(function(result) {
+            console.log('transfer pokens gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), 190, "Failed transfer 1");
@@ -72,7 +72,8 @@ describe("Deposit Tokens > ", function() {
             DCM = DepositContractsManager.at(address);
             // create deposit contract for accountID 'A'
             return P.createDepositContact(config.INVESTOR1_ACC);
-        }).then(function() {
+        }).then(function(result) {
+            console.log('create deposit contract gas cost', result.receipt.gasUsed);
             // getting the address of the deposit contract for accountID 'A'
             return DCM.getDepositAddress.call(config.INVESTOR1_ACC);
         }).then(function(address) {
@@ -104,7 +105,8 @@ describe("Deposit Tokens > ", function() {
         var faucetAmount = 200;
         // transferring 200 PPT tokens to depositAddress from accounts[0]
         // deositAddress is the address of the deposit contract for accountID 'A'
-        global.PPT.transferToAddress(depositAddress, faucetAmount).catch(console.log).then(function() {
+        global.PPT.transferToAddress(depositAddress, faucetAmount).catch(console.log).then(function(result) {
+            console.log('transfer to address gas cost', result.receipt.gasUsed);
             // checking the balance of depositAddress is 200
             return global.PPT.balanceOf(depositAddress);
         }).then(function(amount) {
@@ -153,7 +155,7 @@ describe("Deposit Tokens > ", function() {
 
                 crowdsale = createCS.logs[0].args.crowdsale;
                 console.log('Crowdsale', crowdsale);
-
+                console.log('create crowdsale gas cost', createCS.receipt.gasUsed);
                 done();
             });
     });
@@ -184,6 +186,7 @@ describe("Deposit Tokens > ", function() {
         // so bidder must have the required amount in the currency ledger
         // investor1 has 380 GBP tokens - 190 = 190 balance
         commonTests.initialBid(P, crowdsale, groupName1, groupGoal1, config.INVESTOR1_ACC, "AA007", 190).then(function(result) {
+            console.log('initial bid gas cost', result.receipt.gasUsed);
             // when you bid you are using your tokens 
             // so making a transfer of currency pegged token to populous accountId in ledger
             // which is sent to beneficiary at the end of a crowsdale
@@ -229,6 +232,7 @@ describe("Deposit Tokens > ", function() {
         assert(crowdsale, "Crowdsale required.");
 
         P.fundBeneficiary(crowdsale).then(function(result) {
+            console.log('fund beneficiary gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("GBP", "B");
         }).then(function(value) {
             assert.equal(value.toNumber(), 190, "Failed funding beneficiary");
@@ -240,6 +244,7 @@ describe("Deposit Tokens > ", function() {
         assert(crowdsale, "Crowdsale required.");
         // refund any loosing groups
         P.refundLosingGroups(crowdsale).then(function(result) {
+            console.log('refund losing groups gas cost', result.receipt.gasUsed);
             done();
         });
     });
@@ -254,6 +259,8 @@ describe("Deposit Tokens > ", function() {
         // 200 + 190 = 390 balance
         P.invoicePaymentReceived(crowdsale, 200).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
+
+            console.log('invoice payment received gas cost', result.receipt.gasUsed);
 
             // Check paidAmount set when invoicePaymentReceived
             return Crowdsale.at(crowdsale).paidAmount.call();
@@ -271,6 +278,7 @@ describe("Deposit Tokens > ", function() {
             // Fund winner group
             return P.fundWinnerGroup(crowdsale);
         }).then(function(result) {
+            console.log('fund winner group gas cost', result.receipt.gasUsed);
             assert(result.receipt.logs, "Failed funding winner group");
 
             // Check investor1 GBP balance is increased by invoice amount = 190 + 200 = 390
@@ -297,7 +305,8 @@ describe("Deposit Tokens > ", function() {
         // and transfer balance to investor1
         // 390 - 190 = 190 balance for investor1
         // timelock
-        P.releaseDeposit(config.INVESTOR1_ACC, global.PPT.address, releaseCurrency, receiver, depositIndex).then(function() {
+        P.releaseDeposit(config.INVESTOR1_ACC, global.PPT.address, releaseCurrency, receiver, depositIndex).then(function(result) {
+            console.log('release deposit gas cost', result.receipt.gasUsed);
             // getActiveDepositList returns 1 = deposited and 2 = received
             return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "GBP");
         }).then(function(deposit) {

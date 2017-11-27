@@ -102,6 +102,7 @@ describe("Bank", function() {
         var depositAmount = 8;
         // deposit CNY tokens from externalAddress to 'A'
         CT.transferToContract(P.address, depositAmount, config.INVESTOR1_ACC, { from: externalAddress }).then(function(result) {
+            console.log('transfer to contract gas cost', result.receipt.gasUsed);
             // check that depositAmount is deducted from externalAddress account
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
@@ -188,6 +189,8 @@ describe("Chosen winner > ", function() {
         assert(crowdsale, "Crowdsale required.");
         // bid to group 2 with 25 from investor 1
         commonTests.bid(P, crowdsale, 1, config.INVESTOR1_ACC, 'ACC1', 25).then(function(result) {
+            console.log('bid gas cost', result.receipt.gasUsed);
+
             return P.getLedgerEntry.call("CNY", config.INVESTOR1_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 50, "Failed bidding twice to group 2");
@@ -296,6 +299,7 @@ describe("Chosen winner > ", function() {
         CS.borrowerChooseWinner(0).then(function(result) {
             assert(result.receipt.logs.length, "Failed choosing winner group (flag)");
 
+            console.log('borrower choose winner gas cost', result.receipt.gasUsed);
             return CS.status.call();
             // checking crowdsale status is correct = Closed
             // crowdsale ststuses are : Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
@@ -309,6 +313,7 @@ describe("Chosen winner > ", function() {
         assert(crowdsale, "Crowdsale required.");
         // funding beneficiary and checking beneficiary ledger balance
         P.fundBeneficiary(crowdsale).then(function(result) {
+            console.log('fund beneficiary gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("CNY", BORROWER_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), config.INVESTOR3_ACC_BALANCE, "Failed funding beneficiary");
@@ -360,7 +365,7 @@ describe("Chosen winner > ", function() {
         // Set invoice payment received
         P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
-
+            console.log('invoice payment received gas cost', result.receipt.gasUsed);
             // Check paidAmount
             return CS.paidAmount.call();
         }).then(function(paidAmount) {
