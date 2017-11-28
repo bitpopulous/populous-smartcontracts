@@ -124,8 +124,7 @@ contract Crowdsale is withAccessManager {
         platformTaxPercent = _platformTaxPercent;
         signedDocumentIPFSHash = _signedDocumentIPFSHash;
 
-        //deadline = now + 24 hours;
-        deadline = now + 1 seconds;
+        deadline = now + 24 hours;
         status = States.Open;
     }
 
