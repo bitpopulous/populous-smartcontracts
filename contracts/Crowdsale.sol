@@ -421,7 +421,7 @@ contract Crowdsale is withAccessManager {
     }
 
     /** @dev Gets the number of groups in the groups array.
-      * @return uint8 The returned status.
+      * @return uint The number of bidding groups in the crowdsale.
       */
     function getGroupsCount() public view returns (uint) {
         return groups.length;
