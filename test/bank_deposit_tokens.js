@@ -25,15 +25,15 @@ describe("Init currency token > ", function() {
 
     it("should mint GBP tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
         assert(global.currencies.GBP, "Currency required.");
-        // amount of USD tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
-        // amount of USD tokens to mint = 470 + 450 + 600 = 1,520
+        // amount of GBP tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
+        // amount of GBP tokens to mint = 470 + 450 + 600 = 1,520
         var mintAmount = config.INVESTOR1_ACC_BALANCE;
-        // mint mintAmount of USD tokens and allocate to LEDGER_ACC/"Populous"
+        // mint mintAmount of GBP tokens and allocate to LEDGER_ACC/"Populous"
         P.mintTokens('GBP', mintAmount).then(function(result) {
             console.log('mint tokens gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("GBP", config.LEDGER_ACC);
         }).then(function(amount) {
-            assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
+            assert.equal(amount.toNumber(), mintAmount, "Failed minting GBP tokens");
             done();
         });
     });
