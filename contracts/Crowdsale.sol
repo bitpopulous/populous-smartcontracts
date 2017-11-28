@@ -24,7 +24,7 @@ contract Crowdsale is withAccessManager {
 
     // FIELDS 
 
-    enum AuctionCloseReasons { GroupGoalReached, DeadlineReached, BorrowerClosed }
+    enum AuctionCloseReasons { GroupGoalReached, DeadlineReached, NoBidsAndDeadlineReached, BorrowerClosed, PopulousClosed }
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed }
 
     States public status;
@@ -70,8 +70,6 @@ contract Crowdsale is withAccessManager {
 
     //bidderId => BidderInfo
     mapping (bytes32 => BidderInfo) bidderGroupInfo;
-
-
 
 
     uint public groupsReceivedTokensBack;
@@ -130,6 +128,34 @@ contract Crowdsale is withAccessManager {
         status = States.Open;
     }
 
+    // check if auction deadline has reached and if there were any bids
+    // if deadline reached change state to closed with reason being deadline
+    // reached and no bids
+    // return true or false if deadline reached and no bids
+    function checkNoBids() public returns(bool) {
+        if (now > deadline && groups.length == 0) {
+            if (status == States.Open || status == States.Closed) {
+            //if (status == States.Open && groups[0].amountRaised > 0)
+                status = States.Closed;
+                EventAuctionClosed(uint8(AuctionCloseReasons.NoBidsAndDeadlineReached));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // closes an open auction
+    // onlyPopulous allowed, i.e., populous address has to be msg.sender
+    // function has to be implemented in populous.sol to be msg.sender
+    function closeAuction() public onlyPopulous returns(bool success) {
+        if (status == States.Open) {
+            status = States.Closed;
+            EventAuctionClosed(uint8(AuctionCloseReasons.PopulousClosed));
+            return true;
+        }
+        return false;
+    }
+
     /** @dev Checks whether the invoice auction deadline has passed or not.
       * @return bool A boolean value indicating whether the deadline has passed or not.
       */
@@ -138,6 +164,7 @@ contract Crowdsale is withAccessManager {
             if (status == States.Open) {
                 status = States.Closed;
                 EventAuctionClosed(uint8(AuctionCloseReasons.DeadlineReached));
+                checkNoBids();
             }
             return true;
         }
@@ -320,6 +347,7 @@ contract Crowdsale is withAccessManager {
         onlyOpenAuction
         onlyServer
     {
+        require(!checkNoBids());
         if (groups[groupIndex].amountRaised > 0) {
             winnerGroupIndex = groupIndex;
             hasWinnerGroup = true;
@@ -328,6 +356,8 @@ contract Crowdsale is withAccessManager {
             EventAuctionClosed(uint8(AuctionCloseReasons.BorrowerClosed));
         }
     }
+
+    
 
     // calls the _waitingForPayment method
     function waitingForPayment() public onlyServer returns(bool) {
@@ -351,6 +381,7 @@ contract Crowdsale is withAccessManager {
       * @dev Only populous can use this method.
       */
     function setSentToBeneficiary() public onlyPopulous {
+        require(!checkNoBids());
         sentToBeneficiary = true;
 
         // We have only 1 group (the winning group) and we set 
@@ -358,11 +389,13 @@ contract Crowdsale is withAccessManager {
         if (groups.length == 1) {
             setSentToLosingGroups();
         }
+        
     }
 
-    /** @dev Sets the 'setSentToLosingGroups' boolean variable to true.
+    /** @dev Sets the sent 'setSentToLosingGroups' boolean variable to true.
       */
     function setSentToLosingGroups() private {
+        require(!checkNoBids());
         sentToLosingGroups = true;
         
         _waitingForPayment();
@@ -373,6 +406,8 @@ contract Crowdsale is withAccessManager {
       * @dev Sets the boolean 'hasReceivedTokensBack' variable of the winning group to true
       */
     function setSentToWinnerGroup() private {
+        require(!checkNoBids());
+
         sentToWinnerGroup = true;
         status = States.Completed;
         groups[winnerGroupIndex].hasReceivedTokensBack = true;
@@ -391,19 +426,15 @@ contract Crowdsale is withAccessManager {
     }
 
     /** @dev Gets the number of groups in the groups array.
-      * @return uint The returned number of created groups in the crowdsale.
+      * @return uint The number of bidding groups in the crowdsale.
       */
     function getGroupsCount() public view returns (uint) {
         return groups.length;
     }
 
-    /** @dev Gets the details of a group located by its index/location in the group array.
+    /** @dev Gets the details of a group located by its index/location in the group array..
       * @param groupIndex The location of a group within the groups array variable.
-      * @return name The group name.
-      * @return goal The group goal.
-      * @return biddersCount The number of bidders in the group.
-      * @return amountRaised The amount raised by the group.
-      * @return hasReceivedTokensBack A boolean value to indicate whether the group has received a refund of their tokens.
+      * @return uint8 The returned status.
       */ 
     function getGroup(uint groupIndex)
         public view
@@ -445,6 +476,15 @@ contract Crowdsale is withAccessManager {
         } else if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
             return (0, groupIndex, bidderIndex);
         }
+        
+        /* for(groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+            for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
+                if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+                    return (0, groupIndexes[bidderIndex], bidderIndexes[bidderId]);
+                }
+            }
+        }
+        return (1, 0, 0); */
     }
 
     /** @dev Finds a bidder in a list of bidders with bidder ID and group index.
@@ -461,6 +501,12 @@ contract Crowdsale is withAccessManager {
         } else if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
             return (0, bidderIndex);
         }
+        /* for(bidderIndex = 0; bidderIndex < groups[groupIndex].bidders.length; bidderIndex++) {
+            if (Utils.equal(groups[groupIndex].bidders[bidderIndex].bidderId, bidderId) == true) {
+                return (0, bidderIndexes[bidderId]);
+            }
+        }
+        return (1, 0);  */ 
     }
 
     /** @dev Gets beneficiary's token amount after bidding is closed.
