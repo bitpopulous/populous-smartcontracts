@@ -190,8 +190,9 @@ describe("Deposit Tokens > ", function() {
         // Check status
         // there are 6 states in total
         // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
-        //Crowdsale.at(crowdsale).checkDeadline().then(function(){
-        Crowdsale.at(crowdsale).closeAuction().then(function(){
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeAuction().then(function(){
+        P.closeAuction(crowdsale).then(function(){
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(status) {
             assert.equal(status.toNumber(), 2, "Failed auction status to closed");

@@ -24,7 +24,7 @@ contract Crowdsale is withAccessManager {
 
     // FIELDS 
 
-    enum AuctionCloseReasons { GroupGoalReached, DeadlineReached, NoBidsAndDeadlineReached, BorrowerClosed }
+    enum AuctionCloseReasons { GroupGoalReached, DeadlineReached, NoBidsAndDeadlineReached, BorrowerClosed, PopulousClosed }
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed }
 
     States public status;
@@ -144,12 +144,17 @@ contract Crowdsale is withAccessManager {
         return false;
     }
 
-
-    function closeAuction() public {
-        status = States.Closed;
-        EventAuctionClosed(uint8(AuctionCloseReasons.BorrowerClosed));
+    // closes an open auction
+    // onlyPopulous allowed, i.e., populous address has to be msg.sender
+    // function has to be implemented in populous.sol to be msg.sender
+    function closeAuction() public onlyPopulous returns(bool success) {
+        if (status == States.Open) {
+            status = States.Closed;
+            EventAuctionClosed(uint8(AuctionCloseReasons.PopulousClosed));
+            return true;
+        }
+        return false;
     }
-
 
     /** @dev Checks whether the invoice auction deadline has passed or not.
       * @return bool A boolean value indicating whether the deadline has passed or not.
