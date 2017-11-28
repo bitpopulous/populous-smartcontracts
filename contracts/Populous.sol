@@ -38,7 +38,7 @@ contract iCrowdsale {
       * @return err 0 or 1 implying absence or presence of error.
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
-    function createGroup(string _name, uint _goal) public returns (uint8 err, uint groupIndex);
+    function createGroup(string _name, uint _goal) private returns (uint8 err, uint groupIndex);
     
     
     /** @dev Allows a bidder to place a bid as part of a group within a set of groups.

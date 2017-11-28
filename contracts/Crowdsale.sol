@@ -212,7 +212,7 @@ contract Crowdsale is withAccessManager {
       * @return groupIndex The returned group index/location in a collection of other groups.
       */
     function createGroup(string _name, uint _goal)
-        public
+        private
         onlyOpenAuction
         returns (uint8 err, uint groupIndex)
     {
