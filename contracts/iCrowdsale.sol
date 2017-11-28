@@ -85,7 +85,7 @@ contract iCrowdsale {
       */
     function getStatus() public view returns (uint8);
     /** @dev Gets the number of groups in the groups array.
-      * @return uint The number of bidding groups in teh crowdsale.
+      * @return uint The number of bidding groups in the crowdsale.
       */
     function getGroupsCount() public view returns (uint);
     /** @dev Gets the details of a group located by its index/location in the group array..
