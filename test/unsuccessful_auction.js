@@ -71,7 +71,7 @@ describe("Deposit Tokens > ", function() {
         P.DCM.call().then(function(address) {
             DCM = DepositContractsManager.at(address);
             // create deposit contract for accountID 'A'
-            return P.createDepositContact(config.INVESTOR1_ACC);
+            return P.createDepositContract(config.INVESTOR1_ACC);
         }).then(function(result) {
             console.log('create deposit contract gas cost', result.receipt.gasUsed);
             // getting the address of the deposit contract for accountID 'A'
