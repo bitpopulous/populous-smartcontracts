@@ -561,7 +561,7 @@ contract Populous is withAccessManager {
 
     // NON-CONSTANT METHODS
 
-    function createDepositContact(bytes32 clientId) public onlyServer {
+    function createDepositContract(bytes32 clientId) public onlyServer {
         // Creates a new deposit contract linked to a client ID
         address depositContractAddress = iDepositContractsManager(DCM).create(clientId);
         // Event triggered when deposit contract is created
