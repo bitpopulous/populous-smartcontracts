@@ -1,8 +1,8 @@
 /**
 This is the core module of the system. Currently it holds the code of
-the Bank and Auction modules to avoid external calls and higher gas costs.
+the Bank and crowdsale modules to avoid external calls and higher gas costs.
 It might be a good idea in the future to split the code, separate Bank
-and Auction modules into external files and have the core interact with them
+and crowdsale modules into external files and have the core interact with them
 with addresses and interfaces. 
 */
 pragma solidity ^0.4.17;
@@ -26,7 +26,7 @@ contract Populous is withAccessManager {
     event EventWithdrawal(address to, bytes32 clientId, bytes32 currency, uint amount);
     event EventDeposit(address from, bytes32 clientId, bytes32 currency, uint amount);
 
-    // Auction events
+    // crowdsale events
     event EventNewCrowdsale(address crowdsale);
     event EventBeneficiaryFunded(address crowdsaleAddr, bytes32 borrowerId, bytes32 currency, uint amount);
     event EventLosingGroupBidderRefunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint amount);
@@ -260,13 +260,13 @@ contract Populous is withAccessManager {
     */
 
     /**
-    AUCTION MODULE
+    crowdsale MODULE
     */
 
     // NON-CONSTANT METHODS
 
 
-    /** @dev Creates a new Crowdsale contract instance for an invoice auction restricted to server.
+    /** @dev Creates a new Crowdsale contract instance for an invoice crowdsale restricted to server.
       * @param _currencySymbol The currency symbol, e.g., GBP.
       * @param _borrowerId The unique borrower ID.
       * @param _invoiceId The unique invoice ID.
@@ -306,17 +306,17 @@ contract Populous is withAccessManager {
 
     
     
-    function closeAuction(address crowdsaleAddr)
+    function closeCrowdsale(address crowdsaleAddr)
         public
         onlyServer
         returns (bool success)
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-        return CS.closeAuction();
+        return CS.closeCrowdsale();
     }
 
 
-    /** @dev Allows a bidder to place a bid in an invoice auction.
+    /** @dev Allows a bidder to place a bid in an invoice crowdsale.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
       * @param name The bidder name.
@@ -570,7 +570,7 @@ contract Populous is withAccessManager {
         }
     }    
     /**
-    END OF AUCTION MODULE
+    END OF CROWDSALE MODULE
     */
 
     /**

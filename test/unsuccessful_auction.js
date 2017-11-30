@@ -184,18 +184,18 @@ describe("Deposit Tokens > ", function() {
     
 
 
-    it("should check auction status", function(done){
+    it("should check crowdsale status", function(done){
         assert(crowdsale, "Crowdsale required.");
 
         // Check status
         // there are 6 states in total
         // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
         // Crowdsale.at(crowdsale).checkDeadline().then(function(){
-        // Crowdsale.at(crowdsale).closeAuction().then(function(){
-        P.closeAuction(crowdsale).then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        P.closeCrowdsale(crowdsale).then(function(){
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(status) {
-            assert.equal(status.toNumber(), 2, "Failed auction status to closed");
+            assert.equal(status.toNumber(), 2, "Failed crowdsale status to closed");
             done();
         });
     });
