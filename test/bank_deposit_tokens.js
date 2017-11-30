@@ -255,7 +255,7 @@ describe("Deposit Tokens > ", function() {
         // Set payment received for funded invoice 
         // this sets paidAmount in crowdsale as well to the same amount
         // investor1 group will receive invoice amount of 200 and
-        // investor1 the only one in the group will receive all
+        // investor1 the only one in the group will receive all 10 GBP interest
         // 200 + 190 = 390 balance
         P.invoicePaymentReceived(crowdsale, 200).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
