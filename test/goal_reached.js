@@ -255,7 +255,7 @@ describe("Reach goal with bids > ", function() {
 
         commonTests.bid(P, crowdsale, 0, config.INVESTOR2_ACC, "BB007", 450).then(function(result) {
             console.log('bid gas cost', result.receipt.gasUsed);
-            // Three events should be fired - bid, goal reached, auction closed:
+            // Three events should be fired - bid, goal reached, crowdsale closed:
             assert.equal(result.receipt.logs.length, 4, "Failed bidding");
 
             return P.getLedgerEntry.call("EUR", config.INVESTOR2_ACC);

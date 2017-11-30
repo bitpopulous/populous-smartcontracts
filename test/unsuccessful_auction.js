@@ -103,7 +103,7 @@ describe("Deposit Tokens > ", function() {
         assert(global.PPT, "PPT required.");
 
         var faucetAmount = 200;
-        // transferring 200 PPT tokens to depositAddress from accounts[0]
+        // transferring 200 PPT tokens to depositAddress for client from accounts[0]
         // deositAddress is the address of the deposit contract for accountID 'A'
         global.PPT.transferToAddress(depositAddress, faucetAmount).catch(console.log).then(function(result) {
             console.log('transfer to address gas cost', result.receipt.gasUsed);
@@ -184,18 +184,18 @@ describe("Deposit Tokens > ", function() {
     
 
 
-    it("should check auction status", function(done){
+    it("should check crowdsale status", function(done){
         assert(crowdsale, "Crowdsale required.");
 
         // Check status
         // there are 6 states in total
         // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
         // Crowdsale.at(crowdsale).checkDeadline().then(function(){
-        // Crowdsale.at(crowdsale).closeAuction().then(function(){
-        P.closeAuction(crowdsale).then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        P.closeCrowdsale(crowdsale).then(function(){
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(status) {
-            assert.equal(status.toNumber(), 2, "Failed auction status to closed");
+            assert.equal(status.toNumber(), 2, "Failed crowdsale status to closed");
             done();
         });
     });

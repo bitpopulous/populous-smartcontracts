@@ -6,7 +6,7 @@ contract iCrowdsaleManager {
 
     // NON-CONSTANT METHODS
 
-    /** @dev Creates a new Crowdsale contract instance for an invoice auction.
+    /** @dev Creates a new Crowdsale contract instance for an invoice crowdsale.
       * @param _currencySymbol The currency symbol, e.g., GBP.
       * @param _borrowerId The unique borrower ID.
       * @param _invoiceId The unique invoice ID.

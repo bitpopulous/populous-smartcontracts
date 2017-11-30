@@ -25,8 +25,8 @@ contract CrowdsaleManager is withAccessManager {
     CrowdsaleEntry[] crowdsales;
 
     // The variable invoicesIndex keeps track of invoices by borrower ID, 
-    // invoice number and invoice amount to keep track of auctioned 
-    // invoices and restrict duplicate auctions for the same invoice.
+    // invoice number and invoice amount to keep track of crowdsale 
+    // invoices and restrict duplicate crowdsales for the same invoice.
     mapping(bytes32 => mapping(string => uint)) invoicesIndex;
 
     // NON-CONSTANT METHODS
@@ -59,7 +59,7 @@ contract CrowdsaleManager is withAccessManager {
         onlyPopulous
         returns (address crowdsaleAddr)
     {
-        // Avoid auctioning the same invoice more than once
+        // Avoid using the same invoice in more than crowdsale
         require(invoicesIndex[_borrowerId][_invoiceNumber] != _invoiceAmount);
         invoicesIndex[_borrowerId][_invoiceNumber] = _invoiceAmount;
 
