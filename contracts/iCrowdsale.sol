@@ -1,6 +1,5 @@
 pragma solidity ^0.4.17;
 
-
 /// @title iCrowdsale contract an interface contract
 contract iCrowdsale {
 
@@ -23,10 +22,6 @@ contract iCrowdsale {
 
     //NON-CONSTANT METHODS
 
-    /** @dev Checks whether the invoice auction deadline has passed or not.
-      * @return bool A boolean value indicating whether the deadline has passed or not.
-      */
-    function isDeadlineReached() public returns(bool);
     
     /** @dev Creates a new bidding group for bidders to bid to fund an invoice and assigns the group an index in the collection of groups.
       * @param _name The group name.
@@ -37,6 +32,8 @@ contract iCrowdsale {
     function createGroup(string _name, uint _goal) private returns (uint8 err, uint groupIndex);
     
     
+    function closeAuction() public returns(bool success);
+
     /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.
