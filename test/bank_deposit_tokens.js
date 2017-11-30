@@ -103,7 +103,7 @@ describe("Deposit Tokens > ", function() {
         assert(global.PPT, "PPT required.");
 
         var faucetAmount = 200;
-        // transferring 200 PPT tokens to depositAddress from accounts[0]
+        // transferring 200 PPT tokens to depositAddress for client from accounts[0]
         // deositAddress is the address of the deposit contract for accountID 'A'
         global.PPT.transferToAddress(depositAddress, faucetAmount).catch(console.log).then(function(result) {
             console.log('transfer to address gas cost', result.receipt.gasUsed);
