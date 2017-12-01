@@ -13,6 +13,7 @@ deployer.then(function() {
         return Populous.deployed();
     }).then(function(instance) {
         P = instance;
+
         return DepositContractsManager.deployed();
     }).then(function(DCM) {
         return P.setDCM(DCM.address);

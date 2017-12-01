@@ -144,9 +144,11 @@ contract Crowdsale is withAccessManager {
         return false;
     }
 
-    // closes an open crowdsale
-    // onlyPopulous allowed, i.e., populous address has to be msg.sender
-    // function has to be implemented in populous.sol to be msg.sender
+    /** @dev closes an open crowdsale
+      * @dev onlyPopulous allowed, i.e., populous address has to be msg.sender
+      * @dev function has to be implemented in populous.sol to be msg.sender
+      * @return success This is a boolean true/false indicating if crowdsale is closed.
+      */
     function closeCrowdsale() public onlyPopulous returns(bool success) {
         if (status == States.Open) {
             status = States.Closed;
