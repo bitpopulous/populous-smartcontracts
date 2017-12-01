@@ -249,13 +249,14 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
+
     it("should fund winner group", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
         // Set payment received for funded invoice 
         // this sets paidAmount in crowdsale as well to the same amount
         // investor1 group will receive invoice amount of 200 and
-        // investor1 the only one in the group will receive all
+        // investor1 the only one in the group will receive all 10 GBP interest
         // 200 + 190 = 390 balance
         P.invoicePaymentReceived(crowdsale, 200).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
@@ -287,6 +288,9 @@ describe("Deposit Tokens > ", function() {
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), 390, "Failed funding winner group");
+            return Crowdsale.at(crowdsale).bidderHasTokensBack.call(config.INVESTOR1_ACC);
+        }).then(function(result) {
+            assert.equal(result, 1, "Failed funding bidder in winner group");
             done();
         })
     });
