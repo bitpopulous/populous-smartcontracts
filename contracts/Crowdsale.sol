@@ -434,9 +434,36 @@ contract Crowdsale is withAccessManager {
         return groups.length;
     }
 
+    
+    /** @dev Checks if a bidder in any bidding group
+      * has received their tokens back.
+      * @param bidderId The bidder ID
+      * @return received The boolean true/false indicating token received or not.
+      */
+    function bidderHasTokensBack (bytes32 bidderId) public view returns(bool received) {
+        uint8 err;
+        uint groupIndex;
+        uint bidderIndex;
+        (err, groupIndex, bidderIndex) = findBidder(bidderId);
+        bytes32 bidder;
+        uint bidAmount;
+        bool hasReceivedTokensBack;
+        (bidder, , bidAmount, hasReceivedTokensBack) = getGroupBidder(groupIndex, bidderIndex);
+        if (Utils.equal(bidderId, bidder) && hasReceivedTokensBack) {
+            return true;
+        }
+        return false;
+
+    }
+
+
     /** @dev Gets the details of a group located by its index/location in the group array..
       * @param groupIndex The location of a group within the groups array variable.
-      * @return uint8 The returned status.
+      * @return name The group name.
+      * @return goal The amount representing the group funding goal.
+      * @return biddersCount The number of bidders in the bidding group.
+      * @return amountRaised The amount of tokens raised by the group during crowdsale.
+      * @return hasReceivedTokensBack A boolean value indicating if group has been funded after crowdsale.
       */ 
     function getGroup(uint groupIndex)
         public view

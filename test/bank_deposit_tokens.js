@@ -249,6 +249,7 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
+
     it("should fund winner group", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
@@ -287,6 +288,9 @@ describe("Deposit Tokens > ", function() {
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), 390, "Failed funding winner group");
+            return Crowdsale.at(crowdsale).bidderHasTokensBack.call(config.INVESTOR1_ACC);
+        }).then(function(result) {
+            assert.equal(result, 1, "Failed funding bidder in winner group");
             done();
         })
     });
