@@ -394,7 +394,7 @@ describe("Chosen winner > ", function() {
     });
 
 
-    it("should get correct winner group index", function(done) {
+    it("should get correct crowdsale winner group index", function(done) {
         assert(crowdsale, "Crowdsale required.");
         var CS = Crowdsale.at(crowdsale);
         
