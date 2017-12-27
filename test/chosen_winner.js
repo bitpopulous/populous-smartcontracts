@@ -381,6 +381,31 @@ describe("Chosen winner > ", function() {
         });
     });
 
+    it("should get correct invoice paid amount", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+        var CS = Crowdsale.at(crowdsale);
+        
+        CS.getPaidAmount().then(function(amount) {
+            console.log("Amount received:", amount.toNumber());
+            assert.equal(amount.toNumber(), INVOICE_AMOUNT, "Failed getting paid amount");
+            
+            done();
+        });
+    });
+
+
+    it("should get correct crowdsale winner group index", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+        var CS = Crowdsale.at(crowdsale);
+        
+        CS.getWinnerGroupIndex().then(function(group_index) {
+            console.log("Winner group index:", group_index.toNumber());
+            assert.equal(group_index.toNumber(), 0, "Failed getting paid amount");
+            
+            done();
+        });
+    });
+
     it("should fund winner group", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
