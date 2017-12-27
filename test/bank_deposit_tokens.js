@@ -73,7 +73,11 @@ describe("Deposit Tokens > ", function() {
             // create deposit contract for accountID 'A'
             return P.createDepositContract(config.INVESTOR1_ACC);
         }).then(function(result) {
+            console.log('create deposit contract log');
+            // printing transaction log in console
+            console.log(result.logs[0]);
             console.log('create deposit contract gas cost', result.receipt.gasUsed);
+            console.log('create deposit contract FULL log', result.receipt);
             // getting the address of the deposit contract for accountID 'A'
             return DCM.getDepositAddress.call(config.INVESTOR1_ACC);
         }).then(function(address) {
@@ -154,6 +158,7 @@ describe("Deposit Tokens > ", function() {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 
                 crowdsale = createCS.logs[0].args.crowdsale;
+                console.log(createCS.logs[0]);
                 console.log('Crowdsale', crowdsale);
                 console.log('create crowdsale gas cost', createCS.receipt.gasUsed);
                 done();

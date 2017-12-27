@@ -420,6 +420,21 @@ contract Crowdsale is withAccessManager {
 
     // CONSTANT METHODS
 
+
+    /** @dev Gets the paid amount 
+      * @return uint The paid amount.
+      */
+    function getPaidAmount() public view returns (uint) {
+        return paidAmount;
+    }
+
+    /** @dev Gets the paid amount 
+      * @return uint The paid amount.
+      */
+    function getWinnerGroupIndex() public view returns (uint) {
+        return winnerGroupIndex;
+    }
+
     /** @dev Gets the current status.
       * @return uint8 The returned status.
       */
