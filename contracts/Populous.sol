@@ -384,6 +384,9 @@ contract Populous is withAccessManager {
       */
     function fundBeneficiary(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+        // bug fix
+        //there has to be winner group set before beneficiary is funded
+        require(CS.getHasWinnerGroup());
 
         uint8 err;
         uint amount;
@@ -454,7 +457,9 @@ contract Populous is withAccessManager {
         if (States(CS.getStatus()) != States.Closed) { return; }
 
         uint winnerGroupIndex = CS.winnerGroupIndex();
-        if (winnerGroupIndex == groupIndex) {
+        
+        // bug fix
+        if (winnerGroupIndex == groupIndex && CS.getHasWinnerGroup()) {
             return;
         }
 

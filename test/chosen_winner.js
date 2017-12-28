@@ -309,6 +309,22 @@ describe("Chosen winner > ", function() {
         });
     });
 
+
+    it("should check crowdsale haswinner", function(done){
+        assert(crowdsale, "Crowdsale required.");
+
+        // Check status
+        // there are 6 states in total
+        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        Crowdsale.at(crowdsale).getHasWinnerGroup().then(function(haswinner){
+            console.log("Crowdsale has winner", haswinner);
+            assert.equal(haswinner, true, "Failed to get right haswinner boolean");
+            done();
+        });
+    });
+
     it("should fund beneficiary", function(done) {
         assert(crowdsale, "Crowdsale required.");
         // funding beneficiary and checking beneficiary ledger balance

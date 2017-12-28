@@ -203,7 +203,7 @@ describe("Deposit Tokens > ", function() {
             // 4 = bool hasReceivedTokensBack
             return Crowdsale.at(crowdsale).getGroup.call(0);
         }).then(function(group) {
-            // check that amountRaised for the group with index = 0 is 90
+            // check that amountRaised for the group with index = 0 is 190
             assert.equal(group[3].toNumber(), 190, "Failed bidding");
             done();
         })

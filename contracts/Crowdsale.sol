@@ -128,6 +128,12 @@ contract Crowdsale is withAccessManager {
         status = States.Open;
     }
 
+
+    // to do - add method to check if crowdsale ended without hasWinnerGroup = true
+    // and group length = 1
+    // then refund members with new refund function
+    // findBidder
+
     // check if crowdsale deadline has reached and if there were any bids
     // if deadline reached change state to closed with reason being deadline
     // reached and no bids
@@ -187,13 +193,21 @@ contract Crowdsale is withAccessManager {
         if (groups[groupIndex].biddersReceivedTokensBack == groups[groupIndex].bidders.length) {
             groups[groupIndex].hasReceivedTokensBack = true;
             groupsReceivedTokensBack++;
-            
+            // bug fix
+            // comparing number of groups to number of groups that have received tokens back
+            // check if groupIndex = winner group Index
+            // check if hasWinnerGroup
+            // check if crowdsaleisclosed - already checked before state change
             if (groups.length == 1) {
-                setSentToLosingGroups();
-                setSentToWinnerGroup();
+                if (hasWinnerGroup) {
+                    setSentToLosingGroups();
+                    setSentToWinnerGroup();
+                } else {
+                    setSentToLosingGroups();
+                }
             } else if (groups.length - 1 == groupsReceivedTokensBack) {
                 setSentToLosingGroups();
-            } else if (groups.length == groupsReceivedTokensBack) {
+            } else if (groups.length == groupsReceivedTokensBack && hasWinnerGroup) {
                 setSentToWinnerGroup();
             }
         }
@@ -384,6 +398,8 @@ contract Crowdsale is withAccessManager {
       */
     function setSentToBeneficiary() public onlyPopulous {
         require(!checkNoBids());
+        
+
         sentToBeneficiary = true;
 
         // We have only 1 group (the winning group) and we set 
@@ -420,7 +436,13 @@ contract Crowdsale is withAccessManager {
 
     // CONSTANT METHODS
 
-
+    /** @dev Gets bool hasWinnerGroup for crowdsale
+      * @return bool hasWinnerGroup.
+      */
+    function getHasWinnerGroup() public view returns (bool) {
+        return hasWinnerGroup;
+    }
+    
     /** @dev Gets the paid amount 
       * @return uint The paid amount.
       */
@@ -559,6 +581,9 @@ contract Crowdsale is withAccessManager {
       */
     function getAmountForBeneficiary() public view returns (uint8 err, uint amount) {
         if (status == States.Closed && sentToBeneficiary == false) {
+            // winner group will be zero by default but hasWinnerGroup = False
+            // in that case, funding beneficiary should fail
+            // previously, it still tries to get amountRaised for group with index = 0
             return (0, groups[winnerGroupIndex].amountRaised);
         } else {
             return (1, 0);

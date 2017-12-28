@@ -12,38 +12,38 @@ var
     P, DCM, depositAddress, crowdsale;
 
 describe("Init currency token > ", function() {
-    it("should init currency UAE AED Pokens", function(done) {
+    it("should init currency RND Pokens", function(done) {
         Populous.deployed().then(function(instance) {
             P = instance;
             console.log('Populous', P.address);
-            // creating a new currency AED for which to mint and use tokens
-            return commonTests.createCurrency(P, "AED Pokens", 3, "AED");
+            // creating a new currency RND for which to mint and use tokens
+            return commonTests.createCurrency(P, "RND Pokens", 3, "RND");
         }).then(function() {
             done();
         });
     });
 
-    it("should mint AED tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
-        assert(global.currencies.AED, "Currency required.");
-        // amount of USD tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
-        // amount of USD tokens to mint = 470 + 450 + 600 = 1,520
+    it("should mint RND tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
+        assert(global.currencies.RND, "Currency required.");
+        // amount of RND tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
+        // amount of RND tokens to mint = 470 + 450 + 600 = 1,520
         var mintAmount = config.INVESTOR1_ACC_BALANCE;
-        // mint mintAmount of USD tokens and allocate to LEDGER_ACC/"Populous"
-        P.mintTokens('AED', mintAmount).then(function(result) {
+        // mint mintAmount of RND tokens and allocate to LEDGER_ACC/"Populous"
+        P.mintTokens('RND', mintAmount).then(function(result) {
             console.log('mint tokens gas cost', result.receipt.gasUsed);
-            return P.getLedgerEntry.call("AED", config.LEDGER_ACC);
+            return P.getLedgerEntry.call("RND", config.LEDGER_ACC);
         }).then(function(amount) {
-            assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
+            assert.equal(amount.toNumber(), mintAmount, "Failed minting RND tokens");
             done();
         });
     });
     
-    it("should transfer AED tokens to config.INVESTOR1_ACC", function(done) {
-        assert(global.currencies.AED, "Currency required.");
-        // transfer 190 AED tokens from 'Populous' to 'A'
-        P.transfer("AED", config.LEDGER_ACC, config.INVESTOR1_ACC, 190).then(function(result) {
+    it("should transfer RND tokens to config.INVESTOR1_ACC", function(done) {
+        assert(global.currencies.RND, "Currency required.");
+        // transfer 190 RND tokens from 'Populous' to 'A'
+        P.transfer("RND", config.LEDGER_ACC, config.INVESTOR1_ACC, 190).then(function(result) {
             console.log('transfer pokens gas cost', result.receipt.gasUsed);
-            return P.getLedgerEntry.call("AED", config.INVESTOR1_ACC);
+            return P.getLedgerEntry.call("RND", config.INVESTOR1_ACC);
         }).then(function(value) {
             assert.equal(value.toNumber(), 190, "Failed transfer 1");
             done();
@@ -73,7 +73,11 @@ describe("Deposit Tokens > ", function() {
             // create deposit contract for accountID 'A'
             return P.createDepositContract(config.INVESTOR1_ACC);
         }).then(function(result) {
+            console.log('create deposit contract log');
+            // printing transaction log in console
+            console.log(result.logs[0]);
             console.log('create deposit contract gas cost', result.receipt.gasUsed);
+            console.log('create deposit contract FULL log', result.receipt);
             // getting the address of the deposit contract for accountID 'A'
             return DCM.getDepositAddress.call(config.INVESTOR1_ACC);
         }).then(function(address) {
@@ -117,16 +121,16 @@ describe("Deposit Tokens > ", function() {
 
     it("should deposit PPT", function(done) {
         assert(global.PPT, "PPT required.");
-        // deposit the 200 PPT from 'A' and get 190 AED Pokens
+        // deposit the 200 PPT from 'A' and get 190 RND Pokens
         var
             depositAmount = 200,
-            receiveCurrency = 'AED',
+            receiveCurrency = 'RND',
             receiveAmount = 190;
         // the deposit amount is refunded later
         // When the actor deposits funds into the platform, an equivalent amount of tokens is deposited into his account
         // client gets receive amount in the particular currency ledger from 'Populous'
         P.deposit(config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function() {
-            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "AED");
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "RND");
         }).then(function(deposit) {
             // getActiveDepositList returns three uints
             // the last two are amount deposited and amount received
@@ -136,16 +140,14 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
-    
-
     it("should create crowdsale", function(done) {
-        assert(global.currencies.AED, "Currency required.");
+        assert(global.currencies.RND, "Currency required.");
         // borrowerId is accountID 'B' and is funded when fundBeneficiary is called
         // the 100 (_invoiceAmount) is sent to invoice funders / winning group
         // the 90 (_fundingGoal) is sent to borrower from funding group
         // at the end of crowdsale
         P.createCrowdsale(
-                "AED",
+                "RND",
                 "B",
                 "#8888",
                 "#8888",
@@ -156,46 +158,79 @@ describe("Deposit Tokens > ", function() {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 
                 crowdsale = createCS.logs[0].args.crowdsale;
+                console.log(createCS.logs[0]);
                 console.log('Crowdsale', crowdsale);
                 console.log('create crowdsale gas cost', createCS.receipt.gasUsed);
                 done();
             });
     });
 
-    it("should fail bid to group 1 from config.INVESTOR1_ACC with 0", function(done) {
+    /* it("should create bidding group", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
         var
-            CS = Crowdsale.at(crowdsale);
-                       
-            var isCaught = false;
-            // creation of this group should fail since investor1 has already created
-            // and is part of a bidding group for this crowdsale.
-            commonTests.bid(P, crowdsale, 0, config.INVESTOR1_ACC, "AA007", 0)
-            .catch(function () {isCaught = true;}
-            ).then(function () {
-                if (isCaught === false) {
-                    throw new Error('Not allowed group bid passed !!!');
-                }
-                done();
-            });      
-    });
-
-    
-    it("should check crowdsale haswinner", function(done){
-        assert(crowdsale, "Crowdsale required.");
-        // Check status
-        // there are 6 states in total
-        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
-        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
-        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
-        Crowdsale.at(crowdsale).getHasWinnerGroup().then(function(haswinner){
-            console.log("Crowdsale has winner", haswinner);
-            assert.equal(haswinner, false, "Failed to get right haswinner boolean");
+            CS = Crowdsale.at(crowdsale),
+            groupName1 = 'test group',
+            groupGoal1 = 190;
+        
+        commonTests.createGroup(CS, groupName1, groupGoal1).then(function(result) {
             done();
         });
+    }); */
+
+    
+     
+    it("should create bidding group and place initial bid from config.INVESTOR1_ACC with 190", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+
+        var
+            CS = Crowdsale.at(crowdsale),
+            groupName1 = 'test group',
+            groupGoal1 = 190;
+        // when bid occurs, the token amount is sent to Populous
+        // so bidder must have the required amount in the currency ledger
+        // investor1 has 380 RND tokens - 100 = 280 balance
+        commonTests.initialBid(P, crowdsale, groupName1, groupGoal1, config.INVESTOR1_ACC, "AA007", 100).then(function(result) {
+            console.log('initial bid gas cost', result.receipt.gasUsed);
+            // when you bid you are using your tokens 
+            // so making a transfer of currency pegged token to populous accountId in ledger
+            // which is sent to beneficiary at the end of a crowsdale
+            return P.getLedgerEntry.call("RND", config.INVESTOR1_ACC);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 280, "Failed bidding");
+            // getGroup returns 
+            // 0 = name, 1 = goal, 2 = biddersCount, 3 = amountRaised
+            // 4 = bool hasReceivedTokensBack
+            return Crowdsale.at(crowdsale).getGroup.call(0);
+        }).then(function(group) {
+            // check that amountRaised for the group with index = 0 is 100
+            assert.equal(group[3].toNumber(), 100, "Failed bidding");
+            done();
+        })
     });
 
+    /* it("should bid to group 1 from config.INVESTOR1_ACC with 190", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+        // when bid occurs, the token amount is sent to Populous
+        // so bidder must have the required amount in the currency ledger
+        // investor1 has 380 RND tokens - 190 = 190 balance
+        commonTests.bid(P, crowdsale, 0, config.INVESTOR1_ACC, "AA007", 190).then(function(result) {
+            // when you bid you are using your tokens 
+            // so making a transfer of currency pegged token to populous accountId in ledger
+            // which is sent to beneficiary at the end of a crowsdale
+            return P.getLedgerEntry.call("RND", config.INVESTOR1_ACC);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 190, "Failed bidding");
+            // getGroup returns 
+            // 0 = name, 1 = goal, 2 = biddersCount, 3 = amountRaised
+            // 4 = bool hasReceivedTokensBack
+            return Crowdsale.at(crowdsale).getGroup.call(0);
+        }).then(function(group) {
+            // check that amountRaised for the group with index = 0 is 190
+            assert.equal(group[3].toNumber(), 190, "Failed bidding");
+            done();
+        });
+    }); */
 
     it("should close crowdsale and update status", function(done){
         assert(crowdsale, "Crowdsale required.");
@@ -212,18 +247,39 @@ describe("Deposit Tokens > ", function() {
             done();
         });
     });
-
-
-    it("should check crowdsale haswinner", function(done){
+    
+    it("should fail fund beneficiary", function(done) {
         assert(crowdsale, "Crowdsale required.");
-        // Check status
-        // there are 6 states in total
-        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
-        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
-        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
-        Crowdsale.at(crowdsale).getHasWinnerGroup().then(function(haswinner){
-            console.log("Crowdsale has winner", haswinner);
-            assert.equal(haswinner, false, "Failed to get right haswinner boolean");
+        // fund beneficiary should fail because crowdsale closed
+        // and group at index 0 is not winner group
+        var isCaught = false;
+        // this now checks hasWinnerGroup in CS
+        P.fundBeneficiary(crowdsale)
+            .catch(function () {isCaught = true;}
+        ).then(function () {
+            if (isCaught === false) {
+                throw new Error('Not allowed fund beneficiary passed !!!');
+            }
+            done();
+        });
+    });
+
+    it("should refund losing groups", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+        // refund any loosing groups
+        P.refundLosingGroups(crowdsale).then(function(result) {
+            console.log('refund losing groups gas cost', result.receipt.gasUsed);
+            done();
+        });
+    });
+
+
+    it("should refund losing group bidder in group with index 0", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+        // refund bidder in losing group
+        // this checks hasWinnerGroup in CS
+        P.refundLosingGroupBidder(crowdsale, 0, 0).then(function(result) {
+            console.log('refund losing groups gas cost', result.receipt.gasUsed);
             done();
         });
     });
@@ -232,11 +288,7 @@ describe("Deposit Tokens > ", function() {
         assert(crowdsale, "Crowdsale required.");
 
         var isCaught = false;
-        // Set payment received for funded invoice 
-        // this sets paidAmount in crowdsale as well to the same amount
-        // investor1 group will receive invoice amount of 200 and
-        // investor1 the only one in the group will receive all
-        // 200 + 190 = 390 balance
+        
         P.invoicePaymentReceived(crowdsale, 200)
             .catch(function () {isCaught = true;}
         ).then(function () {
@@ -247,28 +299,70 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
+/*     it("should fund winner group", function(done) {
+        assert(crowdsale, "Crowdsale required.");
 
+        // Set payment received for funded invoice 
+        // this sets paidAmount in crowdsale as well to the same amount
+        // investor1 group will receive invoice amount of 200 and
+        // investor1 the only one in the group will receive all 10 RND interest
+        // 200 + 190 = 390 balance
+        P.invoicePaymentReceived(crowdsale, 200).then(function(result) {
+            assert(result.receipt.logs, "Failed setting payment received");
 
-    
+            console.log('invoice payment received gas cost', result.receipt.gasUsed);
+
+            // Check paidAmount set when invoicePaymentReceived
+            return Crowdsale.at(crowdsale).paidAmount.call();
+        }).then(function(paidAmount) {
+            assert.equal(paidAmount.toNumber(), 200, "Failed setting payment received");
+
+            // Check status
+            // after paidAmount is set, status = States.PaymentReceived;
+            // there are 6 states in total
+            // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+            return Crowdsale.at(crowdsale).status.call();
+        }).then(function(status) {
+            assert.equal(status.toNumber(), 4, "Failed setting payment received");
+
+            // Fund winner group
+            return P.fundWinnerGroup(crowdsale);
+        }).then(function(result) {
+            console.log('fund winner group gas cost', result.receipt.gasUsed);
+            assert(result.receipt.logs, "Failed funding winner group");
+
+            // Check investor1 RND balance is increased by invoice amount = 190 + 200 = 390
+            // investor1 was the only bidder in winner group and bid 190 RND
+            // invoice amount was 200
+            return P.getLedgerEntry.call("RND", config.INVESTOR1_ACC);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 390, "Failed funding winner group");
+            return Crowdsale.at(crowdsale).bidderHasTokensBack.call(config.INVESTOR1_ACC);
+        }).then(function(result) {
+            assert.equal(result, 1, "Failed funding bidder in winner group");
+            done();
+        })
+    }); */
+
     it("should release deposit PPT", function(done) {
         assert(global.PPT, "PPT required.");
 
         var
             depositAmount = 200,
             receiver = accounts[1],
-            releaseCurrency = 'AED',
+            releaseCurrency = 'RND',
             depositIndex = 0;
         // release investor1 PPT token deposit of 200 to receiver address
         // and update total as groupDeposit - investorDeposit
         // and update received as groupReceived - investorReceived 
         // and transfer balance to investor1
-        // 390 - 190 = 200 AED balance for investor1
-        // AED (received) is destroyed and ppt (deposited) is sent back
+        // 390 - 190 = 200 RND balance for investor1
+        // RND (received) is destroyed and ppt (deposited) is sent back
         // timelock
         P.releaseDeposit(config.INVESTOR1_ACC, global.PPT.address, releaseCurrency, receiver, depositIndex).then(function(result) {
             console.log('release deposit gas cost', result.receipt.gasUsed);
             // getActiveDepositList returns 1 = deposited and 2 = received
-            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "AED");
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "RND");
         }).then(function(deposit) {
             // check that amount deposited and received are both = 0
             // and no longer 1 = 200, 2 = 190
@@ -284,12 +378,12 @@ describe("Deposit Tokens > ", function() {
         }).then(function(amount) {
             // check reveiver has been credited with 200 PPT token
             assert.equal(amount.toNumber(), depositAmount, "Failed releasing deposit");
-            // get investor1 account balance in AED tokens after 190 AED pokens are destroyed
-            return P.getLedgerEntry.call("AED", config.INVESTOR1_ACC);
+            // get investor1 account balance in RND tokens after 190 RND pokens are destroyed
+            return P.getLedgerEntry.call("RND", config.INVESTOR1_ACC);
         }).then(function(value) {
-            // investor1 should have 380 - 190 = 190 AED Pokens left in AED ledger
-            // as 10 AED Poken not received as interest from successful crowdsale
-
+            // investor1 should have 380 - 190 = 190 RND Pokens left in RND ledger
+            // as 190 RND Poken received when 200 PPT was deposited will be destroyed 
+            // upon calling release deposit 
             assert.equal(value.toNumber(), 190, "Failed funding winner group");
             done();
         })
