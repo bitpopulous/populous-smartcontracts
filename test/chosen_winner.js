@@ -148,6 +148,38 @@ describe("Chosen winner > ", function() {
             });
     });
 
+/* 
+    it("should close crowdsale and update status", function(done){
+        assert(crowdsale, "Crowdsale required.");
+
+        // Check status
+        // there are 6 states in total
+        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        P.closeCrowdsale(crowdsale).then(function(){
+            return Crowdsale.at(crowdsale).status.call();
+        }).then(function(status) {
+            assert.equal(status.toNumber(), 2, "Failed crowdsale status to closed");
+            done();
+        });
+    });
+
+    it ("should check if crowdsale deadline has reached without any bids", function(done) {
+        assert(crowdsale, "Crowdsale required.");
+
+        var CS = Crowdsale.at(crowdsale);
+
+        CS.checkNoBids().then(function(result){
+            return CS.getClosedNoBids();
+        }).then(function(closedWithNoBids){
+            console.log('check no bids', closedWithNoBids);
+            assert.equal(closedWithNoBids, false, "Failed checking crowdsale closed without bids");
+            done();
+        })
+        
+    }) */
+
     it("should create groups and make bids", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
@@ -298,13 +330,49 @@ describe("Chosen winner > ", function() {
         // choosing a group as winner of invoice crowdsale
         CS.borrowerChooseWinner(0).then(function(result) {
             assert(result.receipt.logs.length, "Failed choosing winner group (flag)");
-
+            console.log('borrower choose winner', result);
+            console.log('borrower choose winner log', result.logs[0]);
             console.log('borrower choose winner gas cost', result.receipt.gasUsed);
             return CS.status.call();
             // checking crowdsale status is correct = Closed
             // crowdsale ststuses are : Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
         }).then(function(value) {
             assert.equal(value.toNumber(), 2, "Failed choosing winner group (status)");
+            done();
+        });
+    });
+
+
+    it("should check crowdsale haswinner", function(done){
+        assert(crowdsale, "Crowdsale required.");
+
+        var CS = Crowdsale.at(crowdsale);
+        // Check status
+        // there are 6 states in total
+        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        CS.getHasWinnerGroup().then(function(haswinner){
+            console.log("Crowdsale has winner", haswinner);
+            assert.equal(haswinner, true, "Failed to get right haswinner boolean");
+            done();
+        });
+    });
+
+    it("should check if crowdsale deadline has reached", function(done){
+        assert(crowdsale, "Crowdsale required.");
+
+        var CS = Crowdsale.at(crowdsale);
+        // Check status
+        // there are 6 states in total
+        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        CS.checkDeadline().then(function(){
+            return CS.getDeadlineReached();
+        }).then(function(deadline){
+            console.log("Crowdsale deadline reached", deadline);
+            assert.equal(deadline, false, "Failed to get right deadline reached boolean");
             done();
         });
     });

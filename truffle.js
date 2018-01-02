@@ -29,8 +29,10 @@ module.exports = {
             port: 8545,
             before_timeout: 900000, //  <=== NEW
             test_timeout: 900000, //  <=== NEW
-            gas: 4672388,
+            gas: 4700036,
+            //gas: 4672388,
             //from: "0x9a6b3778938400ee414780652ad29aea76d804f5"
+            //gasPrice: 100000000000
         },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
