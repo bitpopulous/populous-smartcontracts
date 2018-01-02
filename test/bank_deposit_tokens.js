@@ -83,6 +83,7 @@ describe("Deposit Tokens > ", function() {
         }).then(function(address) {
             assert(address);
             depositAddress = address;
+            console.log('deposit contract address', address);
             done();
         });
     });
@@ -132,10 +133,29 @@ describe("Deposit Tokens > ", function() {
         P.deposit(config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function() {
             return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "GBP");
         }).then(function(deposit) {
+            console.log('active deposit list', deposit);
             // getActiveDepositList returns three uints
-            // the last two are amount deposited and amount received
+            // first is length of the list.
+            // the last two are amount deposited and amount received.
             assert.equal(deposit[1].toNumber(), depositAmount, 'Failed depositing PPT');
             assert.equal(deposit[2].toNumber(), receiveAmount, 'Failed depositing PPT');
+            done();
+        });
+    });
+
+
+    it("should deposit PPT and get active deposit details", function(done) {
+        assert(global.PPT, "PPT required.");
+        
+        DCM.getActiveDeposit.call(config.INVESTOR1_ACC, global.PPT.address, "GBP", 0)
+        .then(function(deposit) {
+            console.log('active deposit', deposit);
+            // getActiveDeposit returns three uints.
+            // the first two are amount deposited and amount received.
+            // the last is a boolean indicating if deposit has been released or not.
+            assert.equal(deposit[0].toNumber(), 200, 'Failed depositing PPT');
+            assert.equal(deposit[1].toNumber(), 190, 'Failed depositing PPT');
+            assert.equal(deposit[2], false, 'Failed depositing PPT');
             done();
         });
     });

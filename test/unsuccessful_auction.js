@@ -169,8 +169,8 @@ describe("Deposit Tokens > ", function() {
             CS = Crowdsale.at(crowdsale);
                        
             var isCaught = false;
-            // creation of this group should fail since investor1 has already created
-            // and is part of a bidding group for this crowdsale.
+            // creation of this group should fail because of bid amount
+            // and group not created by an initia bid.
             commonTests.bid(P, crowdsale, 0, config.INVESTOR1_ACC, "AA007", 0)
             .catch(function () {isCaught = true;}
             ).then(function () {
@@ -182,7 +182,7 @@ describe("Deposit Tokens > ", function() {
     });
 
     
-    it("should check crowdsale haswinner", function(done){
+    it("should check crowdsale has winner", function(done){
         assert(crowdsale, "Crowdsale required.");
         // Check status
         // there are 6 states in total

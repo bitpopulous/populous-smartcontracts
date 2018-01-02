@@ -76,6 +76,8 @@ contract Crowdsale is withAccessManager {
     uint public winnerGroupIndex;
     bool public hasWinnerGroup;
 
+    bool public closedWithNoBids;
+    bool public deadlineReached;
     uint public paidAmount;
 
     bool public sentToBeneficiary;
@@ -145,6 +147,7 @@ contract Crowdsale is withAccessManager {
                 status = States.Closed;
                 EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.NoBidsAndDeadlineReached));
             }
+            //closedWithNoBids = true;
             return true;
         }
         return false;
@@ -174,6 +177,7 @@ contract Crowdsale is withAccessManager {
                 EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.DeadlineReached));
                 checkNoBids();
             }
+            deadlineReached = true;
             return true;
         }
         return false;
@@ -436,6 +440,18 @@ contract Crowdsale is withAccessManager {
 
     // CONSTANT METHODS
 
+    /** @dev Gets bool indicating crowdsale deadline has reached
+      * @return bool deadlineReached
+      */
+    function getDeadlineReached() public view returns (bool) {
+        return deadlineReached;
+    }
+    /** @dev Gets bool closedWithNoBids for crowdsale
+      * @return bool closedWithNoBids indicates if crowdsale was closed without any bids.
+      */
+    function getClosedNoBids() public view returns (bool) {
+        return closedWithNoBids;
+    }
     /** @dev Gets bool hasWinnerGroup for crowdsale
       * @return bool hasWinnerGroup.
       */
@@ -450,8 +466,8 @@ contract Crowdsale is withAccessManager {
         return paidAmount;
     }
 
-    /** @dev Gets the paid amount 
-      * @return uint The paid amount.
+    /** @dev Gets the winning group index 
+      * @return uint The index for winning group.
       */
     function getWinnerGroupIndex() public view returns (uint) {
         return winnerGroupIndex;

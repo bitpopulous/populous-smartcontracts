@@ -23,6 +23,21 @@ describe("Init currency token > ", function() {
         });
     });
 
+    it("should get currency details", function(done) {
+        Populous.deployed().then(function(instance) {
+            P = instance;
+            return P.getCurrency.call("RND");
+        }).then(function(currencyAddress) {
+            assert.notEqual(currencyAddress, 0, "Failed creating currency token");
+            console.log("currency address", currencyAddress);
+            return P.getCurrencySymbol.call(currencyAddress);
+        }).then(function(currencysymbol){
+            console.log("currency symbol",currencysymbol);
+            done();
+        });
+        
+    });
+
     it("should mint RND tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
         assert(global.currencies.RND, "Currency required.");
         // amount of RND tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
