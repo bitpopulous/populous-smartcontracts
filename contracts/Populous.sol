@@ -305,7 +305,9 @@ contract Populous is withAccessManager {
     }
 
     
-    
+    /** @dev closes a crowdsale
+      * @return a boolean value indicating crowdsale successfuly closed or not
+      */
     function closeCrowdsale(address crowdsaleAddr)
         public
         onlyServer
@@ -396,7 +398,6 @@ contract Populous is withAccessManager {
         _transfer(currency, LEDGER_SYSTEM_ACCOUNT, borrowerId, amount);
 
         CS.setSentToBeneficiary();
-
         EventBeneficiaryFunded(crowdsaleAddr, borrowerId, currency, amount);
     }
 
@@ -453,9 +454,7 @@ contract Populous is withAccessManager {
 
         if (States(CS.getStatus()) != States.Closed) { return; }
 
-        uint winnerGroupIndex = CS.winnerGroupIndex();
-
-        if (winnerGroupIndex == groupIndex && CS.getHasWinnerGroup()) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
+        if (CS.winnerGroupIndex() == groupIndex && CS.getHasWinnerGroup() == true) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
 
         bytes32 bidderId;
         uint bidAmount;
