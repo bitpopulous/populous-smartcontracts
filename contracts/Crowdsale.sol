@@ -197,7 +197,6 @@ contract Crowdsale is withAccessManager {
         if (groups[groupIndex].biddersReceivedTokensBack == groups[groupIndex].bidders.length) {
             groups[groupIndex].hasReceivedTokensBack = true;
             groupsReceivedTokensBack++;
-            // bug fix
             // comparing number of groups to number of groups that have received tokens back
             // check if groupIndex = winner group Index
             // check if hasWinnerGroup
@@ -211,7 +210,7 @@ contract Crowdsale is withAccessManager {
                 }
             } else if (groups.length - 1 == groupsReceivedTokensBack) {
                 setSentToLosingGroups();
-            } else if (groups.length == groupsReceivedTokensBack && hasWinnerGroup) {
+            } else if (groups.length == groupsReceivedTokensBack && hasWinnerGroup) { // bug fix
                 setSentToWinnerGroup();
             }
         }

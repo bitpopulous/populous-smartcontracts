@@ -78,12 +78,10 @@ contract iCrowdsale {
 
     // CONSTANT METHODS
 
-/** @dev Gets bool hasWinnerGroup for crowdsale
+    /** @dev Gets bool hasWinnerGroup for crowdsale
       * @return bool hasWinnerGroup.
       */
-    function getHasWinnerGroup() public view returns (bool) {
-        return hasWinnerGroup;
-    }
+    function getHasWinnerGroup() public view returns (bool);
     
     /** @dev Gets the paid amount 
       * @return uint The paid amount.

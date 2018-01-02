@@ -384,9 +384,7 @@ contract Populous is withAccessManager {
       */
     function fundBeneficiary(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-        // bug fix
-        //there has to be winner group set before beneficiary is funded
-        require(CS.getHasWinnerGroup());
+        require(CS.getHasWinnerGroup() == true);// bug fix - there has to be winner group set before beneficiary is funded
 
         uint8 err;
         uint amount;
@@ -445,7 +443,6 @@ contract Populous is withAccessManager {
         }
     }
 
-
     /** @dev Transfers refund to a bidder after crowdsale has closed.
       * @param crowdsaleAddr The invoice crowdsale address.
       * @param groupIndex Group id used to find group among collection of groups.
@@ -457,11 +454,8 @@ contract Populous is withAccessManager {
         if (States(CS.getStatus()) != States.Closed) { return; }
 
         uint winnerGroupIndex = CS.winnerGroupIndex();
-        
-        // bug fix
-        if (winnerGroupIndex == groupIndex && CS.getHasWinnerGroup()) {
-            return;
-        }
+
+        if (winnerGroupIndex == groupIndex && CS.getHasWinnerGroup()) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
 
         bytes32 bidderId;
         uint bidAmount;
@@ -582,7 +576,6 @@ contract Populous is withAccessManager {
     START OF PPT DEPOSIT MODULE
     */
 
-
     // NON-CONSTANT METHODS
 
     function createDepositContract(bytes32 clientId) public onlyServer {
@@ -679,7 +672,6 @@ contract Populous is withAccessManager {
         }
         return false;
     }
-
     /**
     END OF PPT DEPOSIT MODULE
     */
