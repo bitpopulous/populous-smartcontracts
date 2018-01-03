@@ -265,6 +265,18 @@ describe("Reach goal with bids > ", function() {
             return Crowdsale.at(crowdsale).getGroup.call(0);
         }).then(function(group) {
             assert.equal(group[3].toNumber(), 900, "Failed bidding");
+            return Crowdsale.at(crowdsale).getStatus();
+        }).then(function(crowdsale_status){
+            console.log("crowdsale status", crowdsale_status.toNumber());
+            return Crowdsale.at(crowdsale).getGroupsCount();
+        }).then(function(group_count){
+            console.log("groups count", group_count);
+            return Crowdsale.at(crowdsale).getGroup.call(0);
+        }).then(function(group_info){
+            console.log("group details", group_info);
+            return Crowdsale.at(crowdsale).getWinnerGroupIndex();
+        }).then(function(winner_index){
+            console.log("winner group index", winner_index);
             done();
         });
     });
@@ -310,7 +322,12 @@ describe("Reach goal with bids > ", function() {
             return Crowdsale.at(crowdsale).paidAmount.call();
         }).then(function(paidAmount) {
             assert.equal(paidAmount.toNumber(), INVOICE_AMOUNT, "Failed setting payment received");
-
+        
+            return Crowdsale.at(crowdsale).getPaidAmount();
+        }).then(function(getPaidAmount) {
+            assert.equal(getPaidAmount.toNumber(), INVOICE_AMOUNT, "Failed setting payment received");
+            console.log("invoice paid amount", getPaidAmount);
+            
             // Check status
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(status) {

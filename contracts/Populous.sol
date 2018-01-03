@@ -161,8 +161,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function _mintTokens(bytes32 currency, uint amount)
-        private
-        returns (bool success)
+        private returns (bool success)
     {
         if (currencies[currency] != 0x0) {
             ledger[currency][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeAdd(ledger[currency][LEDGER_SYSTEM_ACCOUNT], amount);
@@ -179,9 +178,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function destroyTokens(bytes32 currency, uint amount)
-        public
-        onlyGuardian
-        returns (bool success)
+        public onlyGuardian returns (bool success)
     {
         return _destroyTokens(currency, amount);
     }
@@ -193,8 +190,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function _destroyTokens(bytes32 currency, uint amount)
-        private
-        returns (bool success)
+        private returns (bool success)
     {
         if (currencies[currency] != 0x0) {
             ledger[currency][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeSub(ledger[currency][LEDGER_SYSTEM_ACCOUNT], amount);
@@ -217,9 +213,7 @@ contract Populous is withAccessManager {
       * @param amount The amount to transfer.
       */
     function _transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) private {
-        if (amount == 0) {
-            return;
-        }
+        if (amount == 0) {return;}
         require(ledger[currency][from] >= amount);
     
         ledger[currency][from] = SafeMath.safeSub(ledger[currency][from], amount);
@@ -285,8 +279,7 @@ contract Populous is withAccessManager {
             uint _fundingGoal,
             uint _platformTaxPercent,
             string _signedDocumentIPFSHash)
-        public
-        onlyServer
+        public onlyServer
     {
         require(currencies[_currencySymbol] != 0x0);
 
@@ -309,9 +302,7 @@ contract Populous is withAccessManager {
       * @return a boolean value indicating crowdsale successfuly closed or not
       */
     function closeCrowdsale(address crowdsaleAddr)
-        public
-        onlyServer
-        returns (bool success)
+        public onlyServer returns (bool success)
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
         return CS.closeCrowdsale();
@@ -327,9 +318,7 @@ contract Populous is withAccessManager {
       * @return success A boolean value indicating whether a bid has been successful.
       */
     function bid(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, string name, uint value)
-        public
-        onlyServer
-        returns (bool success)
+        public onlyServer returns (bool success)
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
@@ -362,9 +351,7 @@ contract Populous is withAccessManager {
       * @return goalReached A boolean value indicating whether the group goal has reached or not.
       */
     function initialBid(address crowdsaleAddr, string groupName, uint goal, bytes32 bidderId, string name, uint value)
-        public
-        onlyServer
-        returns (bool success)
+        public onlyServer returns (bool success)
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
@@ -386,7 +373,7 @@ contract Populous is withAccessManager {
       */
     function fundBeneficiary(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-        require(CS.getHasWinnerGroup() == true);// bug fix - there has to be winner group set before beneficiary is funded
+        //require(CS.getHasWinnerGroup() == true);// bug fix - there has to be winner group set before beneficiary is funded
 
         uint8 err;
         uint amount;
@@ -454,7 +441,8 @@ contract Populous is withAccessManager {
 
         if (States(CS.getStatus()) != States.Closed) { return; }
 
-        if (CS.winnerGroupIndex() == groupIndex && CS.getHasWinnerGroup() == true) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
+        if (CS.winnerGroupIndex() == groupIndex) {return;}
+        // && CS.getHasWinnerGroup() == true) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
 
         bytes32 bidderId;
         uint bidAmount;
@@ -604,9 +592,7 @@ contract Populous is withAccessManager {
         uint depositAmount,
         uint receiveAmount
     )
-        public
-        onlyServer
-        returns (bool)
+        public onlyServer returns (bool)
     {
         bool success;
         uint depositIndex;
