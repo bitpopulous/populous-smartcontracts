@@ -32,7 +32,7 @@ module.exports = {
             gas: 4700036,
             //gas: 4672388,
             //from: "0x9a6b3778938400ee414780652ad29aea76d804f5"
-            //gasPrice: 100000000000
+            gasPrice: 100000000000
         },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
