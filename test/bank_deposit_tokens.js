@@ -163,8 +163,8 @@ describe("Deposit Tokens > ", function() {
     it("should create crowdsale", function(done) {
         assert(global.currencies.GBP, "Currency required.");
         // borrowerId is accountID 'B' and is funded when fundBeneficiary is called
-        // the 100 (_invoiceAmount) is sent to invoice funders / winning group
-        // the 90 (_fundingGoal) is sent to borrower from funding group
+        // the 200 (_invoiceAmount) is sent to invoice funders / winning group
+        // the 190 (_fundingGoal) is sent to borrower from funding group
         // at the end of crowdsale
         P.createCrowdsale(
                 "GBP",

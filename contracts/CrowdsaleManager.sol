@@ -61,6 +61,7 @@ contract CrowdsaleManager is withAccessManager {
     {
         // Avoid using the same invoice in more than crowdsale
         require(invoicesIndex[_borrowerId][_invoiceNumber] != _invoiceAmount);
+        require(_fundingGoal < _invoiceAmount);
         invoicesIndex[_borrowerId][_invoiceNumber] = _invoiceAmount;
 
         crowdsaleAddr = new Crowdsale(
