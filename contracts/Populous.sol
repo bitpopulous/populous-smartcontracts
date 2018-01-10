@@ -27,7 +27,7 @@ contract Populous is withAccessManager {
     event EventDeposit(address from, bytes32 clientId, bytes32 currency, uint amount);
 
     // crowdsale events
-    event EventNewCrowdsale(address crowdsale);
+    event EventNewCrowdsale(address crowdsale, bytes32 _currencySymbol, bytes32 _borrowerId, bytes32 _invoiceId, string _invoiceNumber, uint _invoiceAmount, uint _fundingGoal);
     event EventBeneficiaryFunded(address crowdsaleAddr, bytes32 borrowerId, bytes32 currency, uint amount);
     event EventLosingGroupBidderRefunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint amount);
     event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
@@ -294,7 +294,8 @@ contract Populous is withAccessManager {
             _signedDocumentIPFSHash
         );
 
-        EventNewCrowdsale(crowdsaleAddr);
+        EventNewCrowdsale(crowdsaleAddr, _currencySymbol, _borrowerId, _invoiceId, _invoiceNumber, _invoiceAmount, _fundingGoal);
+
     }
 
     
