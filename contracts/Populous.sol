@@ -278,7 +278,8 @@ contract Populous is withAccessManager {
             uint _invoiceAmount,
             uint _fundingGoal,
             uint _platformTaxPercent,
-            string _signedDocumentIPFSHash)
+            string _signedDocumentIPFSHash,
+            uint _extraTime)
         public onlyServer
     {
         require(currencies[_currencySymbol] != 0x0);
@@ -291,7 +292,8 @@ contract Populous is withAccessManager {
             _invoiceAmount,
             _fundingGoal,
             _platformTaxPercent,
-            _signedDocumentIPFSHash
+            _signedDocumentIPFSHash,
+            _extraTime
         );
 
         EventNewCrowdsale(crowdsaleAddr, _currencySymbol, _borrowerId, _invoiceId, _invoiceNumber, _invoiceAmount, _fundingGoal);

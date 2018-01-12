@@ -168,7 +168,7 @@ describe("Deposit Tokens > ", function() {
                 "#8888",
                 200,
                 190,
-                1, 'ipfs')
+                1, 'ipfs', 10)
             .then(function(createCS) {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 

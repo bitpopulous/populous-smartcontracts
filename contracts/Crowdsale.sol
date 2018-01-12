@@ -113,7 +113,8 @@ contract Crowdsale is withAccessManager {
             uint _invoiceAmount,
             uint _fundingGoal,
             uint _platformTaxPercent,
-            string _signedDocumentIPFSHash)
+            string _signedDocumentIPFSHash,
+            uint _extraTime)
             public
             withAccessManager(_accessManager)
     {
@@ -125,8 +126,7 @@ contract Crowdsale is withAccessManager {
         fundingGoal = _fundingGoal;
         platformTaxPercent = _platformTaxPercent;
         signedDocumentIPFSHash = _signedDocumentIPFSHash;
-
-        deadline = now + 24 hours;
+        deadline = now + 24 hours + _extraTime * 1 minutes;
         status = States.Open;
     }
 

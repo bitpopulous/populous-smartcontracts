@@ -137,7 +137,7 @@ describe("Chosen winner > ", function() {
                 "#002",
                 INVOICE_AMOUNT,
                 INVOICE_FUNDING_GOAL,
-                1, 'ipfs')
+                1, 'ipfs', 10)
             .then(function(createCS) {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 

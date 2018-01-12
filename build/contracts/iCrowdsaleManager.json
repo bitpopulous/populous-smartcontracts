@@ -35,6 +35,10 @@
         {
           "name": "_signedDocumentIPFSHash",
           "type": "string"
+        },
+        {
+          "name": "_extraTime",
+          "type": "uint256"
         }
       ],
       "name": "createCrowdsale",
@@ -53,14 +57,14 @@
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "pragma solidity ^0.4.17;\n\n\n/// @title iCrowdsaleManager contract\ncontract iCrowdsaleManager {\n\n    // NON-CONSTANT METHODS\n\n    /** @dev Creates a new Crowdsale contract instance for an invoice crowdsale.\n      * @param _currencySymbol The currency symbol, e.g., GBP.\n      * @param _borrowerId The unique borrower ID.\n      * @param _invoiceId The unique invoice ID.\n      * @param _invoiceNumber The unique invoice number.\n      * @param _invoiceAmount The invoice amount.\n      * @param _fundingGoal The funding goal of the borrower.\n      * @param _platformTaxPercent The percentage charged by the platform\n      * @param _signedDocumentIPFSHash The hash of related invoice documentation saved on IPFS.\n      * @return address The address of deployed smart contract instance.\n      */\n    function createCrowdsale(\n            bytes32 _currencySymbol,\n            bytes32 _borrowerId,\n            bytes32 _invoiceId,\n            string _invoiceNumber,\n            uint _invoiceAmount,\n            uint _fundingGoal,\n            uint _platformTaxPercent,\n            string _signedDocumentIPFSHash)\n            public\n            returns (address);\n}",
-  "sourcePath": "/Users/najienka/Desktop/populous/populous-smartcontracts/contracts/iCrowdsaleManager.sol",
+  "source": "pragma solidity ^0.4.17;\n\n\n/// @title iCrowdsaleManager contract\ncontract iCrowdsaleManager {\n\n    // NON-CONSTANT METHODS\n\n    /** @dev Creates a new Crowdsale contract instance for an invoice crowdsale.\n      * @param _currencySymbol The currency symbol, e.g., GBP.\n      * @param _borrowerId The unique borrower ID.\n      * @param _invoiceId The unique invoice ID.\n      * @param _invoiceNumber The unique invoice number.\n      * @param _invoiceAmount The invoice amount.\n      * @param _fundingGoal The funding goal of the borrower.\n      * @param _platformTaxPercent The percentage charged by the platform\n      * @param _signedDocumentIPFSHash The hash of related invoice documentation saved on IPFS.\n      * @return address The address of deployed smart contract instance.\n      */\n    function createCrowdsale(\n            bytes32 _currencySymbol,\n            bytes32 _borrowerId,\n            bytes32 _invoiceId,\n            string _invoiceNumber,\n            uint _invoiceAmount,\n            uint _fundingGoal,\n            uint _platformTaxPercent,\n            string _signedDocumentIPFSHash,\n            uint _extraTime)\n            public\n            returns (address);\n}",
+  "sourcePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/iCrowdsaleManager.sol",
   "ast": {
     "attributes": {
-      "absolutePath": "/Users/najienka/Desktop/populous/populous-smartcontracts/contracts/iCrowdsaleManager.sol",
+      "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/iCrowdsaleManager.sol",
       "exportedSymbols": {
         "iCrowdsaleManager": [
-          9548
+          4769
         ]
       }
     },
@@ -74,9 +78,9 @@
             ".17"
           ]
         },
-        "id": 9526,
+        "id": 4745,
         "name": "PragmaDirective",
-        "src": "0:24:28"
+        "src": "0:24:13"
       },
       {
         "attributes": {
@@ -90,10 +94,10 @@
           "documentation": "@title iCrowdsaleManager contract",
           "fullyImplemented": false,
           "linearizedBaseContracts": [
-            9548
+            4769
           ],
           "name": "iCrowdsaleManager",
-          "scope": 9549
+          "scope": 4770
         },
         "children": [
           {
@@ -107,7 +111,7 @@
               ],
               "name": "createCrowdsale",
               "payable": false,
-              "scope": 9548,
+              "scope": 4769,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -119,7 +123,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "_currencySymbol",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -132,20 +136,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 9527,
+                        "id": 4746,
                         "name": "ElementaryTypeName",
-                        "src": "831:7:28"
+                        "src": "831:7:13"
                       }
                     ],
-                    "id": 9528,
+                    "id": 4747,
                     "name": "VariableDeclaration",
-                    "src": "831:23:28"
+                    "src": "831:23:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_borrowerId",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -158,20 +162,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 9529,
+                        "id": 4748,
                         "name": "ElementaryTypeName",
-                        "src": "868:7:28"
+                        "src": "868:7:13"
                       }
                     ],
-                    "id": 9530,
+                    "id": 4749,
                     "name": "VariableDeclaration",
-                    "src": "868:19:28"
+                    "src": "868:19:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_invoiceId",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -184,20 +188,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 9531,
+                        "id": 4750,
                         "name": "ElementaryTypeName",
-                        "src": "901:7:28"
+                        "src": "901:7:13"
                       }
                     ],
-                    "id": 9532,
+                    "id": 4751,
                     "name": "VariableDeclaration",
-                    "src": "901:18:28"
+                    "src": "901:18:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_invoiceNumber",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "string memory",
@@ -210,20 +214,20 @@
                           "name": "string",
                           "type": "string storage pointer"
                         },
-                        "id": 9533,
+                        "id": 4752,
                         "name": "ElementaryTypeName",
-                        "src": "933:6:28"
+                        "src": "933:6:13"
                       }
                     ],
-                    "id": 9534,
+                    "id": 4753,
                     "name": "VariableDeclaration",
-                    "src": "933:21:28"
+                    "src": "933:21:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_invoiceAmount",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -236,20 +240,20 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9535,
+                        "id": 4754,
                         "name": "ElementaryTypeName",
-                        "src": "968:4:28"
+                        "src": "968:4:13"
                       }
                     ],
-                    "id": 9536,
+                    "id": 4755,
                     "name": "VariableDeclaration",
-                    "src": "968:19:28"
+                    "src": "968:19:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_fundingGoal",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -262,20 +266,20 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9537,
+                        "id": 4756,
                         "name": "ElementaryTypeName",
-                        "src": "1001:4:28"
+                        "src": "1001:4:13"
                       }
                     ],
-                    "id": 9538,
+                    "id": 4757,
                     "name": "VariableDeclaration",
-                    "src": "1001:17:28"
+                    "src": "1001:17:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_platformTaxPercent",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -288,20 +292,20 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9539,
+                        "id": 4758,
                         "name": "ElementaryTypeName",
-                        "src": "1032:4:28"
+                        "src": "1032:4:13"
                       }
                     ],
-                    "id": 9540,
+                    "id": 4759,
                     "name": "VariableDeclaration",
-                    "src": "1032:24:28"
+                    "src": "1032:24:13"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "_signedDocumentIPFSHash",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "string memory",
@@ -314,19 +318,45 @@
                           "name": "string",
                           "type": "string storage pointer"
                         },
-                        "id": 9541,
+                        "id": 4760,
                         "name": "ElementaryTypeName",
-                        "src": "1070:6:28"
+                        "src": "1070:6:13"
                       }
                     ],
-                    "id": 9542,
+                    "id": 4761,
                     "name": "VariableDeclaration",
-                    "src": "1070:30:28"
+                    "src": "1070:30:13"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_extraTime",
+                      "scope": 4768,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "uint256",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "uint",
+                          "type": "uint256"
+                        },
+                        "id": 4762,
+                        "name": "ElementaryTypeName",
+                        "src": "1114:4:13"
+                      }
+                    ],
+                    "id": 4763,
+                    "name": "VariableDeclaration",
+                    "src": "1114:15:13"
                   }
                 ],
-                "id": 9543,
+                "id": 4764,
                 "name": "ParameterList",
-                "src": "817:284:28"
+                "src": "817:313:13"
               },
               {
                 "children": [
@@ -334,7 +364,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 9547,
+                      "scope": 4768,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -347,36 +377,36 @@
                           "name": "address",
                           "type": "address"
                         },
-                        "id": 9544,
+                        "id": 4765,
                         "name": "ElementaryTypeName",
-                        "src": "1142:7:28"
+                        "src": "1171:7:13"
                       }
                     ],
-                    "id": 9545,
+                    "id": 4766,
                     "name": "VariableDeclaration",
-                    "src": "1142:7:28"
+                    "src": "1171:7:13"
                   }
                 ],
-                "id": 9546,
+                "id": 4767,
                 "name": "ParameterList",
-                "src": "1141:9:28"
+                "src": "1170:9:13"
               }
             ],
-            "id": 9547,
+            "id": 4768,
             "name": "FunctionDefinition",
-            "src": "793:358:28"
+            "src": "793:387:13"
           }
         ],
-        "id": 9548,
+        "id": 4769,
         "name": "ContractDefinition",
-        "src": "65:1088:28"
+        "src": "65:1117:13"
       }
     ],
-    "id": 9549,
+    "id": 4770,
     "name": "SourceUnit",
-    "src": "0:1153:28"
+    "src": "0:1182:13"
   },
   "networks": {},
   "schemaVersion": "1.0.0",
-  "updatedAt": "2018-01-10T09:39:58.655Z"
+  "updatedAt": "2018-01-12T15:58:18.826Z"
 }

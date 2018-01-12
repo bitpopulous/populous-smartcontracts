@@ -25,7 +25,8 @@ contract iCrowdsaleManager {
             uint _invoiceAmount,
             uint _fundingGoal,
             uint _platformTaxPercent,
-            string _signedDocumentIPFSHash)
+            string _signedDocumentIPFSHash,
+            uint _extraTime)
             public
             returns (address);
 }

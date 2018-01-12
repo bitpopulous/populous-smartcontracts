@@ -54,7 +54,8 @@ contract CrowdsaleManager is withAccessManager {
             uint _invoiceAmount,
             uint _fundingGoal,
             uint _platformTaxPercent,
-            string _signedDocumentIPFSHash)
+            string _signedDocumentIPFSHash,
+            uint _extraTime)
         public
         onlyPopulous
         returns (address crowdsaleAddr)
@@ -73,7 +74,8 @@ contract CrowdsaleManager is withAccessManager {
             _invoiceAmount,
             _fundingGoal,
             _platformTaxPercent,
-            _signedDocumentIPFSHash
+            _signedDocumentIPFSHash,
+            _extraTime
         );
     }
 }
