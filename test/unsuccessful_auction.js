@@ -199,13 +199,13 @@ describe("Deposit Tokens > ", function() {
 
     it("should close crowdsale and update status", function(done){
         assert(crowdsale, "Crowdsale required.");
-
+        CS = Crowdsale.at(crowdsale);
         // Check status
         // there are 6 states in total
         // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
         // Crowdsale.at(crowdsale).checkDeadline().then(function(){
         // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
-        P.closeCrowdsale(crowdsale).then(function(){
+        CS.closeCrowdsale().then(function(){
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(status) {
             assert.equal(status.toNumber(), 2, "Failed crowdsale status to closed");

@@ -33,8 +33,6 @@ contract iCrowdsale {
     function createGroup(string _name, uint _goal) private returns (uint8 err, uint groupIndex);
     
     
-    function closeCrowdsale() public returns(bool success);
-
     /** @dev Allows a bidder to place a bid as part of a group within a set of groups.
       * @param groupIndex The index/location of a group in a set of groups.
       * @param bidderId The bidder id/location in a set of bidders.

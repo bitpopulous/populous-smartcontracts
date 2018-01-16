@@ -300,17 +300,6 @@ contract Populous is withAccessManager {
 
     }
 
-    
-    /** @dev closes a crowdsale
-      * @return a boolean value indicating crowdsale successfuly closed or not
-      */
-    function closeCrowdsale(address crowdsaleAddr)
-        public onlyServer returns (bool success)
-    {
-        iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-        return CS.closeCrowdsale();
-    }
-
 
     /** @dev Allows a bidder to place a bid in an invoice crowdsale.
       * @param groupIndex The index/location of a group in a set of groups.
@@ -376,7 +365,7 @@ contract Populous is withAccessManager {
       */
     function fundBeneficiary(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-        //require(CS.getHasWinnerGroup() == true);// bug fix - there has to be winner group set before beneficiary is funded
+        require(CS.getHasWinnerGroup() == true);// bug fix - there has to be winner group set before beneficiary is funded
 
         uint8 err;
         uint amount;
@@ -444,8 +433,7 @@ contract Populous is withAccessManager {
 
         if (States(CS.getStatus()) != States.Closed) { return; }
 
-        if (CS.winnerGroupIndex() == groupIndex) {return;}
-        // && CS.getHasWinnerGroup() == true) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
+        if (CS.winnerGroupIndex() == groupIndex && CS.getHasWinnerGroup() == true) {return;} //bug fix - check hasWinnerGroup is set in crowdsale
 
         bytes32 bidderId;
         uint bidAmount;

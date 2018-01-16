@@ -11,20 +11,19 @@ contract Crowdsale is withAccessManager {
 
     // EVENTS 
 
-    event EventGroupCreated(uint groupIndex, string name, uint goal);
-    event EventGroupGoalReached(uint groupIndex, string _name, uint goal);
-    event EventNewBid(uint groupIndex, bytes32 bidderId, string name, uint value);
-    event EventCrowdsaleOpen();
-    event EventCrowdsaleClosed(uint8 reasonCode);
-    event EventCrowdsaleWaiting();
-    event EventPaymentReceived(uint paidAmount);
-    event EventCrowdsaleCompleted();
-    event EventGroupCreationFailed();
-
+    event EventGroupCreated(address crowdsaleAddr, uint groupIndex, string name, uint goal);
+    event EventGroupGoalReached(address crowdsaleAddr, uint groupIndex, string _name, uint goal);
+    event EventNewBid(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, string name, uint value);
+    event EventCrowdsaleOpen(address crowdsaleAddr);
+    event EventCrowdsaleClosed(address crowdsaleAddr, uint8 reasonCode);
+    event EventCrowdsaleWaiting(address crowdsaleAddr);
+    event EventPaymentReceived(address crowdsaleAddr, uint paidAmount);
+    event EventCrowdsaleCompleted(address crowdsaleAddr);
+    event EventGroupCreationFailed(address crowdsaleAddr);
 
     // FIELDS 
 
-    enum CrowdsaleCloseReasons { GroupGoalReached, DeadlineReached, NoBidsAndDeadlineReached, BorrowerClosed, PopulousClosed }
+    enum CrowdsaleCloseReasons { GroupGoalReached, DeadlineReached, BorrowerClosed, PopulousClosed }
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed }
 
     States public status;
@@ -71,6 +70,7 @@ contract Crowdsale is withAccessManager {
     //bidderId => BidderInfo
     mapping (bytes32 => BidderInfo) bidderGroupInfo;
 
+    address public crowdsaleaddr = address(this);
 
     uint public groupsReceivedTokensBack;
     uint public winnerGroupIndex;
@@ -140,14 +140,8 @@ contract Crowdsale is withAccessManager {
     // if deadline reached change state to closed with reason being deadline
     // reached and no bids
     // return true or false if deadline reached and no bids
-    function checkNoBids() public returns(bool) {
-        if (now > deadline && groups.length == 0) {
-            if (status == States.Open || status == States.Closed) {
-            //if (status == States.Open && groups[0].amountRaised > 0)
-                status = States.Closed;
-                EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.NoBidsAndDeadlineReached));
-            }
-            //closedWithNoBids = true;
+    function checkNoBids() public view returns(bool) {
+        if (groups.length == 0) {
             return true;
         }
         return false;
@@ -158,10 +152,10 @@ contract Crowdsale is withAccessManager {
       * @dev function has to be implemented in populous.sol to be msg.sender
       * @return success This is a boolean true/false indicating if crowdsale is closed.
       */
-    function closeCrowdsale() public onlyPopulous returns(bool success) {
-        if (status == States.Open) {
+    function closeCrowdsale() public onlyServer returns(bool success) {
+        if (status == States.Open && now < deadline) {
             status = States.Closed;
-            EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.PopulousClosed));
+            EventCrowdsaleClosed(crowdsaleaddr, uint8(CrowdsaleCloseReasons.PopulousClosed));
             return true;
         }
         return false;
@@ -174,8 +168,7 @@ contract Crowdsale is withAccessManager {
         if (now > deadline) {
             if (status == States.Open) {
                 status = States.Closed;
-                EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.DeadlineReached));
-                checkNoBids();
+                EventCrowdsaleClosed(crowdsaleaddr, uint8(CrowdsaleCloseReasons.DeadlineReached));
             }
             deadlineReached = true;
             return true;
@@ -225,7 +218,7 @@ contract Crowdsale is withAccessManager {
             paidAmount = _paidAmount;
             status = States.PaymentReceived;
 
-            EventPaymentReceived(paidAmount);
+            EventPaymentReceived(crowdsaleaddr, paidAmount);
         }
     } 
 
@@ -246,11 +239,11 @@ contract Crowdsale is withAccessManager {
             groups[groupIndex].name = _name;
             groups[groupIndex].goal = _goal;
 
-            EventGroupCreated(groupIndex, _name, _goal);
+            EventGroupCreated(crowdsaleaddr, groupIndex, _name, _goal);
 
             return (0, groupIndex);
         } else {
-            EventGroupCreationFailed();
+            EventGroupCreationFailed(crowdsaleaddr);
             return (1, 0);
         }
     }
@@ -303,7 +296,7 @@ contract Crowdsale is withAccessManager {
         // adding bid value to amount raised for the group using the group index to locate group in groups array
         groups[groupIndex].amountRaised = SafeMath.safeAdd(groups[groupIndex].amountRaised, value);
 
-        EventNewBid(groupIndex, bidderId, name, value);
+        EventNewBid(crowdsaleaddr, groupIndex, bidderId, name, value);
         // boolean value to check if goal has reached
         goalReached = groups[groupIndex].amountRaised == groups[groupIndex].goal;
         // using the above boolean value to set the winning group and set the status of the crowdsale to closed
@@ -312,9 +305,9 @@ contract Crowdsale is withAccessManager {
             hasWinnerGroup = true;
             status = States.Closed;
             // event denoting groupGoalReached
-            EventGroupGoalReached(groupIndex, groups[groupIndex].name, groups[groupIndex].goal);
+            EventGroupGoalReached(crowdsaleaddr, groupIndex, groups[groupIndex].name, groups[groupIndex].goal);
             // event denoting crowdsaleClosed
-            EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.GroupGoalReached));
+            EventCrowdsaleClosed(crowdsaleaddr, uint8(CrowdsaleCloseReasons.GroupGoalReached));
         }
 
         return (0, value, groups[groupIndex].goal, goalReached);
@@ -372,7 +365,7 @@ contract Crowdsale is withAccessManager {
             hasWinnerGroup = true;
             status = States.Closed;
 
-            EventCrowdsaleClosed(uint8(CrowdsaleCloseReasons.BorrowerClosed));
+            EventCrowdsaleClosed(crowdsaleaddr, uint8(CrowdsaleCloseReasons.BorrowerClosed));
         }
     }
 
@@ -392,7 +385,7 @@ contract Crowdsale is withAccessManager {
             // Tokens have been sent to beneficiary
             // Tokens have been sent to loser groups
             status = States.WaitingForInvoicePayment;
-            EventCrowdsaleWaiting();
+            EventCrowdsaleWaiting(crowdsaleaddr);
         }
     }
 
@@ -433,7 +426,7 @@ contract Crowdsale is withAccessManager {
         status = States.Completed;
         groups[winnerGroupIndex].hasReceivedTokensBack = true;
         
-        EventCrowdsaleCompleted();
+        EventCrowdsaleCompleted(crowdsaleaddr);
     }
 
 
