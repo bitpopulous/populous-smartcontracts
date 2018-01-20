@@ -181,8 +181,23 @@ describe("Deposit Tokens > ", function() {
             });      
     });
 
+    it("should check crowdsale has no groups", function(done){
+        assert(crowdsale, "Crowdsale required.");
+        // Check status
+        // there are 6 states in total
+        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        var CS = Crowdsale.at(crowdsale);
+
+        CS.getGroupsCount().then(function(group_count){
+            console.log("number of groups", group_count);
+            assert.equal(group_count.toNumber(), 0, "Earlier create group that should fail passed");
+            done();
+        });
+    });
     
-    it("should check crowdsale has winner", function(done){
+    it("should check crowdsale has no winner", function(done){
         assert(crowdsale, "Crowdsale required.");
         // Check status
         // there are 6 states in total
@@ -214,7 +229,7 @@ describe("Deposit Tokens > ", function() {
     });
 
 
-    it("should check crowdsale haswinner", function(done){
+    it("should check crowdsale has no winner", function(done){
         assert(crowdsale, "Crowdsale required.");
         // Check status
         // there are 6 states in total

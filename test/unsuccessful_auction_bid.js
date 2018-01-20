@@ -195,7 +195,7 @@ describe("Deposit Tokens > ", function() {
 
     
      
-    it("should create bidding group and place initial bid from config.INVESTOR1_ACC with 190", function(done) {
+    it("should create bidding group and place initial bid from config.INVESTOR1_ACC with 100", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
         var
@@ -224,6 +224,9 @@ describe("Deposit Tokens > ", function() {
         })
     });
 
+
+
+
     /* it("should bid to group 1 from config.INVESTOR1_ACC with 190", function(done) {
         assert(crowdsale, "Crowdsale required.");
         // when bid occurs, the token amount is sent to Populous
@@ -247,6 +250,21 @@ describe("Deposit Tokens > ", function() {
         });
     }); */
 
+
+    it("should check crowdsale has no winner", function(done){
+        assert(crowdsale, "Crowdsale required.");
+        // Check status
+        // there are 6 states in total
+        // Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
+        // Crowdsale.at(crowdsale).checkDeadline().then(function(){
+        // Crowdsale.at(crowdsale).closeCrowdsale().then(function(){
+        Crowdsale.at(crowdsale).getHasWinnerGroup().then(function(haswinner){
+            console.log("Crowdsale has winner", haswinner);
+            assert.equal(haswinner, false, "Failed to get right haswinner boolean");
+            done();
+        });
+    });
+
     it("should close crowdsale and update status", function(done){
         assert(crowdsale, "Crowdsale required.");
         CS = Crowdsale.at(crowdsale);
@@ -262,6 +280,10 @@ describe("Deposit Tokens > ", function() {
             done();
         });
     });
+
+
+   
+
     
     it("should fail fund beneficiary", function(done) {
         assert(crowdsale, "Crowdsale required.");
