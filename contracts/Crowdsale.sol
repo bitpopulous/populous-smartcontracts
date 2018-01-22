@@ -132,7 +132,7 @@ contract Crowdsale is withAccessManager {
 
 
     // to do - add method to check if crowdsale ended without hasWinnerGroup = true
-    // and group length = 1
+    // and group length => 1
     // then refund members with new refund function
     // findBidder
 

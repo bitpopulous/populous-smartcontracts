@@ -178,7 +178,11 @@ describe("Deposit Tokens > ", function() {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 
                 crowdsale = createCS.logs[0].args.crowdsale;
+                deadline = createCS.logs[0].args.deadline;
+                let date = new Date(deadline*1000);
+
                 console.log('new crowdsale log', createCS.logs[0]);
+                console.log('new crowdsale deadline timestamp', date);
                 console.log('Crowdsale', crowdsale);
                 console.log('create crowdsale gas cost', createCS.receipt.gasUsed);
                 done();
