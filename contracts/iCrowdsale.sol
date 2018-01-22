@@ -10,13 +10,13 @@ contract iCrowdsale {
     bytes32 public borrowerId;
     uint8 public status;
     uint public platformTaxPercent;
-    
     uint public winnerGroupIndex;
     bool public hasWinnerGroup;
     bool public sentToBeneficiary;
     bool public sentToLosingGroups;
     bool public sentToWinnerGroup;
     uint public paidAmount;
+    
 
     // METHODS
     // methods that a contract of type iCrowdsale must implement to fit into the overall application framework
