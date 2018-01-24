@@ -133,11 +133,11 @@ describe("Chosen winner > ", function() {
         P.createCrowdsale(
                 "CNY",
                 BORROWER_ACC,
-                "internalsystemid2",
-                "#002",
+                "0x653276385044434451336a66656b5963633132",
+                "312",
                 INVOICE_AMOUNT,
                 INVOICE_FUNDING_GOAL,
-                1, 'ipfs', 10)
+                1, 'uyXgbMjcARQZ6778Q', 0)
             .then(function(createCS) {
                 assert(createCS.logs.length, "Failed creating crowdsale");
 
