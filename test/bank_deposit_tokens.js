@@ -130,7 +130,9 @@ describe("Deposit Tokens > ", function() {
         // the deposit amount is refunded later
         // When the actor deposits funds into the platform, an equivalent amount of tokens is deposited into his account
         // client gets receive amount in the particular currency ledger from 'Populous'
-        P.deposit(config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function() {
+        P.deposit(config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function(result) {
+            console.log('new deposit log', result.logs[2]);
+            console.log('PPT address', global.PPT.address);
             return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "GBP");
         }).then(function(deposit) {
             console.log('active deposit list', deposit);
@@ -347,7 +349,7 @@ describe("Deposit Tokens > ", function() {
             // check that amount deposited and received are both = 0
             // and no longer 1 = 200, 2 = 190
             // remove 190 from investor1 received and transfer it to account[1]
-            // o.transfer(tokenContract, receiver, deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].deposited)
+            // o.transfer(populousTokenContract, receiver, deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited)
             // transfer received balance to investor1
             // _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
             
