@@ -76,7 +76,6 @@ contract Crowdsale is withAccessManager {
     uint public winnerGroupIndex;
     bool public hasWinnerGroup;
 
-    bool public closedWithNoBids;
     bool public deadlineReached;
     uint public paidAmount;
 
@@ -438,12 +437,7 @@ contract Crowdsale is withAccessManager {
     function getDeadlineReached() public view returns (bool) {
         return deadlineReached;
     }
-    /** @dev Gets bool closedWithNoBids for crowdsale
-      * @return bool closedWithNoBids indicates if crowdsale was closed without any bids.
-      */
-    function getClosedNoBids() public view returns (bool) {
-        return closedWithNoBids;
-    }
+    
     /** @dev Gets bool hasWinnerGroup for crowdsale
       * @return bool hasWinnerGroup.
       */
