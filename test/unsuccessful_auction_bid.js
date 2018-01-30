@@ -404,7 +404,7 @@ describe("Deposit Tokens > ", function() {
             // check that amount deposited and received are both = 0
             // and no longer 1 = 200, 2 = 190
             // remove 190 from investor1 received and transfer it to account[1]
-            // o.transfer(tokenContract, receiver, deposits[clientId][tokenContract][receiveCurrency].list[depositIndex].deposited)
+            // o.transfer(populousTokenContract, receiver, deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited)
             // transfer received balance to investor1
             // _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
             

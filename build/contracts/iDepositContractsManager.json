@@ -28,7 +28,7 @@
           "type": "bytes32"
         },
         {
-          "name": "tokenContract",
+          "name": "populousTokenContract",
           "type": "address"
         },
         {
@@ -67,7 +67,7 @@
           "type": "bytes32"
         },
         {
-          "name": "tokenContract",
+          "name": "populousTokenContract",
           "type": "address"
         },
         {
@@ -107,14 +107,14 @@
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "pragma solidity ^0.4.17;\n\n/// @title iDepositContractsManager contract\ncontract iDepositContractsManager {\n\n    // NON-CONSTANT METHODS\n\n    /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID\n      * @param clientId The bytes32 client ID\n      * @return address The address of the deployed deposit contract instance.\n      */\n    function create(bytes32 clientId) public returns (address);\n    /** @dev Deposits an amount of tokens linked to a client ID.\n      * @param clientId The client ID.\n      * @param tokenContract The token contract.\n      * @param receiveCurrency The currency symbol.\n      * @param depositAmount The deposit amount.\n      * @param receiveAmount The receive amount.\n      * @return bool boolean value indicating whether or not a deposit transaction has been made with success.\n      * @return uint The updated number of deposits.\n      */\n    function deposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount) public returns (bool, uint);\n    /** @dev Releases a deposit to an address/wallet.\n      * @param clientId The client ID.\n      * @param tokenContract The token contract.\n      * @param receiveCurrency The currency symbol.\n      * @param receiver The address/wallet of the receiver.\n      * @param depositIndex The index/location of a specific deposit in the declared deposit list above.\n      * @return bool boolean value indicating whether or not a deposit has been updated with success.\n      * @return uint The token amount deposited.\n      * @return uint The token amount received.\n      */\n    function releaseDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex) public returns (bool, uint, uint);\n}",
+  "source": "pragma solidity ^0.4.17;\n\n/// @title iDepositContractsManager contract\ncontract iDepositContractsManager {\n\n    // NON-CONSTANT METHODS\n\n    /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID\n      * @param clientId The bytes32 client ID\n      * @return address The address of the deployed deposit contract instance.\n      */\n    function create(bytes32 clientId) public returns (address);\n    /** @dev Deposits an amount of tokens linked to a client ID.\n      * @param clientId The client ID.\n      * @param populousTokenContract The token contract.\n      * @param receiveCurrency The currency symbol.\n      * @param depositAmount The deposit amount.\n      * @param receiveAmount The receive amount.\n      * @return bool boolean value indicating whether or not a deposit transaction has been made with success.\n      * @return uint The updated number of deposits.\n      */\n    function deposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount) public returns (bool, uint);\n    /** @dev Releases a deposit to an address/wallet.\n      * @param clientId The client ID.\n      * @param populousTokenContract The token contract.\n      * @param receiveCurrency The currency symbol.\n      * @param receiver The address/wallet of the receiver.\n      * @param depositIndex The index/location of a specific deposit in the declared deposit list above.\n      * @return bool boolean value indicating whether or not a deposit has been updated with success.\n      * @return uint The token amount deposited.\n      * @return uint The token amount received.\n      */\n    function releaseDeposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex) public returns (bool, uint, uint);\n}",
   "sourcePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/iDepositContractsManager.sol",
   "ast": {
     "attributes": {
       "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/iDepositContractsManager.sol",
       "exportedSymbols": {
         "iDepositContractsManager": [
-          4009
+          4810
         ]
       }
     },
@@ -128,9 +128,9 @@
             ".17"
           ]
         },
-        "id": 3965,
+        "id": 4766,
         "name": "PragmaDirective",
-        "src": "0:24:9"
+        "src": "0:24:14"
       },
       {
         "attributes": {
@@ -144,10 +144,10 @@
           "documentation": "@title iDepositContractsManager contract",
           "fullyImplemented": false,
           "linearizedBaseContracts": [
-            4009
+            4810
           ],
           "name": "iDepositContractsManager",
-          "scope": 4010
+          "scope": 4811
         },
         "children": [
           {
@@ -161,7 +161,7 @@
               ],
               "name": "create",
               "payable": false,
-              "scope": 4009,
+              "scope": 4810,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -173,7 +173,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "clientId",
-                      "scope": 3972,
+                      "scope": 4773,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -186,19 +186,19 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 3966,
+                        "id": 4767,
                         "name": "ElementaryTypeName",
-                        "src": "398:7:9"
+                        "src": "398:7:14"
                       }
                     ],
-                    "id": 3967,
+                    "id": 4768,
                     "name": "VariableDeclaration",
-                    "src": "398:16:9"
+                    "src": "398:16:14"
                   }
                 ],
-                "id": 3968,
+                "id": 4769,
                 "name": "ParameterList",
-                "src": "397:18:9"
+                "src": "397:18:14"
               },
               {
                 "children": [
@@ -206,7 +206,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 3972,
+                      "scope": 4773,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -219,24 +219,24 @@
                           "name": "address",
                           "type": "address"
                         },
-                        "id": 3969,
+                        "id": 4770,
                         "name": "ElementaryTypeName",
-                        "src": "432:7:9"
+                        "src": "432:7:14"
                       }
                     ],
-                    "id": 3970,
+                    "id": 4771,
                     "name": "VariableDeclaration",
-                    "src": "432:7:9"
+                    "src": "432:7:14"
                   }
                 ],
-                "id": 3971,
+                "id": 4772,
                 "name": "ParameterList",
-                "src": "431:9:9"
+                "src": "431:9:14"
               }
             ],
-            "id": 3972,
+            "id": 4773,
             "name": "FunctionDefinition",
-            "src": "382:59:9"
+            "src": "382:59:14"
           },
           {
             "attributes": {
@@ -249,7 +249,7 @@
               ],
               "name": "deposit",
               "payable": false,
-              "scope": 4009,
+              "scope": 4810,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -261,7 +261,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "clientId",
-                      "scope": 3989,
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -274,20 +274,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 3973,
+                        "id": 4774,
                         "name": "ElementaryTypeName",
-                        "src": "939:7:9"
+                        "src": "947:7:14"
                       }
                     ],
-                    "id": 3974,
+                    "id": 4775,
                     "name": "VariableDeclaration",
-                    "src": "939:16:9"
+                    "src": "947:16:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
-                      "name": "tokenContract",
-                      "scope": 3989,
+                      "name": "populousTokenContract",
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -300,20 +300,20 @@
                           "name": "address",
                           "type": "address"
                         },
-                        "id": 3975,
+                        "id": 4776,
                         "name": "ElementaryTypeName",
-                        "src": "957:7:9"
+                        "src": "965:7:14"
                       }
                     ],
-                    "id": 3976,
+                    "id": 4777,
                     "name": "VariableDeclaration",
-                    "src": "957:21:9"
+                    "src": "965:29:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "receiveCurrency",
-                      "scope": 3989,
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -326,20 +326,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 3977,
+                        "id": 4778,
                         "name": "ElementaryTypeName",
-                        "src": "980:7:9"
+                        "src": "996:7:14"
                       }
                     ],
-                    "id": 3978,
+                    "id": 4779,
                     "name": "VariableDeclaration",
-                    "src": "980:23:9"
+                    "src": "996:23:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "depositAmount",
-                      "scope": 3989,
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -352,20 +352,20 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 3979,
+                        "id": 4780,
                         "name": "ElementaryTypeName",
-                        "src": "1005:4:9"
+                        "src": "1021:4:14"
                       }
                     ],
-                    "id": 3980,
+                    "id": 4781,
                     "name": "VariableDeclaration",
-                    "src": "1005:18:9"
+                    "src": "1021:18:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "receiveAmount",
-                      "scope": 3989,
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -378,19 +378,19 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 3981,
+                        "id": 4782,
                         "name": "ElementaryTypeName",
-                        "src": "1025:4:9"
+                        "src": "1041:4:14"
                       }
                     ],
-                    "id": 3982,
+                    "id": 4783,
                     "name": "VariableDeclaration",
-                    "src": "1025:18:9"
+                    "src": "1041:18:14"
                   }
                 ],
-                "id": 3983,
+                "id": 4784,
                 "name": "ParameterList",
-                "src": "938:106:9"
+                "src": "946:114:14"
               },
               {
                 "children": [
@@ -398,7 +398,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 3989,
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bool",
@@ -411,20 +411,20 @@
                           "name": "bool",
                           "type": "bool"
                         },
-                        "id": 3984,
+                        "id": 4785,
                         "name": "ElementaryTypeName",
-                        "src": "1061:4:9"
+                        "src": "1077:4:14"
                       }
                     ],
-                    "id": 3985,
+                    "id": 4786,
                     "name": "VariableDeclaration",
-                    "src": "1061:4:9"
+                    "src": "1077:4:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 3989,
+                      "scope": 4790,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -437,24 +437,24 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 3986,
+                        "id": 4787,
                         "name": "ElementaryTypeName",
-                        "src": "1067:4:9"
+                        "src": "1083:4:14"
                       }
                     ],
-                    "id": 3987,
+                    "id": 4788,
                     "name": "VariableDeclaration",
-                    "src": "1067:4:9"
+                    "src": "1083:4:14"
                   }
                 ],
-                "id": 3988,
+                "id": 4789,
                 "name": "ParameterList",
-                "src": "1060:12:9"
+                "src": "1076:12:14"
               }
             ],
-            "id": 3989,
+            "id": 4790,
             "name": "FunctionDefinition",
-            "src": "922:151:9"
+            "src": "930:159:14"
           },
           {
             "attributes": {
@@ -467,7 +467,7 @@
               ],
               "name": "releaseDeposit",
               "payable": false,
-              "scope": 4009,
+              "scope": 4810,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -479,7 +479,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "clientId",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -492,20 +492,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 3990,
+                        "id": 4791,
                         "name": "ElementaryTypeName",
-                        "src": "1669:7:9"
+                        "src": "1693:7:14"
                       }
                     ],
-                    "id": 3991,
+                    "id": 4792,
                     "name": "VariableDeclaration",
-                    "src": "1669:16:9"
+                    "src": "1693:16:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
-                      "name": "tokenContract",
-                      "scope": 4008,
+                      "name": "populousTokenContract",
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -518,20 +518,20 @@
                           "name": "address",
                           "type": "address"
                         },
-                        "id": 3992,
+                        "id": 4793,
                         "name": "ElementaryTypeName",
-                        "src": "1687:7:9"
+                        "src": "1711:7:14"
                       }
                     ],
-                    "id": 3993,
+                    "id": 4794,
                     "name": "VariableDeclaration",
-                    "src": "1687:21:9"
+                    "src": "1711:29:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "receiveCurrency",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bytes32",
@@ -544,20 +544,20 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 3994,
+                        "id": 4795,
                         "name": "ElementaryTypeName",
-                        "src": "1710:7:9"
+                        "src": "1742:7:14"
                       }
                     ],
-                    "id": 3995,
+                    "id": 4796,
                     "name": "VariableDeclaration",
-                    "src": "1710:23:9"
+                    "src": "1742:23:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "receiver",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -570,20 +570,20 @@
                           "name": "address",
                           "type": "address"
                         },
-                        "id": 3996,
+                        "id": 4797,
                         "name": "ElementaryTypeName",
-                        "src": "1735:7:9"
+                        "src": "1767:7:14"
                       }
                     ],
-                    "id": 3997,
+                    "id": 4798,
                     "name": "VariableDeclaration",
-                    "src": "1735:16:9"
+                    "src": "1767:16:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "depositIndex",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -596,19 +596,19 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 3998,
+                        "id": 4799,
                         "name": "ElementaryTypeName",
-                        "src": "1753:4:9"
+                        "src": "1785:4:14"
                       }
                     ],
-                    "id": 3999,
+                    "id": 4800,
                     "name": "VariableDeclaration",
-                    "src": "1753:17:9"
+                    "src": "1785:17:14"
                   }
                 ],
-                "id": 4000,
+                "id": 4801,
                 "name": "ParameterList",
-                "src": "1668:103:9"
+                "src": "1692:111:14"
               },
               {
                 "children": [
@@ -616,7 +616,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bool",
@@ -629,20 +629,20 @@
                           "name": "bool",
                           "type": "bool"
                         },
-                        "id": 4001,
+                        "id": 4802,
                         "name": "ElementaryTypeName",
-                        "src": "1788:4:9"
+                        "src": "1820:4:14"
                       }
                     ],
-                    "id": 4002,
+                    "id": 4803,
                     "name": "VariableDeclaration",
-                    "src": "1788:4:9"
+                    "src": "1820:4:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -655,20 +655,20 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 4003,
+                        "id": 4804,
                         "name": "ElementaryTypeName",
-                        "src": "1794:4:9"
+                        "src": "1826:4:14"
                       }
                     ],
-                    "id": 4004,
+                    "id": 4805,
                     "name": "VariableDeclaration",
-                    "src": "1794:4:9"
+                    "src": "1826:4:14"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "name": "",
-                      "scope": 4008,
+                      "scope": 4809,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -681,36 +681,36 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 4005,
+                        "id": 4806,
                         "name": "ElementaryTypeName",
-                        "src": "1800:4:9"
+                        "src": "1832:4:14"
                       }
                     ],
-                    "id": 4006,
+                    "id": 4807,
                     "name": "VariableDeclaration",
-                    "src": "1800:4:9"
+                    "src": "1832:4:14"
                   }
                 ],
-                "id": 4007,
+                "id": 4808,
                 "name": "ParameterList",
-                "src": "1787:18:9"
+                "src": "1819:18:14"
               }
             ],
-            "id": 4008,
+            "id": 4809,
             "name": "FunctionDefinition",
-            "src": "1645:161:9"
+            "src": "1669:169:14"
           }
         ],
-        "id": 4009,
+        "id": 4810,
         "name": "ContractDefinition",
-        "src": "71:1737:9"
+        "src": "71:1769:14"
       }
     ],
-    "id": 4010,
+    "id": 4811,
     "name": "SourceUnit",
-    "src": "0:1808:9"
+    "src": "0:1840:14"
   },
   "networks": {},
   "schemaVersion": "1.0.0",
-  "updatedAt": "2018-01-24T11:00:16.412Z"
+  "updatedAt": "2018-01-24T16:00:11.177Z"
 }

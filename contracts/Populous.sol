@@ -35,8 +35,8 @@ contract Populous is withAccessManager {
 
     // PPT deposits events
     event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
-    event EventNewDeposit(bytes32 clientId, address tokenContract, bytes32 receiveCurrency, uint deposited, uint received, uint depositIndex);
-    event EventDepositReleased(bytes32 clientId, address tokenContract, bytes32 releaseCurrency, uint deposited, uint received, uint depositIndex);
+    event EventNewDeposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint deposited, uint received, uint depositIndex);
+    event EventDepositReleased(bytes32 clientId, address populousTokenContract, bytes32 releaseCurrency, uint deposited, uint received, uint depositIndex);
 
 
     // FIELDS
@@ -572,7 +572,7 @@ contract Populous is withAccessManager {
       * @dev When the actor deposits funds into the platform, 
       * @dev an equivalent amount of tokens is deposited into his account.
       * @param clientId The client ID.
-      * @param tokenContract The token contract.
+      * @param populousTokenContract The Populous token contract.
       * @param receiveCurrency The currency symbol.
       * @param depositAmount The deposit amount.
       * @param receiveAmount The receive amount.
@@ -580,7 +580,7 @@ contract Populous is withAccessManager {
       */
     function deposit(
         bytes32 clientId,
-        address tokenContract,
+        address populousTokenContract,
         bytes32 receiveCurrency,
         uint depositAmount,
         uint receiveAmount
@@ -594,7 +594,7 @@ contract Populous is withAccessManager {
         // iDepositContractsManager
         (success, depositIndex) = iDepositContractsManager(DCM).deposit(
             clientId,
-            tokenContract,
+            populousTokenContract,
             receiveCurrency,
             depositAmount,
             receiveAmount
@@ -604,7 +604,7 @@ contract Populous is withAccessManager {
             _mintTokens(receiveCurrency, receiveAmount);
             _transfer(receiveCurrency, LEDGER_SYSTEM_ACCOUNT, clientId, receiveAmount);
 
-            EventNewDeposit(clientId, tokenContract, receiveCurrency, depositAmount, receiveAmount, depositIndex);
+            EventNewDeposit(clientId, populousTokenContract, receiveCurrency, depositAmount, receiveAmount, depositIndex);
             return true;
         }
         return false;
@@ -612,7 +612,7 @@ contract Populous is withAccessManager {
 
     /** @dev Releases a deposit to an address/wallet.
       * @param clientId The client ID.
-      * @param tokenContract The token contract.
+      * @param populousTokenContract The token contract.
       * @param releaseCurrency The currency symbol.
       * @param receiver The address/wallet of the receiver.
       * @param depositIndex The index/location of a specific deposit.
@@ -620,7 +620,7 @@ contract Populous is withAccessManager {
       */
     function releaseDeposit(
         bytes32 clientId, 
-        address tokenContract,
+        address populousTokenContract,
         bytes32 releaseCurrency,
         address receiver,
         uint depositIndex
@@ -635,7 +635,7 @@ contract Populous is withAccessManager {
 
         (success, deposited, received) = iDepositContractsManager(DCM).releaseDeposit(
             clientId,
-            tokenContract,
+            populousTokenContract,
             releaseCurrency,
             receiver,
             depositIndex
@@ -645,7 +645,7 @@ contract Populous is withAccessManager {
             _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
             _destroyTokens(releaseCurrency, received);
 
-            EventDepositReleased(clientId, tokenContract, releaseCurrency, deposited, received, depositIndex);
+            EventDepositReleased(clientId, populousTokenContract, releaseCurrency, deposited, received, depositIndex);
             return true;
         }
         return false;
