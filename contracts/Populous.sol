@@ -25,6 +25,7 @@ contract Populous is withAccessManager {
     event EventInternalTransfer(bytes32 currency, bytes32 fromId, bytes32 toId, uint amount);
     event EventWithdrawal(address to, bytes32 clientId, bytes32 currency, uint amount);
     event EventDeposit(address from, bytes32 clientId, bytes32 currency, uint amount);
+    event EventImportedPokens(address from, bytes32 clientId, bytes32 currency, uint amount);
 
     // crowdsale events
     event EventNewCrowdsale(address crowdsale, bytes32 _currencySymbol, bytes32 _borrowerId, bytes32 _invoiceId, string _invoiceNumber, uint _invoiceAmount, uint _fundingGoal, uint deadline);
@@ -62,6 +63,7 @@ contract Populous is withAccessManager {
 
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
+
 
     // NON-CONSTANT METHODS
 
@@ -220,6 +222,23 @@ contract Populous is withAccessManager {
         ledger[currency][to] = SafeMath.safeAdd(ledger[currency][to], amount);
 
         EventInternalTransfer(currency, from, to, amount);
+    }
+
+    
+    function importExternalPokens(bytes32 currency, address from, bytes32 accountId) public onlyPopulous {
+        CurrencyToken CT = CurrencyToken(currencies[currency]);
+        
+        //check balance.
+        uint256 balance = CT.balanceOf(from);
+        //balance is more than 0, and balance has been destroyed.
+        require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
+
+        //credit ledger
+        mintTokens(currency, balance);
+        //credit account
+        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, accountId, balance);
+        //emit event: Imported currency to system
+       EventImportedPokens(from, accountId,currency,balance);
     }
 
     // NON-CONSTANT METHODS

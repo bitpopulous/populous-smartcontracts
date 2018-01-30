@@ -46,6 +46,7 @@ contract CurrencyToken is ERC23Token, withAccessManager {
         totalSupply = SafeMath.safeAdd(totalSupply, amount);
     }
 
+    //Note.. Need to emit event, Pokens destroyed... from system
     /** @dev Destroys a specified amount of tokens 
       * @dev The method uses a modifier from withAccessManager contract to only permit populous to use it.
       * @dev The method uses SafeMath to carry out safe token deductions/subtraction.
@@ -56,6 +57,22 @@ contract CurrencyToken is ERC23Token, withAccessManager {
             return false;
         } else {
             balances[AM.populous()] = SafeMath.safeSub(balances[AM.populous()], amount);
+            totalSupply = SafeMath.safeSub(totalSupply, amount);
+            return true;
+        }
+    }
+
+     
+      /** @dev Destroys a specified amount of tokens, from a user.
+      * @dev The method uses a modifier from withAccessManager contract to only permit populous to use it.
+      * @dev The method uses SafeMath to carry out safe token deductions/subtraction.
+      * @param amount The amount of tokens to create.
+      */
+    function destroyTokensFrom(uint amount, address from) public onlyPopulous returns (bool success) {
+        if (balances[from] < amount) {
+            return false;
+        } else {
+            balances[from] = SafeMath.safeSub(balances[from], amount);
             totalSupply = SafeMath.safeSub(totalSupply, amount);
             return true;
         }
