@@ -1,11 +1,11 @@
 pragma solidity ^0.4.17;
 
-import "./ERC23Token.sol";
+import "./ERC20Token.sol";
 import "./SafeMath.sol";
 
 
 /// @title PopulousToken contract
-contract PopulousToken is ERC23Token {
+contract PopulousToken is ERC20Token {
 
     // FIELDS
 

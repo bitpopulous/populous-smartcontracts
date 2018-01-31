@@ -101,10 +101,11 @@ describe("Bank", function() {
 
         var CT = CurrencyToken.at(global.currencies.USD);
         var externalAddress = accounts[0];
-        var depositAmount = 8;
+        //var depositAmount = 8;
         // deposit USD tokens from externalAddress to 'A'
-        CT.transferToContract(P.address, depositAmount, config.INVESTOR1_ACC, { from: externalAddress }).then(function(result) {
-            console.log('transfer to contract gas cost', result.receipt.gasUsed);
+
+        P.importExternalPokens("USD", externalAddress, config.INVESTOR1_ACC).then(function(result) {
+            console.log('import external pokens to ledger gas cost', result.receipt.gasUsed);
             // check that depositAmount is deducted from externalAddress account
             return CT.balanceOf(externalAddress);
         }).then(function(value) {

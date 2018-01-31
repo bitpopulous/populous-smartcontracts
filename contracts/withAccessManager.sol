@@ -19,12 +19,17 @@ contract withAccessManager {
         _;
     }
 
-    // This modifier uses the isGuardian method in the AccessManager contract AM to determine
-    // whether the msg.sender address is guardian.
-    modifier onlyGuardian {
-        require(AM.isGuardian(msg.sender) == true);
+    modifier onlyServerOronlyDCM {
+        require(AM.isServer(msg.sender) == true || AM.isDCM(msg.sender) == true);
         _;
     }
+
+    // This modifier uses the isGuardian method in the AccessManager contract AM to determine
+    // whether the msg.sender address is guardian.
+    /* modifier onlyGuardian {
+        require(AM.isGuardian(msg.sender) == true);
+        _;
+    } */
 
     // This modifier uses the isPopulous method in the AccessManager contract AM to determine
     // whether the msg.sender address is populous.
@@ -45,7 +50,7 @@ contract withAccessManager {
     /** @dev Updates the AccessManager contract address if msg.sender is guardian.
       * @param _accessManager The address to set.
       */
-    function updateAccessManager(address _accessManager) public onlyGuardian {
+    function updateAccessManager(address _accessManager) public onlyServer {
         AM = AccessManager(_accessManager);
     }
 

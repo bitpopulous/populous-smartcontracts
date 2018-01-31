@@ -2,6 +2,7 @@ var
 Populous = artifacts.require("Populous"),
 CurrencyToken = artifacts.require("CurrencyToken"),
 Crowdsale = artifacts.require("Crowdsale");
+CrowdsaleManager = artifacts.require("CrowdsaleManager");
 
 /**
 * @TODO
@@ -12,7 +13,7 @@ contract('Populous / Crowdsale > ', function(accounts) {
 var
     config = require('../include/test/config.js'),
     commonTests = require('../include/test/common.js'),
-    P, crowdsale;
+    P, crowdsale, CM;
 
 describe("Init currency token", function() {
     it("should init currency token Chinese Yuan CNY", function(done) {
@@ -29,7 +30,20 @@ describe("Init currency token", function() {
             done();
         });
     });
+
+    it("should init crowdsale manager", function(done) {
+        CrowdsaleManager.deployed().then(function(instance) {
+            CM = instance;
+            console.log('Crowdsale Manager', CM.address);
+            // creating a new currency GBP for which to mint and use tokens
+            //return commonTests.createCurrency(P, "GBP Pokens", 3, "GBP");
+            //}).then(function() {
+            done();
+        });
+    });
 });
+
+
 
 
 describe("Bank", function() {
@@ -101,8 +115,8 @@ describe("Bank", function() {
         var externalAddress = accounts[0];
         var depositAmount = 8;
         // deposit CNY tokens from externalAddress to 'A'
-        CT.transferToContract(P.address, depositAmount, config.INVESTOR1_ACC, { from: externalAddress }).then(function(result) {
-            console.log('transfer to contract gas cost', result.receipt.gasUsed);
+        P.importExternalPokens("CNY", externalAddress, config.INVESTOR1_ACC).then(function(result) {
+            console.log('import external pokens to ledger gas cost', result.receipt.gasUsed);
             // check that depositAmount is deducted from externalAddress account
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
@@ -130,7 +144,8 @@ describe("Chosen winner > ", function() {
     it("should create crowdsale", function(done) {
         assert(global.currencies.CNY, "Currency required.");
         // new invoice crowdsale
-        P.createCrowdsale(
+        CM.createCrowdsale(
+                P.address,
                 "CNY",
                 BORROWER_ACC,
                 "0x653276385044434451336a66656b5963633132",

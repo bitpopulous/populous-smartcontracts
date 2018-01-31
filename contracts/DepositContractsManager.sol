@@ -3,10 +3,17 @@ pragma solidity ^0.4.17;
 import "./SafeMath.sol";
 import "./withAccessManager.sol";
 import "./DepositContract.sol";
+import "./Populous.sol";
 
 
 /// @title DepositCountractsManager contract
 contract DepositContractsManager is withAccessManager {
+
+     // PPT deposits events
+    event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
+    event EventNewDeposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint deposited, uint received, uint depositIndex);
+    event EventDepositReleased(bytes32 clientId, address populousTokenContract, bytes32 releaseCurrency, uint deposited, uint received, uint depositIndex);
+
     // FIELDS
 
     // This variable represents deposits 
@@ -51,13 +58,12 @@ contract DepositContractsManager is withAccessManager {
       * @return address The address of the deployed deposit contract instance.
       */
     function create(bytes32 clientId) public
-        onlyPopulous
-        returns (address)
+        onlyServer
     {
         depositAddress[clientId] = new DepositContract(clientId);
         assert(depositAddress[clientId] != 0x0);
 
-        return depositAddress[clientId];
+         EventNewDepositContract(clientId, depositAddress[clientId]);
     }
 
     /** @dev Deposits an amount of tokens linked to a client ID.
@@ -69,10 +75,9 @@ contract DepositContractsManager is withAccessManager {
       * @return bool boolean value indicating whether or not a deposit transaction has been made with success.
       * @return uint The updated number of deposits.
       */
-    function deposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount)
+    function deposit(address populousContract, bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint depositAmount, uint receiveAmount)
         public
-        onlyPopulous
-        returns (bool, uint)
+        onlyServer
     {
         DepositContract o = DepositContract(depositAddress[clientId]);
 
@@ -89,9 +94,18 @@ contract DepositContractsManager is withAccessManager {
                 deposits[clientId][populousTokenContract][receiveCurrency].received,
                 receiveAmount
             );
-            return (true, deposits[clientId][populousTokenContract][receiveCurrency].list.length - 1);
+            
+            //success
+            Populous populous = Populous(populousContract);
+
+            uint depositIndex = deposits[clientId][populousTokenContract][receiveCurrency].list.length - 1;
+
+            populous.mintTokens(receiveCurrency, receiveAmount);
+            populous.transfer(receiveCurrency, populous.getLedgerSystemAccount(), clientId, receiveAmount);
+
+            EventNewDeposit(clientId, populousTokenContract, receiveCurrency, depositAmount, receiveAmount, depositIndex);
+
         }
-        return (false, 0);
     }
 
     /** @dev Releases a deposit to an address/wallet.
@@ -104,10 +118,9 @@ contract DepositContractsManager is withAccessManager {
       * @return uint The token amount deposited.
       * @return uint The token amount received.
       */
-    function releaseDeposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex)
+    function releaseDeposit(address populousContract, bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, address receiver, uint depositIndex)
         public
-        onlyPopulous
-        returns (bool, uint, uint)
+        onlyServer
     {
         DepositContract o = DepositContract(depositAddress[clientId]);
         
@@ -127,13 +140,19 @@ contract DepositContractsManager is withAccessManager {
                 deposits[clientId][populousTokenContract][receiveCurrency].received,
                 deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].received
             );
-            return (
-                true,
-                deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited,
-                deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].received
-            );
+          
+            //success
+            Populous populous = Populous(populousContract);
+
+            uint deposited = deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited;
+            uint received = deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].received;
+
+            populous.transfer(receiveCurrency, clientId, populous.getLedgerSystemAccount(), received);
+            populous.destroyTokens(receiveCurrency, received);
+
+            EventDepositReleased(clientId, populousTokenContract, receiveCurrency, deposited, received, depositIndex);
+
         }
-        return (false, 0, 0);
     }
 
 
@@ -158,7 +177,7 @@ contract DepositContractsManager is withAccessManager {
       */
     function getActiveDepositList(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency) 
         public 
-        view returns (uint, uint, uint) {
+        view returns (uint, uint, uint){
         return (
             deposits[clientId][populousTokenContract][receiveCurrency].list.length,
             deposits[clientId][populousTokenContract][receiveCurrency].deposited,

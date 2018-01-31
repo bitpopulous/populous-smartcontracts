@@ -2,6 +2,7 @@ var
 Populous = artifacts.require("Populous"),
 CurrencyToken = artifacts.require("CurrencyToken"),
 Crowdsale = artifacts.require("Crowdsale");
+CrowdsaleManager = artifacts.require("CrowdsaleManager");
 
 /**
 * @TODO
@@ -100,7 +101,8 @@ describe("Bank", function() {
         var externalAddress = accounts[0];
         var depositAmount = 8;
         // deposit EUR tokens from externalAddress to 'A'
-        CT.transferToContract(P.address, depositAmount, config.INVESTOR1_ACC, { from: externalAddress }).then(function(result) {
+        P.importExternalPokens("EUR", externalAddress, config.INVESTOR1_ACC).then(function(result) {
+            console.log('import external pokens to ledger gas cost', result.receipt.gasUsed);
             // check that depositAmount is deducted from externalAddress account
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
@@ -125,10 +127,22 @@ describe("Reach goal with bids > ", function() {
         INVESTOR_GROUP1_GOAL = 900,
         INVESTOR_GROUP2_GOAL = 999;
 
+    it("should init crowdsale manager", function(done) {
+        CrowdsaleManager.deployed().then(function(instance) {
+            CM = instance;
+            console.log('Crowdsale Manager', CM.address);
+            // creating a new currency GBP for which to mint and use tokens
+            //return commonTests.createCurrency(P, "GBP Pokens", 3, "GBP");
+            //}).then(function() {
+            done();
+        });
+    });
+
     it("should create crowdsale", function(done) {
         assert(global.currencies.EUR, "Currency required.");
         // create new crowdsale with invoice amount and funding goal
-        P.createCrowdsale(
+        CM.createCrowdsale(
+                P.address,
                 "EUR",
                 BORROWER_ACC,
                 "internalsystemid",
