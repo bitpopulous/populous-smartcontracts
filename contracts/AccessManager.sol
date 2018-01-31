@@ -8,45 +8,52 @@ contract AccessManager {
     // fields that can be changed by constructor and functions
 
     address public server; // Address, which the platform website uses.
-    address public guardian; // Address of the guardian, who confirms actions.
     address public populous; // Address of the Populous bank contract.
+    address public depositContractsManager; // Address of the deposit contracts manager contract
 
     // NON-CONSTANT METHODS
 
-    /** @dev Constructor that sets the server and guardian when contract is deployed.
+    /** @dev Constructor that sets the server when contract is deployed.
       * @param _server The address to set as the server.
-      * @param _guardian The address to set as the guardian.
       */
-    function AccessManager(address _server, address _guardian) public {
+    function AccessManager(address _server) public {
         server = _server;
-        guardian = _guardian;
+        //guardian = _guardian;
     }
 
     /** @dev Changes the server address that is set by the constructor.
-      * @dev The method requires the message sender to be the set guardian.
+      * @dev The method requires the message sender to be the set server.
       * @param _server The new address to be set as the server.
       */
     function changeServer(address _server) public {
-        require(isGuardian(msg.sender) == true);
+        require(isServer(msg.sender) == true);
         server = _server;
     }
 
     /** @dev Changes the guardian address that is set by the constructor.
       * @dev The method requires the message sender to be the set guardian.
-      * @param _guardian The new address to be set as the guardian.
       */
-    function changeGuardian(address _guardian) public {
+    /* function changeGuardian(address _guardian) public {
         require(isGuardian(msg.sender) == true);
         guardian = _guardian;
-    }
+    } */
 
     /** @dev Changes the populous contract address.
-      * @dev The method requires the message sender to be the set guardian.
+      * @dev The method requires the message sender to be the set server.
       * @param _populous The address to be set as populous.
       */
     function changePopulous(address _populous) public {
-        require(isGuardian(msg.sender) == true);
+        require(isServer(msg.sender) == true);
         populous = _populous;
+    }
+
+    /** @dev Changes the deposit contracts manager contract address.
+      * @dev The method requires the message sender to be the set server.
+      * @param _depositContractsManager The address to be set as deposit contracts manager.
+      */
+    function changeDCM(address _depositContractsManager) public {
+        require(isServer(msg.sender) == true);
+        depositContractsManager = _depositContractsManager;
     }
 
     // CONSTANT METHODS
@@ -59,13 +66,17 @@ contract AccessManager {
         return sender == server;
     }
 
+    function isDCM(address sender) public view returns (bool) {
+        return sender == depositContractsManager;
+    }
+
     /** @dev Checks a given address to determine whether it is the guardian.
       * @param sender The address to be checked.
       * @return bool returns true or false is the address corresponds to the guardian or not.
       */
-    function isGuardian(address sender) public view returns (bool) {
+    /* function isGuardian(address sender) public view returns (bool) {
         return sender == guardian;
-    }
+    } */
 
     /** @dev Checks a given address to determine whether it is populous address.
       * @param sender The address to be checked.

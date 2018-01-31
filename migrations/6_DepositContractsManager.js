@@ -4,10 +4,11 @@ DepositContractsManager = artifacts.require("DepositContractsManager"),
 Populous = artifacts.require("Populous");
 
 module.exports = function(deployer) {
-var P;
+var P, AM;
 
 deployer.then(function() {
-    return AccessManager.deployed().then(function(AM) {
+    return AccessManager.deployed().then(function(instance) {
+        AM = instance;
         return deployer.deploy(DepositContractsManager, AM.address);
     }).then(function() {
         return Populous.deployed();
@@ -16,7 +17,8 @@ deployer.then(function() {
 
         return DepositContractsManager.deployed();
     }).then(function(DCM) {
-        return P.setDCM(DCM.address);
+        return AM.changeDCM(DCM.address);
+        //return P.setDCM(DCM.address);
     }).then(function() {
         console.log('Finished deploying DCM');
     });

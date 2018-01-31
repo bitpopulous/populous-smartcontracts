@@ -1,19 +1,12 @@
 pragma solidity ^0.4.17;
 
-import "./ERC23Token.sol";
+import "./ERC20Token.sol";
 import "./SafeMath.sol";
 import "./withAccessManager.sol";
 
 
 /// @title CurrencyToken contract
-contract CurrencyToken is ERC23Token, withAccessManager {
-
-    // FIELDS
-
-    bytes32 public name;// token name, e.g, pounds for fiat UK pounds.
-    uint8 public decimals;// How many decimals to show. ie. There could 1000 base units with 3 decimals. Meaning 0.980 SBX = 980 base units. It's like comparing 1 wei to 1 ether.
-    bytes32 public symbol;// An identifier: eg SBX.
-
+contract CurrencyToken is ERC20Token, withAccessManager {
 
     // NON-CONSTANT METHODS
     

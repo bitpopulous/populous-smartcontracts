@@ -28,16 +28,12 @@ contract Populous is withAccessManager {
     event EventImportedPokens(address from, bytes32 clientId, bytes32 currency, uint amount);
 
     // crowdsale events
-    event EventNewCrowdsale(address crowdsale, bytes32 _currencySymbol, bytes32 _borrowerId, bytes32 _invoiceId, string _invoiceNumber, uint _invoiceAmount, uint _fundingGoal, uint deadline);
+    //event EventNewCrowdsale(address crowdsale, bytes32 _currencySymbol, bytes32 _borrowerId, bytes32 _invoiceId, string _invoiceNumber, uint _invoiceAmount, uint _fundingGoal, uint deadline);
     event EventBeneficiaryFunded(address crowdsaleAddr, bytes32 borrowerId, bytes32 currency, uint amount);
     event EventLosingGroupBidderRefunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint amount);
     event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
     event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
 
-    // PPT deposits events
-    event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
-    event EventNewDeposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint deposited, uint received, uint depositIndex);
-    event EventDepositReleased(bytes32 clientId, address populousTokenContract, bytes32 releaseCurrency, uint deposited, uint received, uint depositIndex);
 
 
     // FIELDS
@@ -45,14 +41,10 @@ contract Populous is withAccessManager {
     // Constant fields
 
     bytes32 constant LEDGER_SYSTEM_ACCOUNT = "Populous";
+    bytes32 constant CROWDSALE_ACCOUNT = "Crowdsale";
+
     // This has to be the same one as in Crowdsale
     enum States { Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed }
-
-    // Fields that can be changed by functions
-
-    // conract type fields
-    iCrowdsaleManager public CM;
-    iDepositContractsManager public DCM;
 
     // The 'ledger' will hold records of the amount of tokens
     // an account holds and what currency it is.
@@ -70,17 +62,6 @@ contract Populous is withAccessManager {
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
     function Populous(address _accessManager) public withAccessManager(_accessManager) { }
-
-    // Sets the crowdsale manager address
-    function setCM(address _crowdsaleManager) public onlyServer {
-        CM = iCrowdsaleManager(_crowdsaleManager);
-    }
-
-    // Sets the deposit contracts manager address
-    function setDCM(address _depositContractsManager) public onlyServer {
-        DCM = iDepositContractsManager(_depositContractsManager);
-    }
-
     /**
     BANK MODULE
     */
@@ -95,7 +76,7 @@ contract Populous is withAccessManager {
       */
     function createCurrency(bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
         public
-        onlyGuardian
+        onlyServer
     {
         // Check if currency already exists
         require(currencies[_tokenSymbol] == 0x0);
@@ -109,29 +90,13 @@ contract Populous is withAccessManager {
         EventNewCurrency(_tokenName, _decimalUnits, _tokenSymbol, currencies[_tokenSymbol]);
     }
 
-    // Deposit function called by our external ERC23 tokens upon transfer to the contract
-    function tokenFallback(address from, uint amount, bytes data) public {
-        bytes32 currencySymbol = currenciesSymbols[msg.sender];
-
-        require(currencySymbol.length != 0);
-
-        bytes32 clientId;
-        assembly {
-            clientId := mload(add(data, 32))
-        }
-        require(CurrencyToken(msg.sender).destroyTokens(amount) != false);
-        
-        ledger[currencySymbol][clientId] = SafeMath.safeAdd(ledger[currencySymbol][clientId], amount);
-        EventDeposit(from, clientId, currencySymbol, amount);
-    }
-
     /** @dev Allows a token owner to withdraw from their wallet to another address
       * @param clientExternal The address to transfer withdrawn amount to.
       * @param clientId The client ID.
       * @param currency The cyrrency symbol, e.g., GBP
       * @param amount The amount.
       */
-    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) public onlyGuardian {
+    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) public onlyServer {
         require(currencies[currency] != 0x0 && ledger[currency][clientId] >= amount);
 
         ledger[currency][clientId] = SafeMath.safeSub(ledger[currency][clientId], amount);
@@ -150,7 +115,7 @@ contract Populous is withAccessManager {
       */
     function mintTokens(bytes32 currency, uint amount)
         public
-        onlyGuardian
+        onlyServerOronlyDCM
         returns (bool success)
     {
         return _mintTokens(currency, amount);
@@ -180,7 +145,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function destroyTokens(bytes32 currency, uint amount)
-        public onlyGuardian returns (bool success)
+        public onlyServerOronlyDCM returns (bool success)
     {
         return _destroyTokens(currency, amount);
     }
@@ -204,7 +169,7 @@ contract Populous is withAccessManager {
     }    
 
     // Calls the _transfer method to make a transfer on the internal ledger.
-    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServer {
+    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServerOronlyDCM {
         _transfer(currency, from, to, amount);
     }
 
@@ -225,14 +190,13 @@ contract Populous is withAccessManager {
     }
 
     
-    function importExternalPokens(bytes32 currency, address from, bytes32 accountId) public onlyPopulous {
+    function importExternalPokens(bytes32 currency, address from, bytes32 accountId) public onlyServer {
         CurrencyToken CT = CurrencyToken(currencies[currency]);
         
         //check balance.
         uint256 balance = CT.balanceOf(from);
         //balance is more than 0, and balance has been destroyed.
         require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
-
         //credit ledger
         mintTokens(currency, balance);
         //credit account
@@ -268,6 +232,11 @@ contract Populous is withAccessManager {
         return currenciesSymbols[currency];
     }
 
+    //get the getLedgerSystemAccount
+    function getLedgerSystemAccount() public view returns(bytes32) {
+        return LEDGER_SYSTEM_ACCOUNT;
+    }
+
     /**
     END OF BANK MODULE
     */
@@ -277,50 +246,6 @@ contract Populous is withAccessManager {
     */
 
     // NON-CONSTANT METHODS
-
-
-    /** @dev Creates a new Crowdsale contract instance for an invoice crowdsale restricted to server.
-      * @param _currencySymbol The currency symbol, e.g., GBP.
-      * @param _borrowerId The unique borrower ID.
-      * @param _invoiceId The unique invoice ID.
-      * @param _invoiceNumber The unique invoice number.
-      * @param _invoiceAmount The invoice amount.
-      * @param _fundingGoal The funding goal of the borrower.
-      * @param _platformTaxPercent The percentage charged by the platform
-      * @param _signedDocumentIPFSHash The hash of related invoice documentation saved on IPFS.
-      */
-    function createCrowdsale(
-            bytes32 _currencySymbol,
-            bytes32 _borrowerId,
-            bytes32 _invoiceId,
-            string _invoiceNumber,
-            uint _invoiceAmount,
-            uint _fundingGoal,
-            uint _platformTaxPercent,
-            string _signedDocumentIPFSHash,
-            uint _extraTime)
-        public onlyServer
-    {
-        require(currencies[_currencySymbol] != 0x0);
-
-        address crowdsaleAddr = CM.createCrowdsale(
-            _currencySymbol,
-            _borrowerId,
-            _invoiceId,
-            _invoiceNumber,
-            _invoiceAmount,
-            _fundingGoal,
-            _platformTaxPercent,
-            _signedDocumentIPFSHash,
-            _extraTime
-        );
-
-        uint deadline = now + 24 hours;
-
-        EventNewCrowdsale(crowdsaleAddr, _currencySymbol, _borrowerId, _invoiceId, _invoiceNumber, _invoiceAmount, _fundingGoal, deadline);
-
-    }
-
 
     /** @dev Allows a bidder to place a bid in an invoice crowdsale.
       * @param groupIndex The index/location of a group in a set of groups.
@@ -334,6 +259,7 @@ contract Populous is withAccessManager {
         public onlyServer returns (bool success)
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+        require(ledger[CS.currencySymbol()][bidderId] >= value && value != 0);//checking bidder poken balance
 
         uint8 err;
         uint finalValue;
@@ -342,7 +268,7 @@ contract Populous is withAccessManager {
         (err, finalValue, groupGoal, goalReached) = CS.bid(groupIndex, bidderId, name, value);
 
         if (err == 0) {
-            _transfer(CS.currencySymbol(), bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
+            _transfer(CS.currencySymbol(), bidderId, CROWDSALE_ACCOUNT, finalValue);
             return true;
         } else {
             return false;
@@ -367,6 +293,7 @@ contract Populous is withAccessManager {
         public onlyServer returns (bool success)
     {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
+        require(ledger[CS.currencySymbol()][bidderId] >= value && value != 0);//checking bidder poken balance
 
         uint8 err;
         uint finalValue;
@@ -375,7 +302,7 @@ contract Populous is withAccessManager {
         (err, finalValue, groupGoal, goalReached) = CS.initialBid(groupName, goal, bidderId, name, value);
 
         if (err == 0) {
-            _transfer(CS.currencySymbol(), bidderId, LEDGER_SYSTEM_ACCOUNT, finalValue);
+            _transfer(CS.currencySymbol(), bidderId, CROWDSALE_ACCOUNT, finalValue);
             return true;
         } else {
             return false;
@@ -395,7 +322,7 @@ contract Populous is withAccessManager {
 
         bytes32 borrowerId = CS.borrowerId();
         bytes32 currency = CS.currencySymbol();
-        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, borrowerId, amount);
+        _transfer(currency, CROWDSALE_ACCOUNT, borrowerId, amount);
 
         CS.setSentToBeneficiary();
         EventBeneficiaryFunded(crowdsaleAddr, borrowerId, currency, amount);
@@ -432,7 +359,7 @@ contract Populous is withAccessManager {
                     // Check if bidder has already been refunded
                     if (bidderHasReceivedTokensBack == false) {
                         // Refund bidder
-                        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, bidAmount);
+                        _transfer(currency, CROWDSALE_ACCOUNT, bidderId, bidAmount);
                         
                         // Save bidder refund in Crowdsale contract
                         CS.setBidderHasReceivedTokensBack(groupIndex, bidderIndex);
@@ -463,7 +390,7 @@ contract Populous is withAccessManager {
 
         if (bidderHasReceivedTokensBack == false && bidderId.length != 0) {
             bytes32 currency = CS.currencySymbol();
-            _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, bidAmount);
+            _transfer(currency, CROWDSALE_ACCOUNT, bidderId, bidAmount);
             
             // Save bidder refund in Crowdsale contract
             CS.setBidderHasReceivedTokensBack(groupIndex, bidderIndex);
@@ -487,7 +414,7 @@ contract Populous is withAccessManager {
 
         bytes32 currency = CS.currencySymbol();
         _mintTokens(currency, paidAmount);
-
+        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, CROWDSALE_ACCOUNT, paidAmount);
         CS.setPaidAmount(paidAmount);
         
         EventPaymentReceived(crowdsaleAddr, currency, paidAmount);
@@ -525,7 +452,7 @@ contract Populous is withAccessManager {
             // Fund winning bidder based on his contribution
             uint benefitsAmount = bidAmount * paidAmount / amountRaised;
 
-            _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, benefitsAmount);
+            _transfer(currency, CROWDSALE_ACCOUNT, bidderId, benefitsAmount);
             
             // Save bidder refund in Crowdsale contract
             CS.setBidderHasReceivedTokensBack(winnerGroupIndex, bidderIndex);
@@ -559,7 +486,7 @@ contract Populous is withAccessManager {
             // Fund winning bidder based on his contribution
             uint benefitsAmount = bidAmount * paidAmount / amountRaised;
 
-            _transfer(currency, LEDGER_SYSTEM_ACCOUNT, bidderId, benefitsAmount);
+            _transfer(currency, CROWDSALE_ACCOUNT, bidderId, benefitsAmount);
             
             // Save bidder refund in Crowdsale contract
             CS.setBidderHasReceivedTokensBack(winnerGroupIndex, bidderIndex);
@@ -569,107 +496,5 @@ contract Populous is withAccessManager {
     }    
     /**
     END OF CROWDSALE MODULE
-    */
-
-    /**
-    START OF PPT DEPOSIT MODULE
-    */
-
-    // NON-CONSTANT METHODS
-
-    function createDepositContract(bytes32 clientId) public onlyServer {
-        // Creates a new deposit contract linked to a client ID
-        address depositContractAddress = iDepositContractsManager(DCM).create(clientId);
-        // Event triggered when deposit contract is created
-        EventNewDepositContract(clientId, depositContractAddress);
-    }
-
-    /** @dev Deposits an amount of tokens linked to a client ID.
-      * @dev client receives the receiveAmount in the receiveCurrency
-      * @dev the amount is sent from populous and linked to clientId 
-      * @dev on the ledger in the specified currency
-      * @dev When the actor deposits funds into the platform, 
-      * @dev an equivalent amount of tokens is deposited into his account.
-      * @param clientId The client ID.
-      * @param populousTokenContract The Populous token contract.
-      * @param receiveCurrency The currency symbol.
-      * @param depositAmount The deposit amount.
-      * @param receiveAmount The receive amount.
-      * @return bool boolean value indicating whether or not a deposit transaction has been made with success.
-      */
-    function deposit(
-        bytes32 clientId,
-        address populousTokenContract,
-        bytes32 receiveCurrency,
-        uint depositAmount,
-        uint receiveAmount
-    )
-        public onlyServer returns (bool)
-    {
-        bool success;
-        uint depositIndex;
-        
-        // success and depositIndex are both returned from the deposit method of
-        // iDepositContractsManager
-        (success, depositIndex) = iDepositContractsManager(DCM).deposit(
-            clientId,
-            populousTokenContract,
-            receiveCurrency,
-            depositAmount,
-            receiveAmount
-        );
-
-        if (success) {
-            _mintTokens(receiveCurrency, receiveAmount);
-            _transfer(receiveCurrency, LEDGER_SYSTEM_ACCOUNT, clientId, receiveAmount);
-
-            EventNewDeposit(clientId, populousTokenContract, receiveCurrency, depositAmount, receiveAmount, depositIndex);
-            return true;
-        }
-        return false;
-    }
-
-    /** @dev Releases a deposit to an address/wallet.
-      * @param clientId The client ID.
-      * @param populousTokenContract The token contract.
-      * @param releaseCurrency The currency symbol.
-      * @param receiver The address/wallet of the receiver.
-      * @param depositIndex The index/location of a specific deposit.
-      * @return bool boolean value indicating whether or not a deposit has been updated with success.
-      */
-    function releaseDeposit(
-        bytes32 clientId, 
-        address populousTokenContract,
-        bytes32 releaseCurrency,
-        address receiver,
-        uint depositIndex
-    )
-        public
-        onlyServer
-        returns (bool)
-    {
-        bool success;
-        uint deposited;
-        uint received;
-
-        (success, deposited, received) = iDepositContractsManager(DCM).releaseDeposit(
-            clientId,
-            populousTokenContract,
-            releaseCurrency,
-            receiver,
-            depositIndex
-        );
-
-        if (success) {
-            _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
-            _destroyTokens(releaseCurrency, received);
-
-            EventDepositReleased(clientId, populousTokenContract, releaseCurrency, deposited, received, depositIndex);
-            return true;
-        }
-        return false;
-    }
-    /**
-    END OF PPT DEPOSIT MODULE
     */
 }
