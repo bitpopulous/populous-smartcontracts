@@ -34,6 +34,7 @@ contract Populous is withAccessManager {
     event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
     event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
 
+    event EventExchange(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint amount, bytes32 conversion_rate, uint from_amount, uint fee_amount);
 
 
     // FIELDS
@@ -115,7 +116,7 @@ contract Populous is withAccessManager {
       */
     function mintTokens(bytes32 currency, uint amount)
         public
-        onlyServerOronlyDCM
+        onlyServerOrOnlyDCM
         returns (bool success)
     {
         return _mintTokens(currency, amount);
@@ -145,7 +146,7 @@ contract Populous is withAccessManager {
       * @param currency The related currency to mint.
       */
     function destroyTokens(bytes32 currency, uint amount)
-        public onlyServerOronlyDCM returns (bool success)
+        public onlyServerOrOnlyDCM returns (bool success)
     {
         return _destroyTokens(currency, amount);
     }
@@ -169,7 +170,7 @@ contract Populous is withAccessManager {
     }    
 
     // Calls the _transfer method to make a transfer on the internal ledger.
-    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServerOronlyDCM {
+    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServerOrOnlyDCM {
         _transfer(currency, from, to, amount);
     }
 
@@ -497,4 +498,29 @@ contract Populous is withAccessManager {
     /**
     END OF CROWDSALE MODULE
     */
+    /**
+    EXCHANGE MODULE 
+     */
+     //Note: on the server, fee would have to be deducted from the to_amount. 
+     function exchangeCurrency(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint from_amount, uint to_amount, uint256 fee_amount, bytes32 conversion_rate)
+        public
+        onlyServer
+    {
+        //client must own amount to exchange and currency held must already exist
+        require(currencies[from_currency] != 0x0 && currencies[to_currency] != 0x0 && ledger[from_currency][clientId] >= from_amount);
+
+        //transfer pokens to platform account from client, this will deduct from client balance
+        _transfer(from_currency, clientId, LEDGER_SYSTEM_ACCOUNT, from_amount);
+        //destroy transfered tokens
+        _destroyTokens(from_currency, from_amount);
+        
+        //mint receive amount of to_currency and transfer amount (fees has been deducted from the server.)
+        _mintTokens(to_currency, SafeMath.safeAdd(to_amount, fee_amount));
+        
+        //transfer minted amount
+        _transfer(to_currency, LEDGER_SYSTEM_ACCOUNT, clientId, to_amount);
+        
+        //emit exchange event
+        EventExchange(clientId, from_currency, to_currency, from_amount, conversion_rate, to_amount, fee_amount);
+    }
 }
