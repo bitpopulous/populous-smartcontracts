@@ -22,7 +22,7 @@ describe("Init currency token", function() {
             console.log('Populous', P.address);
             // create new EUR currency token
             if (!global.currencies || !global.currencies.EUR) {
-                return commonTests.createCurrency(P, "EUR Pokens", 3, "EUR");
+                return commonTests.createCurrency(P, "EUR Pokens", 8, "EUR");
             } else {
                 return Promise.resolve();
             }
@@ -81,11 +81,11 @@ describe("Bank", function() {
         var withdrawalAmount = 8;
 
         // withdraw withdrawal amount of EUR tokens from 'A' and send to externalAddress
-        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'EUR', withdrawalAmount).then(function() {
+        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'EUR', withdrawalAmount, 3).then(function() {
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
             // check withdrawal amount of EUR tokens was allocated externalAddress
-            assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
+            assert.equal(value.toNumber(), withdrawalAmount - 3, "Failed withdrawal");
             // check withdrawal amount of EUR tokens was withdrawn from 'A'
             return P.getLedgerEntry.call("EUR", config.INVESTOR1_ACC);
         }).then(function(value) {
@@ -110,7 +110,7 @@ describe("Bank", function() {
             // check that the depositAmount has been added to 'A'
             return P.getLedgerEntry.call("EUR", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed deposit");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 3, "Failed deposit");
             done();
         });
     });
@@ -194,7 +194,7 @@ describe("Reach goal with bids > ", function() {
             assert.equal(value.toNumber(), 1, "Failed creating group");
             return P.getLedgerEntry.call("EUR", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 450, "Failed bidding");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 450 - 3, "Failed bidding");
             return Crowdsale.at(crowdsale).getGroup.call(0);
         }).then(function(group) {
             assert.equal(group[3].toNumber(), 450, "Failed bidding");
@@ -217,7 +217,7 @@ describe("Reach goal with bids > ", function() {
         });
     }); */
 
-    it("should fail create new bidding group and place initial bid to group 1 from config.INVESTOR1_ACC with 20", function(done) {
+    it("should fail create new bidding group and place initial bid to group 1 from config.INVESTOR1_ACC with 450", function(done) {
         assert(crowdsale, "Crowdsale required.");
 
         var
@@ -309,18 +309,28 @@ describe("Reach goal with bids > ", function() {
         });
     });
 
-    it("should refund losing groups", function(done) {
+    it("should refund losing group bidders", function(done) {
         assert(crowdsale, "Crowdsale required.");
         // refund loosing groups
-        P.refundLosingGroups(crowdsale).then(function(result) {
-            console.log('refund losing groups gas cost', result.receipt.gasUsed);
+        Crowdsale.at(crowdsale).findBidder(config.INVESTOR3_ACC).then(function(result){
+            console.log('find bidder', result);
+            var groupIndex = result[1].toNumber();
+            var bidderIndex = result[2].toNumber();
+            return P.refundLosingGroupBidder(crowdsale, result[1].toNumber(), result[2].toNumber());
+        }).then(function(result){
+            console.log('refund losing group bidder gas cost', result.receipt.gasUsed);
             return P.getLedgerEntry.call("EUR", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 450, "Failed refunding losing group");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 450 - 3, "Failed refunding losing group");
 
             return Crowdsale.at(crowdsale).status.call();
         }).then(function(status) {
             assert.equal(status.toNumber(), 3, "Failed changing crowdsale status");
+            return P.getLedgerEntry.call("EUR", config.INVESTOR3_ACC);
+        }).then(function(value) {
+            console.log('investor 3 balance', value);
+            assert.equal(value.toNumber(), config.INVESTOR3_ACC_BALANCE - 350, "Failed refunding losing group bidder");
+
             done();
         });
     });
@@ -356,7 +366,7 @@ describe("Reach goal with bids > ", function() {
             // Check investor1 balance
             return P.getLedgerEntry.call("EUR", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE + 50, "Failed funding winner group");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE + 50 - 3, "Failed funding winner group");
 
             // Check investor2 balance
             return P.getLedgerEntry.call("EUR", config.INVESTOR2_ACC);

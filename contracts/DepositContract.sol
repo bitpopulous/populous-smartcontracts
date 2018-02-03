@@ -1,20 +1,22 @@
 pragma solidity ^0.4.17;
 
 import "./iERC20Token.sol";
+import "./withAccessManager.sol";
+
 
 
 /// @title DepositContract contract
-contract DepositContract {
+contract DepositContract is withAccessManager {
 
     bytes32 clientId;// cliend ID.
     address manager; // address of contract manager.
 
     // MODIFIERS
 
-    modifier onlyManager() {
+    /* modifier onlyManager() {
         require(msg.sender == manager);
         _;
-    }
+    } */
 
     // NON-CONSTANT METHODS 
 
@@ -22,10 +24,10 @@ contract DepositContract {
       * @dev The method also sets the manager to the msg.sender.
       * @param _clientId A string of fixed length representing the client ID.
       */
-    function DepositContract(bytes32 _clientId) public {
+    function DepositContract(bytes32 _clientId, address accessManager) public withAccessManager(accessManager) {
         clientId = _clientId;
-        manager = msg.sender;
     }
+     
 
     /** @dev Transfers an amount '_value' of tokens from msg.sender to '_to' address/wallet.
       * @param populousTokenContract The address of the ERC20 token contract which implements the transfer method.
@@ -34,7 +36,7 @@ contract DepositContract {
       * @return success boolean true or false indicating whether the transfer was successful or not.
       */
     function transfer(address populousTokenContract, address _to, uint256 _value) public
-        onlyManager returns (bool success) 
+        onlyServerOrOnlyDCM returns (bool success) 
     {
         return iERC20Token(populousTokenContract).transfer(_to, _value);
     }
@@ -48,5 +50,6 @@ contract DepositContract {
     function balanceOf(address populousTokenContract) public view returns (uint) {
         return iERC20Token(populousTokenContract).balanceOf(this);
     }
+
 
 }

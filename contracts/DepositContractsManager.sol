@@ -60,10 +60,10 @@ contract DepositContractsManager is withAccessManager {
     function create(bytes32 clientId) public
         onlyServer
     {
-        depositAddress[clientId] = new DepositContract(clientId);
+        depositAddress[clientId] = new DepositContract(clientId, AM);
         assert(depositAddress[clientId] != 0x0);
 
-         EventNewDepositContract(clientId, depositAddress[clientId]);
+        EventNewDepositContract(clientId, depositAddress[clientId]);
     }
 
     /** @dev Deposits an amount of tokens linked to a client ID.

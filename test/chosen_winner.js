@@ -22,7 +22,7 @@ describe("Init currency token", function() {
             console.log('Populous', P.address);
 
             if (!global.currencies || !global.currencies.CNY) {
-                return commonTests.createCurrency(P, "CNY Pokens", 3, "CNY");
+                return commonTests.createCurrency(P, "CNY Pokens", 8, "CNY");
             } else {
                 return Promise.resolve();
             }
@@ -95,11 +95,11 @@ describe("Bank", function() {
         var withdrawalAmount = 8;
 
         // withdraw withdrawal amount of CNY tokens from 'A' and send to externalAddress
-        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'CNY', withdrawalAmount).then(function() {
+        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'CNY', withdrawalAmount, 5).then(function() {
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
             // check withdrawal amount of CNY tokens was allocated externalAddress
-            assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
+            assert.equal(value.toNumber(), withdrawalAmount - 5, "Failed withdrawal");
             // check withdrawal amount of CNY tokens was withdrawn from 'A'
             return P.getLedgerEntry.call("CNY", config.INVESTOR1_ACC);
         }).then(function(value) {
@@ -124,7 +124,7 @@ describe("Bank", function() {
             // check that the depositAmount has been added to 'A'
             return P.getLedgerEntry.call("CNY", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed deposit");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 5, "Failed deposit");
             done();
         });
     });
@@ -240,7 +240,7 @@ describe("Chosen winner > ", function() {
 
             return P.getLedgerEntry.call("CNY", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 50, "Failed bidding twice to group 2");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 50 - 5, "Failed bidding twice to group 2");
             return Crowdsale.at(crowdsale).getGroup.call(1);
         }).then(function(group) {
             assert.equal(group[3].toNumber(), 50, "Failed bidding");
@@ -259,7 +259,7 @@ describe("Chosen winner > ", function() {
 
             return P.getLedgerEntry.call("CNY", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 50, "Failed bidding 2, 3");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 50 - 5, "Failed bidding 2, 3");
 
             return P.getLedgerEntry.call("CNY", config.INVESTOR2_ACC);
         }).then(function(value) {

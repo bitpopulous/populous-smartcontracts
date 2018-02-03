@@ -5,13 +5,14 @@ PopulousToken = artifacts.require("PopulousToken"),
 DepositContractsManager = artifacts.require("DepositContractsManager"),
 Crowdsale = artifacts.require("Crowdsale");
 CrowdsaleManager = artifacts.require("CrowdsaleManager");
-
+AccessManager = artifacts.require("AccessManager");
+DepositContract = artifacts.require("DepositContract");
 
 contract('Populous / Tokens > ', function(accounts) {
 var
     config = require('../include/test/config.js'),
     commonTests = require('../include/test/common.js'),
-    P, DCM, depositAddress, crowdsale, CM;
+    P, DCM, depositAddress, crowdsale, CM, AM;
 
 describe("Init currency token > ", function() {
     it("should init currency GBP Pokens", function(done) {
@@ -19,12 +20,23 @@ describe("Init currency token > ", function() {
             P = instance;
             console.log('Populous', P.address);
             // creating a new currency GBP for which to mint and use tokens
-            return commonTests.createCurrency(P, "GBP Pokens", 3, "GBP");
+            return commonTests.createCurrency(P, "GBP Pokens", 8, "GBP");
         }).then(function() {
             done();
         });
     });
 
+
+    it("should init currency ZIM ZM Pokens", function(done) {
+        Populous.deployed().then(function(instance) {
+            P = instance;
+            console.log('Populous', P.address);
+            // creating a new currency AED for which to mint and use tokens
+            return commonTests.createCurrency(P, "ZIM Pokens", 8, "ZM");
+        }).then(function() {
+            done();
+        });
+    });
 
     it("should mint GBP tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
         assert(global.currencies.GBP, "Currency required.");
@@ -40,7 +52,24 @@ describe("Init currency token > ", function() {
             done();
         });
     });
+
     
+    it("should mint ZM tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
+        assert(global.currencies.ZM, "Currency required.");
+        // amount of GBP tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
+        // amount of GBP tokens to mint = 470 + 450 + 600 = 1,520
+        var mintAmount = config.INVESTOR1_ACC_BALANCE;
+        // mint mintAmount of GBP tokens and allocate to LEDGER_ACC/"Populous"
+        P.mintTokens('ZM', mintAmount).then(function(result) {
+            console.log('mint tokens gas cost', result.receipt.gasUsed);
+            return P.getLedgerEntry.call("ZM", config.LEDGER_ACC);
+        }).then(function(amount) {
+            assert.equal(amount.toNumber(), mintAmount, "Failed minting GBP tokens");
+            done();
+        });
+    });
+
+
     it("should transfer GBP tokens to config.INVESTOR1_ACC", function(done) {
         assert(global.currencies.GBP, "Currency required.");
         // transfer 190 GBP tokens from 'Populous' to 'A'
@@ -52,7 +81,46 @@ describe("Init currency token > ", function() {
             done();
         });
     });
+
+
+    it("should transfer ZM tokens to config.INVESTOR1_ACC", function(done) {
+        assert(global.currencies.ZM, "Currency required.");
+        // transfer 190 ZM tokens from 'Populous' to 'A'
+        P.transfer("ZM", config.LEDGER_ACC, config.INVESTOR1_ACC, 190).then(function(result) {
+            console.log('transfer pokens gas cost', result.receipt.gasUsed);
+            return P.getLedgerEntry.call("ZM", config.INVESTOR1_ACC);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 190, "Failed transfer 1");
+            done();
+        });
+    });
+
+
+
+    it("should exchange ZM tokens owned by config.INVESTOR1_ACC to equivalent GBP tokens", function(done) {
+        assert(global.currencies.ZM, "Currency required.");
+        assert(global.currencies.GBP, "Currency required.");
+        
+        P.getLedgerEntry.call("ZM", config.INVESTOR1_ACC)
+        .then(function(value) {
+            assert.equal(value.toNumber(), 190, "Failed transfer 1");
+            return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
+        }).then(function(balance){
+            assert.equal(balance.toNumber(), 190, "Failed transfer 1");
+            return P.exchangeCurrency(config.INVESTOR1_ACC, 'ZM', 'GBP', 160, 100, 12, '1.14');
+        }).then(function(result) {
+            console.log('conversion gas cost', result.receipt.gasUsed);
+            return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
+        }).then(function(balance){
+            assert.equal(balance.toNumber(), 290, "Failed transfer 1");
+            return P.getLedgerEntry.call("ZM", config.INVESTOR1_ACC);
+        }).then(function(balance){
+            assert.equal(balance.toNumber(), 30, "Failed transfer 1");
+            done();
+        });
+    });
     
+
 
     it("should init PPT", function(done) {
         PopulousToken.new().then(function(instance) {
@@ -68,7 +136,23 @@ describe("Init currency token > ", function() {
 });
 
 describe("Deposit Tokens > ", function() {
-    it("should create deposit contract for client", function(done) {
+
+    it("should init access manager", function(done) {
+        AccessManager.deployed().then(function(instance) {
+            assert(instance);
+            // creating a new instance of the populous token contract
+            // PPT which is linked to ERC23Token.sol
+            AM = instance;
+            console.log('Access Manager', AM.address);
+
+            done();
+        });
+    });
+
+
+
+
+    it("should create deposit contract for client with access manager", function(done) {
         assert(global.PPT, "PPT required.");
 
         DepositContractsManager.deployed().then(function(instance) {
@@ -77,9 +161,10 @@ describe("Deposit Tokens > ", function() {
             // create deposit contract for accountID 'A'
             return DCM.create(config.INVESTOR1_ACC);
         }).then(function(result) {
+            
             console.log('create deposit contract log');
             // printing transaction log in console
-            console.log(result.logs[0]);
+            console.log('new deposit contract log', result);
             console.log('create deposit contract gas cost', result.receipt.gasUsed);
             console.log('create deposit contract FULL log', result.receipt);
             // getting the address of the deposit contract for accountID 'A'
@@ -87,7 +172,15 @@ describe("Deposit Tokens > ", function() {
         }).then(function(address) {
             assert(address);
             depositAddress = address;
+            console.log('access manager address', AM.address);
             console.log('deposit contract address', address);
+            
+            var DC = DepositContract.at(address);
+            return DC.AM.call();
+        }).then(function(result){
+            assert(result);
+            console.log('access manager address', AM.address);
+            console.log('access manager address from deposit contract', result);
             done();
         });
     });
@@ -233,7 +326,7 @@ describe("Deposit Tokens > ", function() {
             groupGoal1 = 190;
         // when bid occurs, the token amount is sent to Populous
         // so bidder must have the required amount in the currency ledger
-        // investor1 has 380 GBP tokens - 190 = 190 balance
+        // investor1 has 480 GBP tokens - 190 = 290 balance
         commonTests.initialBid(P, crowdsale, groupName1, groupGoal1, config.INVESTOR1_ACC, "AA007", 190).then(function(result) {
             console.log('initial bid gas cost', result.receipt.gasUsed);
             // when you bid you are using your tokens 
@@ -241,7 +334,7 @@ describe("Deposit Tokens > ", function() {
             // which is sent to beneficiary at the end of a crowsdale
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 190, "Failed bidding");
+            assert.equal(value.toNumber(), 290, "Failed bidding");
             // getGroup returns 
             // 0 = name, 1 = goal, 2 = biddersCount, 3 = amountRaised
             // 4 = bool hasReceivedTokensBack
@@ -289,15 +382,6 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
-    it("should refund losing groups", function(done) {
-        assert(crowdsale, "Crowdsale required.");
-        // refund any loosing groups
-        P.refundLosingGroups(crowdsale).then(function(result) {
-            console.log('refund losing groups gas cost', result.receipt.gasUsed);
-            done();
-        });
-    });
-
 
     it("should fund winner group", function(done) {
         assert(crowdsale, "Crowdsale required.");
@@ -336,7 +420,7 @@ describe("Deposit Tokens > ", function() {
             // invoice amount was 200
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), 390, "Failed funding winner group");
+            assert.equal(value.toNumber(), 490, "Failed funding winner group");
             return Crowdsale.at(crowdsale).bidderHasTokensBack.call(config.INVESTOR1_ACC);
         }).then(function(result) {
             assert.equal(result, 1, "Failed funding bidder in winner group");
@@ -381,10 +465,10 @@ describe("Deposit Tokens > ", function() {
             // get investor1 account balance in GBP tokens after 190 GBP pokens are destroyed
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
-            // investor1 should have 390 - 190 = 200 GBP Pokens left in GBP ledger
+            // investor1 should have 490 - 190 = 200 GBP Pokens left in GBP ledger
             // as 190 GBP Poken received when 200 PPT was deposited will be destroyed 
             // upon calling release deposit 
-            assert.equal(value.toNumber(), 200, "Failed funding winner group");
+            assert.equal(value.toNumber(), 300, "Failed funding winner group");
             done();
         })
     });

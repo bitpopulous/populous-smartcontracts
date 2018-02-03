@@ -14,7 +14,6 @@ deployer.then(function() {
         return Populous.deployed();
     }).then(function(instance) {
         P = instance;
-
         return DepositContractsManager.deployed();
     }).then(function(DCM) {
         return AM.changeDCM(DCM.address);

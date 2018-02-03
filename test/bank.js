@@ -21,7 +21,7 @@ describe("Init currency token", function() {
             console.log('Populous', P.address);
             // creating a new currency USD for which to mint and use tokens
             if (!global.currencies || !global.currencies.USD) {
-                return commonTests.createCurrency(P, "USD Pokens", 3, "USD");
+                return commonTests.createCurrency(P, "USD Pokens", 8, "USD");
             } else {
                 return Promise.resolve();
             }
@@ -82,12 +82,12 @@ describe("Bank", function() {
         var withdrawalAmount = 8;
 
         // withdraw withdrawal amount of USD tokens from 'A' and send to externalAddress
-        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'USD', withdrawalAmount).then(function(result) {
+        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'USD', withdrawalAmount, 1).then(function(result) {
             console.log('withdraw pokens gas cost', result.receipt.gasUsed);
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
             // check withdrawal amount of USD tokens was allocated externalAddress
-            assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
+            assert.equal(value.toNumber(), withdrawalAmount - 1, "Failed withdrawal");
             // check withdrawal amount of USD tokens was withdrawn from 'A'
             return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
         }).then(function(value) {
@@ -113,7 +113,7 @@ describe("Bank", function() {
             // check that the depositAmount has been added to 'A'
             return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
         }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed deposit");
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 1, "Failed deposit");
             done();
         });
     });

@@ -18,7 +18,7 @@ describe("Init currency token > ", function() {
             P = instance;
             console.log('Populous', P.address);
             // creating a new currency RND for which to mint and use tokens
-            return commonTests.createCurrency(P, "RND Pokens", 3, "RND");
+            return commonTests.createCurrency(P, "RND Pokens", 8, "RND");
         }).then(function() {
             done();
         });
@@ -315,22 +315,20 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
-    it("should refund losing groups", function(done) {
+    it("should refund losing group bidders", function(done) {
         assert(crowdsale, "Crowdsale required.");
-        // refund any loosing groups
-        P.refundLosingGroups(crowdsale).then(function(result) {
-            console.log('refund losing groups gas cost', result.receipt.gasUsed);
-            done();
-        });
-    });
-
-
-    it("should refund losing group bidder in group with index 0", function(done) {
-        assert(crowdsale, "Crowdsale required.");
-        // refund bidder in losing group
-        // this checks hasWinnerGroup in CS
-        P.refundLosingGroupBidder(crowdsale, 0, 0).then(function(result) {
-            console.log('refund losing groups gas cost', result.receipt.gasUsed);
+        // refund loosing groups
+        Crowdsale.at(crowdsale).findBidder(config.INVESTOR1_ACC).then(function(result){
+            console.log('find bidder', result);
+            var groupIndex = result[1].toNumber();
+            var bidderIndex = result[2].toNumber();
+            return P.refundLosingGroupBidder(crowdsale, result[1].toNumber(), result[2].toNumber());
+        }).then(function(result){
+            console.log('refund losing group bidder gas cost', result.receipt.gasUsed);
+            return P.getLedgerEntry.call("RND", config.INVESTOR1_ACC);
+        }).then(function(value) {
+            console.log('investor 1 balance', value);
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - 90, "Failed refunding losing group bidder");
             done();
         });
     });
