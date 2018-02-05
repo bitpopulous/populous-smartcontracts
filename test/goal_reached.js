@@ -339,7 +339,7 @@ describe("Reach goal with bids > ", function() {
         assert(crowdsale, "Crowdsale required.");
 
         // Set payment received
-        P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT).then(function(result) {
+        P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT, 0).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
             console.log('invoice payment received gas cost', result.receipt.gasUsed);
             // Check paidAmount
