@@ -23,7 +23,7 @@ contract Populous is withAccessManager {
     event EventMintTokens(bytes32 currency, uint amount);
     event EventDestroyTokens(bytes32 currency, uint amount);
     event EventInternalTransfer(bytes32 currency, bytes32 fromId, bytes32 toId, uint amount);
-    event EventWithdrawal(address to, bytes32 clientId, bytes32 currency, uint amount);
+    event EventWithdrawal(address to, bytes32 clientId, bytes32 currency, uint amount, uint fee);
     event EventDeposit(address from, bytes32 clientId, bytes32 currency, uint amount);
     event EventImportedPokens(address from, bytes32 clientId, bytes32 currency, uint amount);
 
@@ -34,7 +34,7 @@ contract Populous is withAccessManager {
     event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
     event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
 
-    event EventExchange(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint amount, bytes32 conversion_rate, uint from_amount, uint fee_amount);
+    event EventExchange(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint amount, string conversion_rate, uint from_amount, uint fee_amount);
 
 
     // FIELDS
@@ -96,16 +96,22 @@ contract Populous is withAccessManager {
       * @param clientId The client ID.
       * @param currency The cyrrency symbol, e.g., GBP
       * @param amount The amount.
+      * @param fee The fee to charge the client.
       */
-    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount) public onlyServer {
-        require(currencies[currency] != 0x0 && ledger[currency][clientId] >= amount);
+    function withdraw(address clientExternal, bytes32 clientId, bytes32 currency, uint amount, uint fee) public onlyServer {
+    require(currencies[currency] != 0x0 && ledger[currency][clientId] >= amount);
 
         ledger[currency][clientId] = SafeMath.safeSub(ledger[currency][clientId], amount);
+        
+        uint mintAmount  = SafeMath.safeSub(amount, fee);
 
-        CurrencyToken(currencies[currency]).mintTokens(amount);
-        require(CurrencyToken(currencies[currency]).transfer(clientExternal, amount) == true);
+        CurrencyToken(currencies[currency]).mintTokens(mintAmount);
+        require(CurrencyToken(currencies[currency]).transfer(clientExternal, mintAmount) == true);
 
-        EventWithdrawal(clientExternal, clientId, currency, amount);
+        //deposit fee to Ledger account.
+        ledger[currency][LEDGER_SYSTEM_ACCOUNT] = SafeMath.safeAdd(ledger[currency][LEDGER_SYSTEM_ACCOUNT], fee);
+
+        EventWithdrawal(clientExternal, clientId, currency, amount, fee);
     }
     
     /** @dev Mints/Generates a specified amount of tokens 
@@ -333,7 +339,7 @@ contract Populous is withAccessManager {
       * @dev This function has to be split, because it might exceed the gas limit, if the groups and bidders are too many.
       * @param crowdsaleAddr The invoice crowdsale address.
       */
-    function refundLosingGroups(address crowdsaleAddr) public {
+/*     function refundLosingGroups(address crowdsaleAddr) public {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.Closed) { return; }
@@ -370,7 +376,7 @@ contract Populous is withAccessManager {
                 }
             }
         }
-    }
+    } */
 
     /** @dev Transfers refund to a bidder after crowdsale has closed.
       * @param crowdsaleAddr The invoice crowdsale address.
@@ -495,6 +501,7 @@ contract Populous is withAccessManager {
             EventWinnerGroupBidderFunded(crowdsaleAddr, winnerGroupIndex, bidderId, currency, bidAmount, benefitsAmount);
         }
     }    
+
     /**
     END OF CROWDSALE MODULE
     */
@@ -502,7 +509,8 @@ contract Populous is withAccessManager {
     EXCHANGE MODULE 
      */
      //Note: on the server, fee would have to be deducted from the to_amount. 
-     function exchangeCurrency(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint from_amount, uint to_amount, uint256 fee_amount, bytes32 conversion_rate)
+    //function exchangeCurrency(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint from_amount, uint to_amount, uint256 fee_amount, bytes32 conversion_rate)
+    function exchangeCurrency(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint from_amount, uint to_amount, uint256 fee_amount, string conversion_rate)
         public
         onlyServer
     {

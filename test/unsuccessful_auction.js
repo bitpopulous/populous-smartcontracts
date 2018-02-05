@@ -19,11 +19,12 @@ describe("Init currency token > ", function() {
             P = instance;
             console.log('Populous', P.address);
             // creating a new currency AED for which to mint and use tokens
-            return commonTests.createCurrency(P, "AED Pokens", 3, "AED");
+            return commonTests.createCurrency(P, "AED Pokens", 8, "AED");
         }).then(function() {
             done();
         });
     });
+
 
     it("should mint AED tokens: " + (config.INVESTOR1_ACC_BALANCE), function(done) {
         assert(global.currencies.AED, "Currency required.");
