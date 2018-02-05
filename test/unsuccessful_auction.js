@@ -130,12 +130,12 @@ describe("Deposit Tokens > ", function() {
         // When the actor deposits funds into the platform, an equivalent amount of tokens is deposited into his account
         // client gets receive amount in the particular currency ledger from 'Populous'
         DCM.deposit(P.address, config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function() {
-            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "AED");
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address);
         }).then(function(deposit) {
             // getActiveDepositList returns three uints
             // the last two are amount deposited and amount received
+            assert.equal(deposit[0].toNumber(), 1, 'Failed depositing PPT');
             assert.equal(deposit[1].toNumber(), depositAmount, 'Failed depositing PPT');
-            assert.equal(deposit[2].toNumber(), receiveAmount, 'Failed depositing PPT');
             done();
         });
     });
@@ -267,7 +267,7 @@ describe("Deposit Tokens > ", function() {
         // investor1 group will receive invoice amount of 200 and
         // investor1 the only one in the group will receive all
         // 200 + 190 = 390 balance
-        P.invoicePaymentReceived(crowdsale, 200)
+        P.invoicePaymentReceived(crowdsale, 200, 10)
             .catch(function () {isCaught = true;}
         ).then(function () {
             if (isCaught === false) {
@@ -298,7 +298,7 @@ describe("Deposit Tokens > ", function() {
         DCM.releaseDeposit(P.address, config.INVESTOR1_ACC, global.PPT.address, releaseCurrency, receiver, depositIndex).then(function(result) {
             console.log('release deposit gas cost', result.receipt.gasUsed);
             // getActiveDepositList returns 1 = deposited and 2 = received
-            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "AED");
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address);
         }).then(function(deposit) {
             // check that amount deposited and received are both = 0
             // and no longer 1 = 200, 2 = 190
@@ -307,8 +307,8 @@ describe("Deposit Tokens > ", function() {
             // transfer received balance to investor1
             // _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
             
+            assert.equal(deposit[0].toNumber(), 1, "Failed releasing deposit");
             assert.equal(deposit[1].toNumber(), 0, "Failed releasing deposit");
-            assert.equal(deposit[2].toNumber(), 0, "Failed releasing deposit");
             // check reveiver has received the 200 token deposit
             return global.PPT.balanceOf(receiver);
         }).then(function(amount) {

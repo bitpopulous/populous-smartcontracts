@@ -446,13 +446,13 @@ describe("Chosen winner > ", function() {
         var CS = Crowdsale.at(crowdsale);
 
         // Set invoice payment received
-        P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT).then(function(result) {
+        P.invoicePaymentReceived(crowdsale, INVOICE_AMOUNT, 10).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
             console.log('invoice payment received gas cost', result.receipt.gasUsed);
             // Check paidAmount
             return CS.paidAmount.call();
         }).then(function(paidAmount) {
-            assert.equal(paidAmount.toNumber(), INVOICE_AMOUNT, "Failed setting payment received");
+            assert.equal(paidAmount.toNumber(), INVOICE_AMOUNT - 10, "Failed setting payment received");
 
             // Check status = 4
             // crowdsale statuses = Pending, Open, Closed, WaitingForInvoicePayment, PaymentReceived, Completed
@@ -470,7 +470,7 @@ describe("Chosen winner > ", function() {
         
         CS.getPaidAmount().then(function(amount) {
             console.log("Amount received:", amount.toNumber());
-            assert.equal(amount.toNumber(), INVOICE_AMOUNT, "Failed getting paid amount");
+            assert.equal(amount.toNumber(), INVOICE_AMOUNT - 10, "Failed getting paid amount");
             
             done();
         });
@@ -529,7 +529,7 @@ describe("Chosen winner > ", function() {
                 // Check winner investor balance
                 return P.getLedgerEntry.call("CNY", config.INVESTOR3_ACC);
             }).then(function(value) {
-                assert.equal(value.toNumber(), INVOICE_AMOUNT, "Failed funding winner group (amount)");
+                assert.equal(value.toNumber(), INVOICE_AMOUNT - 10, "Failed funding winner group (amount)");
                 done();
             });
         }, 1000);

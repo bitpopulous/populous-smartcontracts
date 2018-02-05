@@ -371,6 +371,7 @@ contract Crowdsale is withAccessManager {
     
 
     // calls the _waitingForPayment method
+    // called by setSentToLosingGroup
     function waitingForPayment() public onlyServer returns(bool) {
         return _waitingForPayment();
     }

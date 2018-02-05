@@ -22,7 +22,7 @@ contract DepositContractsManager is withAccessManager {
     struct Deposit {
         uint deposited;
         uint received;
-        uint releaseTime;
+        bytes32 currency;
         bool isReleased;
     }
 
@@ -30,20 +30,16 @@ contract DepositContractsManager is withAccessManager {
     // together with the total amount deposited and received for a deposit contract.
     struct DepositList {
         Deposit[] list;
-        uint deposited;
-        uint received;
+        uint totalDeposited;
     }
+
+    // clientId => populousTokenContract => DepositList
+    mapping (bytes32 => mapping(address => DepositList)) deposits;
 
     // This variable will be used to keep track of client IDs and
     // their deposit addresses
     // clientId => depositAddress
     mapping (bytes32 => address) depositAddress;
-
-    // The variable 'deposits'
-    // links a bytes32 client ID to a token contract address linked to a currency symbol 
-    // linked to a DepositList object type declared above.
-    // clientId => populousTokenContract => currencySymbol => DepositList
-    mapping (bytes32 => mapping(address => mapping(bytes32 => DepositList))) deposits;
 
 
     // NON-CONSTANT METHODS
@@ -81,24 +77,20 @@ contract DepositContractsManager is withAccessManager {
     {
         DepositContract o = DepositContract(depositAddress[clientId]);
 
-        if (SafeMath.safeSub(o.balanceOf(populousTokenContract), deposits[clientId][populousTokenContract][receiveCurrency].deposited) == depositAmount) {
+        if (SafeMath.safeSub(o.balanceOf(populousTokenContract), deposits[clientId][populousTokenContract].totalDeposited) == depositAmount) {
             // save new deposit info
-            deposits[clientId][populousTokenContract][receiveCurrency].list.push(Deposit(depositAmount, receiveAmount, now + 30 days, false));
-            
+            deposits[clientId][populousTokenContract].list.push(Deposit(depositAmount, receiveAmount, receiveCurrency, false));
+
             // update totals
-            deposits[clientId][populousTokenContract][receiveCurrency].deposited = SafeMath.safeAdd(
-                deposits[clientId][populousTokenContract][receiveCurrency].deposited,
+            deposits[clientId][populousTokenContract].totalDeposited = SafeMath.safeAdd(
+                deposits[clientId][populousTokenContract].totalDeposited,
                 depositAmount
-            );
-            deposits[clientId][populousTokenContract][receiveCurrency].received = SafeMath.safeAdd(
-                deposits[clientId][populousTokenContract][receiveCurrency].received,
-                receiveAmount
             );
             
             //success
             Populous populous = Populous(populousContract);
 
-            uint depositIndex = deposits[clientId][populousTokenContract][receiveCurrency].list.length - 1;
+            uint depositIndex = deposits[clientId][populousTokenContract].list.length - 1;
 
             populous.mintTokens(receiveCurrency, receiveAmount);
             populous.transfer(receiveCurrency, populous.getLedgerSystemAccount(), clientId, receiveAmount);
@@ -123,32 +115,32 @@ contract DepositContractsManager is withAccessManager {
         onlyServer
     {
         DepositContract o = DepositContract(depositAddress[clientId]);
-        
-        if (deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited != 0 &&
-            deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].isReleased == false &&
-            o.transfer(populousTokenContract, receiver, deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited) &&
-            deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].releaseTime > now
+        Populous populous = Populous(populousContract);
+
+        require(populous.getLedgerEntry(receiveCurrency, clientId) >= deposits[clientId][populousTokenContract].list[depositIndex].received);
+
+
+        if (deposits[clientId][populousTokenContract].list[depositIndex].deposited != 0 && 
+            deposits[clientId][populousTokenContract].list[depositIndex].isReleased == false &&
+            deposits[clientId][populousTokenContract].list[depositIndex].currency == receiveCurrency
         ) {
-            deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].isReleased = true;
+            deposits[clientId][populousTokenContract].list[depositIndex].isReleased = true;
 
             // update totals
-            deposits[clientId][populousTokenContract][receiveCurrency].deposited = SafeMath.safeSub(
-                deposits[clientId][populousTokenContract][receiveCurrency].deposited,
-                deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited
+            deposits[clientId][populousTokenContract].totalDeposited = SafeMath.safeSub(
+                deposits[clientId][populousTokenContract].totalDeposited,
+                deposits[clientId][populousTokenContract].list[depositIndex].deposited
             );
-            deposits[clientId][populousTokenContract][receiveCurrency].received = SafeMath.safeSub(
-                deposits[clientId][populousTokenContract][receiveCurrency].received,
-                deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].received
-            );
-          
+                      
             //success
-            Populous populous = Populous(populousContract);
+            
+            require(o.transfer(populousTokenContract, receiver, deposits[clientId][populousTokenContract].list[depositIndex].deposited) == true);
 
-            uint deposited = deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited;
-            uint received = deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].received;
+            uint deposited = deposits[clientId][populousTokenContract].list[depositIndex].deposited;
+            uint received = deposits[clientId][populousTokenContract].list[depositIndex].received;
 
-            populous.transfer(receiveCurrency, clientId, populous.getLedgerSystemAccount(), received);
-            populous.destroyTokens(receiveCurrency, received);
+            require(populous.transfer(receiveCurrency, clientId, populous.getLedgerSystemAccount(), received) == true);
+            require(populous.destroyTokens(receiveCurrency, received) == true);
 
             EventDepositReleased(clientId, populousTokenContract, receiveCurrency, deposited, received, depositIndex);
 
@@ -158,6 +150,12 @@ contract DepositContractsManager is withAccessManager {
 
     // CONSTANT METHODS
 
+    function getTotalDeposited(bytes32 clientId, address populousTokenContract) 
+        public 
+        view returns (uint) 
+    {
+        return deposits[clientId][populousTokenContract].totalDeposited;
+    }
 
     /** @dev Gets the deposit address linked to a given client ID.
       * @param clientId The client ID.
@@ -170,18 +168,16 @@ contract DepositContractsManager is withAccessManager {
     /** @dev Gets the deposit address linked to a given client ID.
       * @param clientId The client ID.
       * @param populousTokenContract The token contract
-      * @param receiveCurrency The currency symbol
       * @return uint The length of a deposit list linked to the client ID, token contract and currency.
       * @return uint The token amount deposited.
-      * @return uint The token amount received.
       */
-    function getActiveDepositList(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency) 
+    function getActiveDepositList(bytes32 clientId, address populousTokenContract) 
         public 
-        view returns (uint, uint, uint){
+        view returns (uint, uint)
+    {
         return (
-            deposits[clientId][populousTokenContract][receiveCurrency].list.length,
-            deposits[clientId][populousTokenContract][receiveCurrency].deposited,
-            deposits[clientId][populousTokenContract][receiveCurrency].received
+            deposits[clientId][populousTokenContract].list.length,
+            deposits[clientId][populousTokenContract].totalDeposited
         );
     }
 
@@ -196,12 +192,15 @@ contract DepositContractsManager is withAccessManager {
       */
     function getActiveDeposit(bytes32 clientId, address populousTokenContract, bytes32 receiveCurrency, uint depositIndex) 
         public 
-        view returns (uint, uint, bool) {
-        return (
-            deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited,
-            deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].received,
-            deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].isReleased
-        );
+        view returns (uint, uint, bool) 
+    {
+        if (deposits[clientId][populousTokenContract].list[depositIndex].currency == receiveCurrency) {
+            return (
+                deposits[clientId][populousTokenContract].list[depositIndex].deposited,
+                deposits[clientId][populousTokenContract].list[depositIndex].received,
+                deposits[clientId][populousTokenContract].list[depositIndex].isReleased
+            );
+        }
     }
 
 

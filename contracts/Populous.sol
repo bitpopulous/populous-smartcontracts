@@ -31,7 +31,7 @@ contract Populous is withAccessManager {
     //event EventNewCrowdsale(address crowdsale, bytes32 _currencySymbol, bytes32 _borrowerId, bytes32 _invoiceId, string _invoiceNumber, uint _invoiceAmount, uint _fundingGoal, uint deadline);
     event EventBeneficiaryFunded(address crowdsaleAddr, bytes32 borrowerId, bytes32 currency, uint amount);
     event EventLosingGroupBidderRefunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint amount);
-    event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount);
+    event EventPaymentReceived(address crowdsaleAddr, bytes32 currency, uint amount, uint feeAmount);
     event EventWinnerGroupBidderFunded(address crowdsaleAddr, uint groupIndex, bytes32 bidderId, bytes32 currency, uint bidAmount, uint benefitsAmount);
 
     event EventExchange(bytes32 clientId, bytes32 from_currency, bytes32 to_currency, uint amount, string conversion_rate, uint from_amount, uint fee_amount);
@@ -176,8 +176,10 @@ contract Populous is withAccessManager {
     }    
 
     // Calls the _transfer method to make a transfer on the internal ledger.
-    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServerOrOnlyDCM {
-        _transfer(currency, from, to, amount);
+    function transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) public onlyServerOrOnlyDCM 
+        returns (bool success)
+    {
+        return _transfer(currency, from, to, amount);
     }
 
     /** @dev Transfers an amount of a specific currency from 'from' to 'to' on the ledger.
@@ -186,7 +188,7 @@ contract Populous is withAccessManager {
       * @param to The client to credit
       * @param amount The amount to transfer.
       */
-    function _transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) private {
+    function _transfer(bytes32 currency, bytes32 from, bytes32 to, uint amount) private returns (bool success) {
         if (amount == 0) {return;}
         require(ledger[currency][from] >= amount);
     
@@ -194,6 +196,7 @@ contract Populous is withAccessManager {
         ledger[currency][to] = SafeMath.safeAdd(ledger[currency][to], amount);
 
         EventInternalTransfer(currency, from, to, amount);
+        return true;
     }
 
     
@@ -384,6 +387,7 @@ contract Populous is withAccessManager {
       * @param bidderIndex Bidder id used to find bidder among collection of bidders in a group.
       */
     function refundLosingGroupBidder(address crowdsaleAddr, uint groupIndex, uint bidderIndex) public {
+
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
 
         if (States(CS.getStatus()) != States.Closed) { return; }
@@ -410,21 +414,20 @@ contract Populous is withAccessManager {
       * @param crowdsaleAddr The invoice crowdsale address.
       * @param paidAmount The amount to be paid.
       */
-    function invoicePaymentReceived(address crowdsaleAddr, uint paidAmount) public onlyServer {
+    function invoicePaymentReceived(address crowdsaleAddr, uint paidAmount, uint feeAmount) public onlyServer {
         iCrowdsale CS = iCrowdsale(crowdsaleAddr);
-
-        //if (States(CS.getStatus()) != States.WaitingForInvoicePayment || CS.sentToWinnerGroup() == true) { return; }   
 
         assert(States(CS.getStatus()) == States.WaitingForInvoicePayment || CS.sentToWinnerGroup() == true);   
 
         require(CS.invoiceAmount() <= paidAmount);
-
+        uint receivedAmount = SafeMath.safeSub(paidAmount, feeAmount);
         bytes32 currency = CS.currencySymbol();
         _mintTokens(currency, paidAmount);
-        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, CROWDSALE_ACCOUNT, paidAmount);
-        CS.setPaidAmount(paidAmount);
+
+        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, CROWDSALE_ACCOUNT, receivedAmount);
+        CS.setPaidAmount(receivedAmount);
         
-        EventPaymentReceived(crowdsaleAddr, currency, paidAmount);
+        EventPaymentReceived(crowdsaleAddr, currency, paidAmount, feeAmount);
     }
     
     /** @dev Transfers funds/payment to bidders in winner group based on contributions/total bid.

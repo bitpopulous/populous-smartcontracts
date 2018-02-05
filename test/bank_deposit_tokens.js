@@ -204,12 +204,12 @@ describe("Deposit Tokens > ", function() {
     it("should transfer PPT to deposit address", function(done) {
         assert(global.PPT, "PPT required.");
 
-        var faucetAmount = 200;
+        var faucetAmount = 100;
         // transferring 200 PPT tokens to depositAddress for client from accounts[0]
         // deositAddress is the address of the deposit contract for accountID 'A'
         global.PPT.transfer(depositAddress, faucetAmount).catch(console.log).then(function(result) {
             console.log('transfer to address gas cost', result.receipt.gasUsed);
-            // checking the balance of depositAddress is 200
+            // checking the balance of depositAddress is 100
             return global.PPT.balanceOf(depositAddress);
         }).then(function(amount) {
             assert.equal(amount.toNumber(), faucetAmount, "Failed getting tokens from faucet");
@@ -217,11 +217,11 @@ describe("Deposit Tokens > ", function() {
         });
     });
 
-    it("should deposit PPT", function(done) {
+    it("should deposit PPT and get GBP", function(done) {
         assert(global.PPT, "PPT required.");
         // deposit the 200 PPT from 'A' and get 190 GBP Pokens
         var
-            depositAmount = 200,
+            depositAmount = 100,
             receiveCurrency = 'GBP',
             receiveAmount = 190;
 
@@ -231,17 +231,66 @@ describe("Deposit Tokens > ", function() {
         DCM.deposit(P.address, config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function(result) {
             console.log('new deposit log', result.logs[2]);
             console.log('PPT address', global.PPT.address);
-            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "GBP");
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address);
         }).then(function(deposit) {
             console.log('active deposit list', deposit);
             // getActiveDepositList returns three uints
             // first is length of the list.
             // the last two are amount deposited and amount received.
+            assert.equal(deposit[0].toNumber(), 1, 'Failed depositing PPT');
             assert.equal(deposit[1].toNumber(), depositAmount, 'Failed depositing PPT');
-            assert.equal(deposit[2].toNumber(), receiveAmount, 'Failed depositing PPT');
             done();
         });
     });
+
+
+    it("should transfer PPT to deposit address", function(done) {
+        assert(global.PPT, "PPT required.");
+
+        var faucetAmount = 100;
+        // send another 100 to deposit contract
+        // we cannot use the same PPT to deposit twice and get different currencies
+        // transferring 200 PPT tokens to depositAddress for client from accounts[0]
+        // deositAddress is the address of the deposit contract for accountID 'A'
+        global.PPT.transfer(depositAddress, faucetAmount).catch(console.log).then(function(result) {
+            console.log('transfer to address gas cost', result.receipt.gasUsed);
+            // checking the balance of depositAddress is 200
+            return global.PPT.balanceOf(depositAddress);
+        }).then(function(amount) {
+            assert.equal(amount.toNumber(), 200, "Failed getting tokens from faucet");
+            done();
+        });
+    });
+
+
+    it("should deposit PPT and get ZM", function(done) {
+        assert(global.PPT, "PPT required.");
+        // deposit the 200 PPT from 'A' and get 190 GBP Pokens
+        var
+            depositAmount = 100,
+            receiveCurrency = 'ZM',
+            receiveAmount = 100;
+
+        // the deposit amount is refunded later
+        // When the actor deposits funds into the platform, an equivalent amount of tokens is deposited into his account
+        // client gets receive amount in the particular currency ledger from 'Populous'
+        DCM.deposit(P.address, config.INVESTOR1_ACC, global.PPT.address, receiveCurrency, depositAmount, receiveAmount).then(function(result) {
+            console.log('new deposit log', result.logs[2]);
+            console.log('PPT address', global.PPT.address);
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address);
+        }).then(function(deposit) {
+            console.log('active deposit list', deposit);
+            // getActiveDepositList returns two uints
+            // first is length of the list.
+            // the second is the total deposited.
+            // we have deposited 100 PPT twice so total deposited should be 200 and 
+            // there should be 2 deposits in deposit list
+            assert.equal(deposit[0].toNumber(), 2, 'Failed depositing PPT');
+            assert.equal(deposit[1].toNumber(), 200, 'Failed depositing PPT');
+            done();
+        });
+    });
+
 
 
     it("should deposit PPT and get active deposit details", function(done) {
@@ -253,7 +302,7 @@ describe("Deposit Tokens > ", function() {
             // getActiveDeposit returns three uints.
             // the first two are amount deposited and amount received.
             // the last is a boolean indicating if deposit has been released or not.
-            assert.equal(deposit[0].toNumber(), 200, 'Failed depositing PPT');
+            assert.equal(deposit[0].toNumber(), 100, 'Failed depositing PPT');
             assert.equal(deposit[1].toNumber(), 190, 'Failed depositing PPT');
             assert.equal(deposit[2], false, 'Failed depositing PPT');
             done();
@@ -391,7 +440,7 @@ describe("Deposit Tokens > ", function() {
         // investor1 group will receive invoice amount of 200 and
         // investor1 the only one in the group will receive all 10 GBP interest
         // 200 + 190 = 390 balance
-        P.invoicePaymentReceived(crowdsale, 200).then(function(result) {
+        P.invoicePaymentReceived(crowdsale, 200, 10).then(function(result) {
             assert(result.receipt.logs, "Failed setting payment received");
 
             console.log('invoice payment received gas cost', result.receipt.gasUsed);
@@ -399,7 +448,7 @@ describe("Deposit Tokens > ", function() {
             // Check paidAmount set when invoicePaymentReceived
             return Crowdsale.at(crowdsale).paidAmount.call();
         }).then(function(paidAmount) {
-            assert.equal(paidAmount.toNumber(), 200, "Failed setting payment received");
+            assert.equal(paidAmount.toNumber(), 190, "Failed setting payment received");
 
             // Check status
             // after paidAmount is set, status = States.PaymentReceived;
@@ -420,7 +469,11 @@ describe("Deposit Tokens > ", function() {
             // invoice amount was 200
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
+<<<<<<< HEAD
+            assert.equal(value.toNumber(), 480, "Failed funding winner group");
+=======
             assert.equal(value.toNumber(), 490, "Failed funding winner group");
+>>>>>>> master
             return Crowdsale.at(crowdsale).bidderHasTokensBack.call(config.INVESTOR1_ACC);
         }).then(function(result) {
             assert.equal(result, 1, "Failed funding bidder in winner group");
@@ -446,7 +499,7 @@ describe("Deposit Tokens > ", function() {
         DCM.releaseDeposit(P.address, config.INVESTOR1_ACC, global.PPT.address, releaseCurrency, receiver, depositIndex).then(function(result) {
             console.log('release deposit gas cost', result.receipt.gasUsed);
             // getActiveDepositList returns 1 = deposited and 2 = received
-            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address, "GBP");
+            return DCM.getActiveDepositList.call(config.INVESTOR1_ACC, global.PPT.address);
         }).then(function(deposit) {
             // check that amount deposited and received are both = 0
             // and no longer 1 = 200, 2 = 190
@@ -454,21 +507,28 @@ describe("Deposit Tokens > ", function() {
             // o.transfer(populousTokenContract, receiver, deposits[clientId][populousTokenContract][receiveCurrency].list[depositIndex].deposited)
             // transfer received balance to investor1
             // _transfer(releaseCurrency, clientId, LEDGER_SYSTEM_ACCOUNT, received);
-            
-            assert.equal(deposit[1].toNumber(), 0, "Failed releasing deposit");
-            assert.equal(deposit[2].toNumber(), 0, "Failed releasing deposit");
+            assert.equal(deposit[0].toNumber(), 2, "Failed releasing deposit");
+            assert.equal(deposit[1].toNumber(), 100, "Failed releasing deposit");
             // check reveiver has received the 200 token deposit
             return global.PPT.balanceOf(receiver);
         }).then(function(amount) {
-            // check reveiver has been credited with 200 PPT token
-            assert.equal(amount.toNumber(), depositAmount, "Failed releasing deposit");
+            // check reveiver has been credited with 100 PPT token
+            assert.equal(amount.toNumber(), depositAmount - 100, "Failed releasing deposit");
             // get investor1 account balance in GBP tokens after 190 GBP pokens are destroyed
             return P.getLedgerEntry.call("GBP", config.INVESTOR1_ACC);
         }).then(function(value) {
+<<<<<<< HEAD
+            // investor1 should have 490 - 190 = 300 GBP Pokens left in GBP ledger
+            // as 190 GBP Poken received when 200 PPT was deposited will be destroyed 
+            // upon calling release deposit 
+            // 300 - 10 fee amount for invoice seller upon calling invoicePaymentReceived
+            assert.equal(value.toNumber(), 300 - 10, "Failed funding winner group");
+=======
             // investor1 should have 490 - 190 = 200 GBP Pokens left in GBP ledger
             // as 190 GBP Poken received when 200 PPT was deposited will be destroyed 
             // upon calling release deposit 
             assert.equal(value.toNumber(), 300, "Failed funding winner group");
+>>>>>>> master
             done();
         })
     });
