@@ -44,7 +44,7 @@ module.exports = {
             P.initialBid(crowdsaleAddress, groupName, goal, investorId, investorName, bidAmount).then(function(result) {
                 assert(result.receipt.logs.length, "Failed bidding: no bidding event");
                 console.log('Initial Bid', groupName, goal, investorId, investorName, bidAmount);
-
+                console.log('Initial Bid logs', result.logs);
                 resolve(result);
             }).catch(reject);
         });
