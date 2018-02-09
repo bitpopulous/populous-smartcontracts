@@ -7,6 +7,7 @@ with addresses and interfaces.
 */
 pragma solidity ^0.4.17;
 
+import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
 
@@ -15,11 +16,11 @@ import "./DepositContract.sol";
 contract Populous is withAccessManager {
 
     // EVENTS
-
+    event EventNewCrowdsaleBlock(bytes32 crowdsaleId, bytes invoiceId, uint sourceLength);
     // Bank events
+    event EventWithdrawPPT(bytes32 accountId, address depositContract, address to, uint amount);
+    event EventWithdrawPokens(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency);
     event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
-    event EventDestroyTokens(bytes32 currency, uint amount);
-    event EventWithdrawal(address to, bytes32 clientId, bytes32 currency, uint amount, uint fee); // PPT deposits events
     event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
 
     // FIELDS
@@ -31,18 +32,21 @@ contract Populous is withAccessManager {
     mapping (bytes32 => address) depositAddress;
 
     struct storageSource {
-        bytes32 dataHash;
-        bytes32 dataSource; // upload provider: ips / aws (uploaded to our aws server) / ... who provides the storage for this information.
+        bytes32 dataHash1;
+        bytes32 dataHash2;
+        bytes32 dataSource; // upload provider: ipfs / aws (uploaded to our aws server) / ... who provides the storage for this information.
         bytes32 dataType; // crowdsale (creators, bids) + addresses /exchange_date/deposit_history (latest)/ -- for external auditing.
     }
 
     struct record {
        bytes32 invoiceId;
+       bool isSet;
        storageSource[] documents; //source[0] = ["0x23222324"]
     }
 
     //crowdsaleId => (invoiceId, documents ["crowdsale_log","exchange_history","deposit_history"])
-    mapping(bytes32 => record) Records;
+    mapping(bytes32 => record) Blocks;
+
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
@@ -54,17 +58,43 @@ contract Populous is withAccessManager {
 
 
     // NON-CONSTANT METHODS
-    function Record(bytes32 _crowdsaleId, bytes32 _invoiceId, bytes32[] _records) public
+    function insertBlock(bytes32 _crowdsaleId, bytes32 _invoiceId, 
+        bytes32 _ipfsHash1,
+        bytes32 _ipfsHash2,
+        bytes32 _awsHash1,
+        bytes32 _awsHash2,
+        bytes32 _dataType) 
+    public
     onlyServer
     {
-        // record the history of a crowdsale on the ledger, with internal and external logs, and interal address to so it can be easily audited using etherscan
-        Records[_crowdsaleId].invoiceId = _invoiceId;
-        Records[_crowdsaleId].documents.push(storageSource(
-           0x1,
-           0x2,
-           0x3)
+        require(Blocks[_crowdsaleId].isSet == false);
+        Blocks[_crowdsaleId].documents.push(storageSource(
+           _ipfsHash1,
+           _ipfsHash2,
+           "ipfs",
+           _dataType)
         );
 
+        // record the history of a crowdsale on the ledger, with internal and external logs, and interal address to so it can be easily audited using etherscan
+        Blocks[_crowdsaleId].invoiceId = _invoiceId;
+        Blocks[_crowdsaleId].documents.push(storageSource(
+           _awsHash1,
+           _awsHash2,
+           "aws",
+           _dataType)
+        );
+
+    }
+
+    function insertSource(bytes32 _crowdsaleId, bytes32 _dataHash1, bytes32 _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
+        require(Blocks[_crowdsaleId].isSet == true);
+
+        Blocks[_crowdsaleId].documents.push(storageSource(
+           _dataHash1,
+           _dataHash2,
+           _dataSource,
+           _dataType)
+        );
     }
        /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
@@ -100,22 +130,24 @@ contract Populous is withAccessManager {
         EventNewCurrency(_tokenName, _decimalUnits, _tokenSymbol, currencies[_tokenSymbol]);
     }
 
-    function withdrawPPT();
-    function withdrawPokens();
+    
+    function withdrawPPT(address pptAddress, bytes32 accountId, address depositContract, address to, uint amount) public onlyServer {
+        DepositContract o = DepositContract(depositContract);
+        require(o.transfer(pptAddress, to, amount) == true);
+        EventWithdrawPPT(accountId, depositContract, to, amount);
+    }
+    
 
-    function importExternalPokens(bytes32 currency, address from, bytes32 accountId) public onlyServer {
-        CurrencyToken CT = CurrencyToken(currencies[currency]);
+    function withdrawPoken(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency) public onlyServer {
+        CurrencyToken cT = CurrencyToken(currencies[currency]);
         
-        //check balance.
-        uint256 balance = CT.balanceOf(from);
-        //balance is more than 0, and balance has been destroyed.
-        require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
+        require(ledgerBalance >= amount && currencies[currency] != 0x0);
         //credit ledger
-        mintTokens(currency, balance);
+        cT.mintTokens(amount);
         //credit account
-        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, accountId, balance);
+        cT.transfer(to, amount);
         //emit event: Imported currency to system
-       EventImportedPokens(from, accountId,currency,balance);
+        EventWithdrawPokens(accountId, to, amount, ledgerBalance, currency);
     }
 
     /** @dev Gets the address of a currency.
@@ -140,18 +172,21 @@ contract Populous is withAccessManager {
     function getDepositAddress(bytes32 clientId) public view returns (address) {
         return depositAddress[clientId];
     }
-    function getRecord(bytes32 _crowdsaleId, uint documentIndex) public view returns(bytes32, bytes32, bytes32, bytes32){
-   
-        return (Records[_crowdsaleId].invoiceId,
-                Records[_crowdsaleId].documents[documentIndex].dataHash,
-                Records[_crowdsaleId].documents[documentIndex].dataSource,
-                Records[_crowdsaleId].documents[documentIndex].dataType
+    function getRecord(bytes32 _crowdsaleId, uint documentIndex) public view 
+    returns(bytes32, bytes32, bytes32, bytes32, bytes32) 
+    {
+        return (Blocks[_crowdsaleId].invoiceId,
+                Blocks[_crowdsaleId].documents[documentIndex].dataHash1,
+                Blocks[_crowdsaleId].documents[documentIndex].dataHash2,
+                Blocks[_crowdsaleId].documents[documentIndex].dataSource,
+                Blocks[_crowdsaleId].documents[documentIndex].dataType
                 );
 
     }
+
     function getRecordDocumentIndexs(bytes32 _crowdsaleId) public view
     returns(uint)
     {
-        return Records[_crowdsaleId].documents.length - 1;
+        return Blocks[_crowdsaleId].documents.length - 1;
     }
 }
