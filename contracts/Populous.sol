@@ -184,7 +184,7 @@ contract Populous is withAccessManager {
 
     }
 
-    function getRecordDocumentIndexs(bytes32 _crowdsaleId) public view
+    function getRecordDocumentIndexes(bytes32 _crowdsaleId) public view
     returns(uint)
     {
         return Blocks[_crowdsaleId].documents.length - 1;
