@@ -38,7 +38,7 @@ contract CurrencyToken is ERC20Token, withAccessManager {
       * @dev The method uses SafeMath to carry out safe additions.
       * @param amount The amount of tokens to create.
       */
-    function mintTokens(uint amount) public onlyServer {
+    function mintTokens(uint amount) public onlyServerOrOnlyPopulous {
         balances[AM.server()] = SafeMath.safeAdd(balances[AM.server()], amount);
         totalSupply = SafeMath.safeAdd(totalSupply, amount);
         EventMintTokens(symbol, amount);

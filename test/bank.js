@@ -51,6 +51,7 @@ describe("Bank", function() {
 
     it("should transfer USD tokens to config.INVESTOR1_ACC, config.INVESTOR2_ACC, config.INVESTOR3_ACC_BALANCE", function(done) {
         assert(global.currencies.USD, "Currency required.");
+        var CT = CurrencyToken.at(global.currencies.USD);
         // transfer 470 USD tokens from 'Populous' to 'A'
         CT.transfer(config.INVESTOR1_WALLET, config.INVESTOR1_ACC_BALANCE).then(function(result) {
             //console.log('transfer pokens gas cost', result.receipt.gasUsed);
@@ -76,20 +77,38 @@ describe("Bank", function() {
         });
     });
 
+
+    it("should import USD tokens of config.INVESTOR1_WALLET to an internal account Id, e.g., A", function(done) {
+        assert(global.currencies.USD, "Currency required.");
+
+        var CT = CurrencyToken.at(global.currencies.USD);
+
+        P.importExternalPokens('USD', config.INVESTOR1_WALLET, config.INVESTOR1_ACC).then(function(result) {
+            return CT.balanceOf(config.INVESTOR1_WALLET);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 0, "Failed importing tokens");
+            return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed importing tokens");
+            done();
+        });
+    });
+
+
     it("should withdraw USD tokens of config.INVESTOR1_ACC to an external address, e.g., 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
         assert(global.currencies.USD, "Currency required.");
 
         var CT = CurrencyToken.at(global.currencies.USD);
-        var externalAddress = accounts[0];
-        var withdrawalAmount = 8;
+        var externalAddress = config.INVESTOR1_WALLET;
+        var withdrawalAmount = 370;
 
         // withdraw withdrawal amount of USD tokens from 'A' and send to externalAddress
-        P.withdraw(externalAddress, config.INVESTOR1_ACC, 'USD', withdrawalAmount, 1).then(function(result) {
-            console.log('withdraw pokens gas cost', result.receipt.gasUsed);
+        P.withdrawPoken(config.INVESTOR1_ACC, externalAddress, withdrawalAmount, 'USD').then(function(result) {
+            //console.log('withdraw pokens gas cost', result.receipt.gasUsed);
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
             // check withdrawal amount of USD tokens was allocated externalAddress
-            assert.equal(value.toNumber(), withdrawalAmount - 1, "Failed withdrawal");
+            assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
             // check withdrawal amount of USD tokens was withdrawn from 'A'
             return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
         }).then(function(value) {

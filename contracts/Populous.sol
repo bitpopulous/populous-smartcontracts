@@ -164,10 +164,10 @@ contract Populous is withAccessManager {
         EventImportedPokens(from, accountId,currency,balance);
     }
 
-    function withdrawPoken(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency) public onlyServer {
+    function withdrawPoken(bytes32 accountId, address to, uint amount, bytes32 currency) public onlyServer {
         CurrencyToken cT = CurrencyToken(currencies[currency]);
         
-        require(ledgerBalance >= amount && currencies[currency] != 0x0);
+        require(ledger[currency][accountId] >= amount && currencies[currency] != 0x0);
         //credit ledger
         cT.mintTokens(amount);
         //credit account
@@ -175,7 +175,18 @@ contract Populous is withAccessManager {
         ledger[currency][accountId] = SafeMath.safeSub(ledger[currency][accountId], amount);
 
         //emit event: Imported currency to system
-        EventWithdrawPokens(accountId, to, amount, ledgerBalance, currency);
+        EventWithdrawPokens(accountId, to, amount, ledger[currency][accountId], currency);
+    }
+
+    // CONSTANT METHODS
+
+    /** @dev Gets a ledger entry.
+      * @param currency The currency for the transaction.
+      * @param accountId The entry id.
+      * @return uint The currency amount linked to the ledger entry
+      */
+    function getLedgerEntry(bytes32 currency, bytes32 accountId) public view returns (uint) {
+        return ledger[currency][accountId];
     }
 
     /** @dev Gets the address of a currency.

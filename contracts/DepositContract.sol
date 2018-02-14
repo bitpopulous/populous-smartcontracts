@@ -36,7 +36,7 @@ contract DepositContract is withAccessManager {
       * @return success boolean true or false indicating whether the transfer was successful or not.
       */
     function transfer(address populousTokenContract, address _to, uint256 _value) public
-        onlyServerOrOnlyDCM returns (bool success) 
+        onlyServerOrOnlyPopulous returns (bool success) 
     {
         return iERC20Token(populousTokenContract).transfer(_to, _value);
     }
