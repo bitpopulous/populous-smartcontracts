@@ -137,6 +137,20 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(accountId, depositContract, to, amount);
     }
     
+    function importExternalPokens(bytes32 currency, address from, bytes32 accountId) public onlyServer {
+        CurrencyToken CT = CurrencyToken(currencies[currency]);
+        
+        //check balance.
+        uint256 balance = CT.balanceOf(from);
+        //balance is more than 0, and balance has been destroyed.
+        require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
+        //mint tokens in internal ledger
+        mintTokens(currency, balance);
+        //credit account/client Id
+        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, accountId, balance);
+        //emit event: Imported currency to system
+       EventImportedPokens(from, accountId,currency,balance);
+    }
 
     function withdrawPoken(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency) public onlyServer {
         CurrencyToken cT = CurrencyToken(currencies[currency]);
