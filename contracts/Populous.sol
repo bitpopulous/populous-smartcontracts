@@ -20,6 +20,7 @@ contract Populous is withAccessManager {
     // Bank events
     event EventWithdrawPPT(bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPokens(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency);
+    event EventImportedPokens(address from, bytes32 accountId, bytes32 currency, uint balance);
     event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
 
@@ -153,12 +154,14 @@ contract Populous is withAccessManager {
         uint256 balance = CT.balanceOf(from);
         //balance is more than 0, and balance has been destroyed.
         require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
-        //mint tokens in internal ledger
-        mintTokens(currency, balance);
+        //update token balance in internal ledger
+        ledger[currency][accountId] = SafeMath.safeAdd(ledger[currency][accountId], balance);
+
+        //mintTokens(currency, balance);
         //credit account/client Id
-        _transfer(currency, LEDGER_SYSTEM_ACCOUNT, accountId, balance);
+        //_transfer(currency, LEDGER_SYSTEM_ACCOUNT, accountId, balance);
         //emit event: Imported currency to system
-       EventImportedPokens(from, accountId,currency,balance);
+        EventImportedPokens(from, accountId,currency,balance);
     }
 
     function withdrawPoken(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency) public onlyServer {
@@ -169,6 +172,8 @@ contract Populous is withAccessManager {
         cT.mintTokens(amount);
         //credit account
         cT.transfer(to, amount);
+        ledger[currency][accountId] = SafeMath.safeSub(ledger[currency][accountId], amount);
+
         //emit event: Imported currency to system
         EventWithdrawPokens(accountId, to, amount, ledgerBalance, currency);
     }
