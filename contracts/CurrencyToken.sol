@@ -8,6 +8,10 @@ import "./withAccessManager.sol";
 /// @title CurrencyToken contract
 contract CurrencyToken is ERC20Token, withAccessManager {
 
+    //EVENTS
+
+    event EventMintTokens(bytes32 currency, uint amount);
+
     // NON-CONSTANT METHODS
     
     /** @dev Creates a new currency/token.
@@ -34,9 +38,10 @@ contract CurrencyToken is ERC20Token, withAccessManager {
       * @dev The method uses SafeMath to carry out safe additions.
       * @param amount The amount of tokens to create.
       */
-    function mintTokens(uint amount) public onlyPopulous {
+    function mintTokens(uint amount) public onlyServer {
         balances[AM.populous()] = SafeMath.safeAdd(balances[AM.populous()], amount);
         totalSupply = SafeMath.safeAdd(totalSupply, amount);
+        EventMintTokens(symbol, amount);
     }
 
     //Note.. Need to emit event, Pokens destroyed... from system
