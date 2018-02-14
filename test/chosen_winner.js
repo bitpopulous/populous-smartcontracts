@@ -1,8 +1,8 @@
 var
 Populous = artifacts.require("Populous"),
-CurrencyToken = artifacts.require("CurrencyToken"),
-Crowdsale = artifacts.require("Crowdsale");
-CrowdsaleManager = artifacts.require("CrowdsaleManager");
+CurrencyToken = artifacts.require("CurrencyToken");
+//Crowdsale = artifacts.require("Crowdsale");
+//CrowdsaleManager = artifacts.require("CrowdsaleManager");
 
 /**
 * @TODO

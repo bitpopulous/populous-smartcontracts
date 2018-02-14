@@ -2,9 +2,9 @@ var
 Populous = artifacts.require("Populous"),
 CurrencyToken = artifacts.require("CurrencyToken"),
 PopulousToken = artifacts.require("PopulousToken"),
-DepositContractsManager = artifacts.require("DepositContractsManager"),
-Crowdsale = artifacts.require("Crowdsale");
-CrowdsaleManager = artifacts.require("CrowdsaleManager");
+//DepositContractsManager = artifacts.require("DepositContractsManager"),
+//Crowdsale = artifacts.require("Crowdsale");
+//CrowdsaleManager = artifacts.require("CrowdsaleManager");
 AccessManager = artifacts.require("AccessManager");
 DepositContract = artifacts.require("DepositContract");
 

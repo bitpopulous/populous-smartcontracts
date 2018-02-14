@@ -1,8 +1,6 @@
 var
 Populous = artifacts.require("Populous"),
-CurrencyToken = artifacts.require("CurrencyToken"),
-Crowdsale = artifacts.require("Crowdsale");
-
+CurrencyToken = artifacts.require("CurrencyToken");
 /**
 * @TODO
 * Write tests for the restrictions: deadline checks, status checks, sent tokens checks, balances checks
@@ -12,7 +10,7 @@ contract('Populous / CurrencyToken > ', function(accounts) {
 var
     config = require('../include/test/config.js'),
     commonTests = require('../include/test/common.js'),
-    P, crowdsale;
+    P, CT;
 
 describe("Init currency token", function() {
     it("should init currency token American Dollar USD", function(done) {
@@ -38,9 +36,13 @@ describe("Bank", function() {
         // amount of USD tokens to mint = 470 + 450 + 600 = 1,520
         var mintAmount = config.INVESTOR1_ACC_BALANCE + config.INVESTOR2_ACC_BALANCE + config.INVESTOR3_ACC_BALANCE;
         // mint mintAmount of USD tokens and allocate to LEDGER_ACC/"Populous"
-        P.mintTokens('USD', mintAmount).then(function(result) {
-            console.log('mint tokens gas cost', result.receipt.gasUsed);
-            return P.getLedgerEntry.call("USD", config.LEDGER_ACC);
+        P.getCurrency("USD").then(function(tokenAddress){
+            CT = CurrencyToken.at(tokenAddress);
+            console.log('Currency token address: ', tokenAddress);
+            return CT.mintTokens(mintAmount);
+        }).then(function(result) {
+            //console.log('mint tokens gas cost', result.receipt.gasUsed);
+            return CT.balanceOf(web3.eth.accounts[0]);
         }).then(function(amount) {
             assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
             done();
@@ -50,24 +52,24 @@ describe("Bank", function() {
     it("should transfer USD tokens to config.INVESTOR1_ACC, config.INVESTOR2_ACC, config.INVESTOR3_ACC_BALANCE", function(done) {
         assert(global.currencies.USD, "Currency required.");
         // transfer 470 USD tokens from 'Populous' to 'A'
-        P.transfer("USD", config.LEDGER_ACC, config.INVESTOR1_ACC, config.INVESTOR1_ACC_BALANCE).then(function(result) {
-            console.log('transfer pokens gas cost', result.receipt.gasUsed);
+        CT.transfer(config.INVESTOR1_WALLET, config.INVESTOR1_ACC_BALANCE).then(function(result) {
+            //console.log('transfer pokens gas cost', result.receipt.gasUsed);
             // transfer 450 USD tokens from 'Populous' to 'B'
-            return P.transfer("USD", config.LEDGER_ACC, config.INVESTOR2_ACC, config.INVESTOR2_ACC_BALANCE);
+            return CT.transfer(config.INVESTOR2_WALLET, config.INVESTOR2_ACC_BALANCE);
         }).then(function() {
             // transfer 600 USD tokens from 'Populous' to 'C'
-            return P.transfer("USD", config.LEDGER_ACC, config.INVESTOR3_ACC, config.INVESTOR3_ACC_BALANCE);
+            return CT.transfer(config.INVESTOR3_WALLET, config.INVESTOR3_ACC_BALANCE);
         }).then(function() {
             // check USD token balance of 'A' is 470
-            return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
+            return CT.balanceOf(config.INVESTOR1_WALLET);
         }).then(function(value) {
             assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed transfer 1");
             // check USD token balance of 'B' is 450
-            return P.getLedgerEntry.call("USD", config.INVESTOR2_ACC);
+            return CT.balanceOf(config.INVESTOR2_WALLET);
         }).then(function(value) {
             assert.equal(value.toNumber(), config.INVESTOR2_ACC_BALANCE, "Failed transfer 2");
             // check USD token balance of 'C' is 600
-            return P.getLedgerEntry.call("USD", config.INVESTOR3_ACC);
+            return CT.balanceOf(config.INVESTOR3_WALLET);
         }).then(function(value) {
             assert.equal(value.toNumber(), config.INVESTOR3_ACC_BALANCE, "Failed transfer 3");
             done();
