@@ -26,6 +26,15 @@ contract Populous is withAccessManager {
     // FIELDS
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
+
+    // The 'ledger' will hold records of the amount of tokens
+    // an internal account Id holds and what currency it is.
+    // This amount will be retrieved using the currency symbol and 
+    // account ID as keys.
+    // currencySymbol => (accountId => amount)
+    mapping(bytes32 => mapping(bytes32 => uint)) ledger;
+
+
     // This variable will be used to keep track of client IDs and
     // their deposit addresses
     // clientId => depositAddress
