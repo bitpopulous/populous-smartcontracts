@@ -16,7 +16,8 @@ import "./DepositContract.sol";
 contract Populous is withAccessManager {
 
     // EVENTS
-    event EventNewCrowdsaleBlock(bytes32 crowdsaleId, bytes invoiceId, uint sourceLength);
+    event EventNewCrowdsaleBlock(bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
+    event EventNewCrowdsaleSource(bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
     // Bank events
     event EventWithdrawPPT(bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPokens(bytes32 accountId, address to, uint amount, bytes32 currency);
@@ -87,6 +88,9 @@ contract Populous is withAccessManager {
            _dataType)
         );
 
+        Blocks[_crowdsaleId].isSet = true;
+        EventNewCrowdsaleBlock(_crowdsaleId, _invoiceId, getRecordDocumentIndexes(_crowdsaleId));
+
     }
 
     function insertSource(bytes32 _crowdsaleId, bytes32 _dataHash1, bytes32 _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
@@ -98,6 +102,7 @@ contract Populous is withAccessManager {
            _dataSource,
            _dataType)
         );
+        EventNewCrowdsaleSource(_crowdsaleId, Blocks[_crowdsaleId].invoiceId, getRecordDocumentIndexes(_crowdsaleId));
     }
        /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
