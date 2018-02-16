@@ -78,7 +78,7 @@ contract Populous is withAccessManager {
            _dataType)
         );
 
-        // record the history of a crowdsale on the ledger, with internal and external logs, and interal address to so it can be easily audited using etherscan
+        // record the history of a crowdsale on the ledger, with internal and external logs, and interal address too so it can be easily audited using etherscan
         Blocks[_crowdsaleId].invoiceId = _invoiceId;
         Blocks[_crowdsaleId].documents.push(storageSource(
            _awsHash1,
@@ -206,6 +206,6 @@ contract Populous is withAccessManager {
     function getRecordDocumentIndexes(bytes32 _crowdsaleId) public view
     returns(uint)
     {
-        return Blocks[_crowdsaleId].documents.length - 1;
+        return Blocks[_crowdsaleId].documents.length;
     }
 }

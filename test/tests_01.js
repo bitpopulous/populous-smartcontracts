@@ -190,6 +190,28 @@ describe("Bank", function() {
 
 });
 
+
+describe("Crowdsale data", function() {
+
+    var crowdsaleId = "#AA001";
+    it("should get number of crowdsale document blocks", function(done) {
+        P.getRecordDocumentIndexes(crowdsaleId).then(function(numberofBlocks) {
+            assert.equal(numberofBlocks.toNumber(), 0, "failed getting correct number of crowdsale blocks");
+            done();
+        });
+    });
+
+    it("should insert crowdsale block", function(done) {
+        done();
+    });
+
+    it("should insert crowdsale source", function(done) {
+        done();
+    });
+});
+
+
+
 /* describe("Bank", function() {
 
     it("should mint USD tokens: " + (config.INVESTOR1_ACC_BALANCE + config.INVESTOR2_ACC_BALANCE + config.INVESTOR3_ACC_BALANCE), function(done) {
