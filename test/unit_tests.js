@@ -210,11 +210,15 @@ describe("Crowdsale data", function() {
         var _dataType = "pdf contract";
 
         P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash1, _ipfsHash2, _awsHash1, _awsHash2, _dataType).then(function(result){
-            console.log('insert block log', result.logs[0]);
+            //console.log('insert block log', result.logs[0]);
+            assert(result.logs.length, "Failed withdrawing PPT");
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
-            return P.getRecord(crowdsaleId, 1);
+            return P.getRecord(crowdsaleId, 0);
         }).then(function(crowdsale_record){
-            console.log('crowdsale record', crowdsale_record);
+            //console.log('crowdsale record', crowdsale_record);
+            assert.equal(web3.toUtf8(crowdsale_record[0]), _invoiceId, "failed returning correct crowdsale record");
+            assert.equal(web3.toUtf8(crowdsale_record[1]), _ipfsHash1, "failed returning correct crowdsale record");
+            
             return P.getRecordDocumentIndexes(crowdsaleId);
         }).then(function(numberofBlocks) {
             assert.equal(numberofBlocks.toNumber(), 2, "failed getting correct number of crowdsale blocks");
@@ -224,17 +228,19 @@ describe("Crowdsale data", function() {
 
     it("should insert crowdsale source", function(done) {
         var _invoiceId = "#invoice023";
-        var _dataHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t";
-        var _dataHash2 = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVA";
+        var _dataHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2z";
+        var _dataHash2 = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVL";
         var _dataSource = "ipfs"; 
         var _dataType = "pdf contract";
 
         P.insertSource(crowdsaleId, _dataHash1, _dataHash2, _dataSource, _dataType).then(function(result){
-            console.log('insert block log', result.logs[0]);
+            assert(result.logs.length, "Failed withdrawing PPT");
+            //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
             return P.getRecord(crowdsaleId, 2);
         }).then(function(crowdsale_record){
-            console.log('crowdsale record', crowdsale_record);
+            assert.equal(web3.toUtf8(crowdsale_record[0]), _invoiceId, "failed returning correct crowdsale record");
+            //console.log('crowdsale record', crowdsale_record);
             return P.getRecordDocumentIndexes(crowdsaleId);
         }).then(function(numberofBlocks) {
             assert.equal(numberofBlocks.toNumber(), 3, "failed getting correct number of crowdsale blocks");

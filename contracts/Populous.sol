@@ -36,8 +36,8 @@ contract Populous is withAccessManager {
     mapping (bytes32 => address) depositAddress;
 
     struct storageSource {
-        bytes32 dataHash1;
-        bytes32 dataHash2;
+        bytes dataHash1;
+        bytes dataHash2;
         bytes32 dataSource; // upload provider: ipfs / aws (uploaded to our aws server) / ... who provides the storage for this information.
         bytes32 dataType; // crowdsale (creators, bids) + addresses /exchange_date/deposit_history (latest)/ -- for external auditing.
     }
@@ -63,10 +63,10 @@ contract Populous is withAccessManager {
 
     // NON-CONSTANT METHODS
     function insertBlock(bytes32 _crowdsaleId, bytes32 _invoiceId, 
-        bytes32 _ipfsHash1,
-        bytes32 _ipfsHash2,
-        bytes32 _awsHash1,
-        bytes32 _awsHash2,
+        bytes _ipfsHash1,
+        bytes _ipfsHash2,
+        bytes _awsHash1,
+        bytes _awsHash2,
         bytes32 _dataType) 
     public
     onlyServer
@@ -93,7 +93,7 @@ contract Populous is withAccessManager {
 
     }
 
-    function insertSource(bytes32 _crowdsaleId, bytes32 _dataHash1, bytes32 _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
+    function insertSource(bytes32 _crowdsaleId, bytes _dataHash1, bytes _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
         require(Blocks[_crowdsaleId].isSet == true);
 
         Blocks[_crowdsaleId].documents.push(storageSource(
@@ -197,7 +197,7 @@ contract Populous is withAccessManager {
         return depositAddress[clientId];
     }
     function getRecord(bytes32 _crowdsaleId, uint documentIndex) public view 
-    returns(bytes32, bytes32, bytes32, bytes32, bytes32) 
+    returns(bytes32, bytes, bytes, bytes32, bytes32) 
     {
         return (Blocks[_crowdsaleId].invoiceId,
                 Blocks[_crowdsaleId].documents[documentIndex].dataHash1,
