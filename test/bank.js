@@ -137,6 +137,57 @@ describe("Bank", function() {
             done();
         });
     });
+
+
+    it("should import USD tokens of config.INVESTOR1_WALLET to an internal account Id, e.g., A", function(done) {
+        assert(global.currencies.USD, "Currency required.");
+        var CT = CurrencyToken.at(global.currencies.USD);
+
+        CT.balanceOf(config.INVESTOR1_WALLET).then(function(balance){
+            assert.equal(balance.toNumber(), 370, "failed earlier withdrawal of tokens");
+        
+            return P.importPokens('USD', config.INVESTOR1_WALLET, config.INVESTOR1_ACC);
+        }).then(function(result) {
+            return CT.balanceOf(config.INVESTOR1_WALLET);
+        }).then(function(value) {
+            assert.equal(value.toNumber(), 0, "Failed importing tokens");
+            done();
+        });
+    });
+
+
+    it("should withdraw PPT to investor wallet", function(done) {
+        assert(global.PPT, "PPT required.");
+
+        var depositAmount = 100;
+        var balances = 50;
+        var deposit_address;
+        var depositContractPPTBalance, investorPPTBalance;
+
+        P.getDepositAddress(config.INVESTOR1_ACC).then(function(depositAddress){
+            assert(depositAddress);
+            deposit_address = depositAddress;
+            return global.PPT.balanceOf(depositAddress);
+        }).then(function(result) {
+            assert.equal(result.toNumber(), 100, "failed depositing PPT");
+            // checking the balance of depositAddress is 100
+            return P.withdrawPPT(global.PPT.address, config.INVESTOR1_ACC, deposit_address, config.INVESTOR1_WALLET, 50);
+        }).then(function(withdrawPPT) {
+            assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
+            return global.PPT.balanceOf(deposit_address); 
+        }).then(function(balanceOfDepositContract){
+            assert.equal(balanceOfDepositContract.toNumber(), balances, "failed withdrawing PPT");
+            depositContractPPTBalance = balanceOfDepositContract.toNumber();
+            return global.PPT.balanceOf(config.INVESTOR1_WALLET);
+        }).then(function(balanceOfInvestor){
+            investorPPTBalance = balanceOfInvestor.toNumber();
+            assert.equal(balanceOfInvestor.toNumber(), balances, "failed withdrawing PPT");
+            assert.equal(investorPPTBalance, depositContractPPTBalance, "failed withdrawing PPT");
+            done();
+        });
+    });
+
+
 });
 
 /* describe("Bank", function() {
