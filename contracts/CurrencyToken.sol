@@ -33,13 +33,14 @@ contract CurrencyToken is ERC20Token, withAccessManager {
         symbol = _tokenSymbol; // Set the symbol for display purposes
     }
 
+
     /** @dev Mints/Generates a specified amount of tokens 
       * @dev The method uses a modifier from withAccessManager contract to only permit populous to use it.
       * @dev The method uses SafeMath to carry out safe additions.
       * @param amount The amount of tokens to create.
       */
-    function mintTokens(uint amount) public onlyServerOrOnlyPopulous {
-        balances[AM.server()] = SafeMath.safeAdd(balances[AM.server()], amount);
+    function mintTokens(uint amount) public onlyPopulous {
+        balances[AM.populous()] = SafeMath.safeAdd(balances[AM.populous()], amount);
         totalSupply = SafeMath.safeAdd(totalSupply, amount);
         EventMintTokens(symbol, amount);
     }
@@ -50,6 +51,7 @@ contract CurrencyToken is ERC20Token, withAccessManager {
       * @dev The method uses SafeMath to carry out safe token deductions/subtraction.
       * @param amount The amount of tokens to create.
       */
+
     function destroyTokens(uint amount) public onlyPopulous returns (bool success) {
         if (balances[AM.populous()] < amount) {
             return false;

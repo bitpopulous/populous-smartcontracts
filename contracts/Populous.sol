@@ -19,21 +19,14 @@ contract Populous is withAccessManager {
     event EventNewCrowdsaleBlock(bytes32 crowdsaleId, bytes invoiceId, uint sourceLength);
     // Bank events
     event EventWithdrawPPT(bytes32 accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPokens(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency);
-    event EventImportedPokens(address from, bytes32 accountId, bytes32 currency, uint balance);
+    event EventWithdrawPokens(bytes32 accountId, address to, uint amount, bytes32 currency);
+    event EventImportPokens(address from, bytes32 accountId, bytes32 currency, uint balance);
     event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
 
     // FIELDS
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
-
-    // The 'ledger' will hold records of the amount of tokens
-    // an internal account Id holds and what currency it is.
-    // This amount will be retrieved using the currency symbol and 
-    // account ID as keys.
-    // currencySymbol => (accountId => amount)
-    mapping(bytes32 => mapping(bytes32 => uint)) ledger;
 
 
     // This variable will be used to keep track of client IDs and
@@ -147,47 +140,34 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(accountId, depositContract, to, amount);
     }
     
-    function importExternalPokens(bytes32 currency, address from, bytes32 accountId) public onlyServer {
+    function importPokens(bytes32 currency, address from, bytes32 accountId) public onlyServer {
         CurrencyToken CT = CurrencyToken(currencies[currency]);
         
         //check balance.
         uint256 balance = CT.balanceOf(from);
         //balance is more than 0, and balance has been destroyed.
         require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
-        //update token balance in internal ledger
-        ledger[currency][accountId] = SafeMath.safeAdd(ledger[currency][accountId], balance);
-
-        //mintTokens(currency, balance);
-        //credit account/client Id
-        //_transfer(currency, LEDGER_SYSTEM_ACCOUNT, accountId, balance);
         //emit event: Imported currency to system
-        EventImportedPokens(from, accountId,currency,balance);
+        EventImportPokens(from, accountId,currency,balance);
     }
 
+
     function withdrawPoken(bytes32 accountId, address to, uint amount, bytes32 currency) public onlyServer {
+        require(currencies[currency] != 0x0);
+
         CurrencyToken cT = CurrencyToken(currencies[currency]);
         
-        require(ledger[currency][accountId] >= amount && currencies[currency] != 0x0);
         //credit ledger
         cT.mintTokens(amount);
         //credit account
         cT.transfer(to, amount);
-        ledger[currency][accountId] = SafeMath.safeSub(ledger[currency][accountId], amount);
 
         //emit event: Imported currency to system
-        EventWithdrawPokens(accountId, to, amount, ledger[currency][accountId], currency);
+        EventWithdrawPokens(accountId, to, amount, currency);
     }
 
     // CONSTANT METHODS
 
-    /** @dev Gets a ledger entry.
-      * @param currency The currency for the transaction.
-      * @param accountId The entry id.
-      * @return uint The currency amount linked to the ledger entry
-      */
-    function getLedgerEntry(bytes32 currency, bytes32 accountId) public view returns (uint) {
-        return ledger[currency][accountId];
-    }
 
     /** @dev Gets the address of a currency.
       * @param currency The currency.
