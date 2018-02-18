@@ -273,7 +273,6 @@ describe("Crowdsale data", function() {
         });
     });
 
-
 });
 
 
