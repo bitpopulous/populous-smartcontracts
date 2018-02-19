@@ -19,8 +19,8 @@ contract withAccessManager {
         _;
     }
 
-    modifier onlyServerOrOnlyDCM {
-        require(AM.isServer(msg.sender) == true || AM.isDCM(msg.sender) == true);
+    modifier onlyServerOrOnlyPopulous {
+        require(AM.isServer(msg.sender) == true || AM.isPopulous(msg.sender) == true);
         _;
     }
 
