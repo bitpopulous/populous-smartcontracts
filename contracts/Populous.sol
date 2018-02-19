@@ -16,24 +16,28 @@ import "./DepositContract.sol";
 contract Populous is withAccessManager {
 
     // EVENTS
-    event EventNewCrowdsaleBlock(bytes32 crowdsaleId, bytes invoiceId, uint sourceLength);
+    event EventNewCrowdsaleBlock(bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
+    event EventNewCrowdsaleSource(bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
     // Bank events
     event EventWithdrawPPT(bytes32 accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPokens(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency);
+    event EventWithdrawPokens(bytes32 accountId, address to, uint amount, bytes32 currency);
+    event EventImportPokens(address from, bytes32 accountId, bytes32 currency, uint balance);
     event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
 
     // FIELDS
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
+
+
     // This variable will be used to keep track of client IDs and
     // their deposit addresses
     // clientId => depositAddress
     mapping (bytes32 => address) depositAddress;
 
     struct storageSource {
-        bytes32 dataHash1;
-        bytes32 dataHash2;
+        bytes dataHash1;
+        bytes dataHash2;
         bytes32 dataSource; // upload provider: ipfs / aws (uploaded to our aws server) / ... who provides the storage for this information.
         bytes32 dataType; // crowdsale (creators, bids) + addresses /exchange_date/deposit_history (latest)/ -- for external auditing.
     }
@@ -59,10 +63,10 @@ contract Populous is withAccessManager {
 
     // NON-CONSTANT METHODS
     function insertBlock(bytes32 _crowdsaleId, bytes32 _invoiceId, 
-        bytes32 _ipfsHash1,
-        bytes32 _ipfsHash2,
-        bytes32 _awsHash1,
-        bytes32 _awsHash2,
+        bytes _ipfsHash1,
+        bytes _ipfsHash2,
+        bytes _awsHash1,
+        bytes _awsHash2,
         bytes32 _dataType) 
     public
     onlyServer
@@ -75,7 +79,7 @@ contract Populous is withAccessManager {
            _dataType)
         );
 
-        // record the history of a crowdsale on the ledger, with internal and external logs, and interal address to so it can be easily audited using etherscan
+        // record the history of a crowdsale on the ledger, with internal and external logs, and interal address too so it can be easily audited using etherscan
         Blocks[_crowdsaleId].invoiceId = _invoiceId;
         Blocks[_crowdsaleId].documents.push(storageSource(
            _awsHash1,
@@ -84,9 +88,12 @@ contract Populous is withAccessManager {
            _dataType)
         );
 
+        Blocks[_crowdsaleId].isSet = true;
+        EventNewCrowdsaleBlock(_crowdsaleId, _invoiceId, getRecordDocumentIndexes(_crowdsaleId));
+
     }
 
-    function insertSource(bytes32 _crowdsaleId, bytes32 _dataHash1, bytes32 _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
+    function insertSource(bytes32 _crowdsaleId, bytes _dataHash1, bytes _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
         require(Blocks[_crowdsaleId].isSet == true);
 
         Blocks[_crowdsaleId].documents.push(storageSource(
@@ -95,6 +102,7 @@ contract Populous is withAccessManager {
            _dataSource,
            _dataType)
         );
+        EventNewCrowdsaleSource(_crowdsaleId, Blocks[_crowdsaleId].invoiceId, getRecordDocumentIndexes(_crowdsaleId));
     }
        /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
@@ -137,18 +145,34 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(accountId, depositContract, to, amount);
     }
     
+    function importPokens(bytes32 currency, address from, bytes32 accountId) public onlyServer {
+        CurrencyToken CT = CurrencyToken(currencies[currency]);
+        
+        //check balance.
+        uint256 balance = CT.balanceOf(from);
+        //balance is more than 0, and balance has been destroyed.
+        require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
+        //emit event: Imported currency to system
+        EventImportPokens(from, accountId,currency,balance);
+    }
 
-    function withdrawPoken(bytes32 accountId, address to, uint amount, uint ledgerBalance, bytes32 currency) public onlyServer {
+
+    function withdrawPoken(bytes32 accountId, address to, uint amount, bytes32 currency) public onlyServer {
+        require(currencies[currency] != 0x0);
+
         CurrencyToken cT = CurrencyToken(currencies[currency]);
         
-        require(ledgerBalance >= amount && currencies[currency] != 0x0);
         //credit ledger
         cT.mintTokens(amount);
         //credit account
         cT.transfer(to, amount);
+
         //emit event: Imported currency to system
-        EventWithdrawPokens(accountId, to, amount, ledgerBalance, currency);
+        EventWithdrawPokens(accountId, to, amount, currency);
     }
+
+    // CONSTANT METHODS
+
 
     /** @dev Gets the address of a currency.
       * @param currency The currency.
@@ -173,7 +197,7 @@ contract Populous is withAccessManager {
         return depositAddress[clientId];
     }
     function getRecord(bytes32 _crowdsaleId, uint documentIndex) public view 
-    returns(bytes32, bytes32, bytes32, bytes32, bytes32) 
+    returns(bytes32, bytes, bytes, bytes32, bytes32) 
     {
         return (Blocks[_crowdsaleId].invoiceId,
                 Blocks[_crowdsaleId].documents[documentIndex].dataHash1,
@@ -187,6 +211,6 @@ contract Populous is withAccessManager {
     function getRecordDocumentIndexes(bytes32 _crowdsaleId) public view
     returns(uint)
     {
-        return Blocks[_crowdsaleId].documents.length - 1;
+        return Blocks[_crowdsaleId].documents.length;
     }
 }
