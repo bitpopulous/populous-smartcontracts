@@ -221,16 +221,6 @@ describe("Crowdsale data", function() {
 
     it("should insert crowdsale block", function(done) {
         var _invoiceId = "#invoice023";
-<<<<<<< HEAD
-        var _ipfsHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t";
-        var _ipfsHash2 = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVA";
-        var _awsHash1 = "QmT9qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6"; 
-        var _awsHash2 = "QmT2qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6";
-        var _dataType = "pdf contract";
-        // insert crowdsale block in populous.sol contract
-        // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
-        P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash1, _ipfsHash2, _awsHash1, _awsHash2, _dataType).then(function(result){
-=======
         //var _ipfsHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t";
         //length 47
         var _ipfsHash = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2tp";
@@ -241,7 +231,6 @@ describe("Crowdsale data", function() {
         // insert crowdsale block in populous.sol contract
         // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
         P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash, _awsHash, _dataType).then(function(result){
->>>>>>> re-build
             //console.log('insert block log', result.logs[0]);
             assert(result.logs.length, "Failed withdrawing PPT");
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
@@ -250,13 +239,9 @@ describe("Crowdsale data", function() {
         }).then(function(crowdsale_record){
             //console.log('crowdsale record', crowdsale_record);
             assert.equal(web3.toUtf8(crowdsale_record[0]), _invoiceId, "failed returning correct crowdsale record");
-<<<<<<< HEAD
-            assert.equal(web3.toUtf8(crowdsale_record[1]), _ipfsHash1, "failed returning correct crowdsale record");
-=======
             console.log('hash from contract', web3.toUtf8(crowdsale_record[1]));
             console.log('hash param', _ipfsHash);
             assert.equal(web3.toUtf8(crowdsale_record[1]), _ipfsHash, "failed returning correct crowdsale record");
->>>>>>> re-build
             // get total number of blocks inserted for a crowdsale Id
             return P.getRecordDocumentIndexes(crowdsaleId);
         }).then(function(numberofBlocks) {
@@ -268,22 +253,13 @@ describe("Crowdsale data", function() {
 
     it("should insert crowdsale source", function(done) {
         var _invoiceId = "#invoice023";
-<<<<<<< HEAD
-        var _dataHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2z";
-        var _dataHash2 = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVL";
-=======
         //var _dataHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2z";
         var _dataHash = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVL";
->>>>>>> re-build
         var _dataSource = "ipfs"; 
         var _dataType = "pdf contract";
         // insert crowdsale record using public function inserSource in populous.sol
         // this will only make one array push only after 
-<<<<<<< HEAD
-        P.insertSource(crowdsaleId, _dataHash1, _dataHash2, _dataSource, _dataType).then(function(result){
-=======
         P.insertSource(crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
->>>>>>> re-build
             assert(result.logs.length, "Failed withdrawing PPT");
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
