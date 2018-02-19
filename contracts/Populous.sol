@@ -36,8 +36,7 @@ contract Populous is withAccessManager {
     mapping (bytes32 => address) depositAddress;
 
     struct storageSource {
-        bytes dataHash1;
-        bytes dataHash2;
+        bytes dataHash;
         bytes32 dataSource; // upload provider: ipfs / aws (uploaded to our aws server) / ... who provides the storage for this information.
         bytes32 dataType; // crowdsale (creators, bids) + addresses /exchange_date/deposit_history (latest)/ -- for external auditing.
     }
@@ -63,18 +62,15 @@ contract Populous is withAccessManager {
 
     // NON-CONSTANT METHODS
     function insertBlock(bytes32 _crowdsaleId, bytes32 _invoiceId, 
-        bytes _ipfsHash1,
-        bytes _ipfsHash2,
-        bytes _awsHash1,
-        bytes _awsHash2,
+        bytes _ipfsHash,
+        bytes _awsHash,
         bytes32 _dataType) 
     public
     onlyServer
     {
         require(Blocks[_crowdsaleId].isSet == false);
         Blocks[_crowdsaleId].documents.push(storageSource(
-           _ipfsHash1,
-           _ipfsHash2,
+           _ipfsHash,
            "ipfs",
            _dataType)
         );
@@ -82,8 +78,7 @@ contract Populous is withAccessManager {
         // record the history of a crowdsale on the ledger, with internal and external logs, and interal address too so it can be easily audited using etherscan
         Blocks[_crowdsaleId].invoiceId = _invoiceId;
         Blocks[_crowdsaleId].documents.push(storageSource(
-           _awsHash1,
-           _awsHash2,
+           _awsHash,
            "aws",
            _dataType)
         );
@@ -93,12 +88,11 @@ contract Populous is withAccessManager {
 
     }
 
-    function insertSource(bytes32 _crowdsaleId, bytes _dataHash1, bytes _dataHash2, bytes32 _dataSource, bytes32 _dataType) public {
+    function insertSource(bytes32 _crowdsaleId, bytes _dataHash, bytes32 _dataSource, bytes32 _dataType) public {
         require(Blocks[_crowdsaleId].isSet == true);
 
         Blocks[_crowdsaleId].documents.push(storageSource(
-           _dataHash1,
-           _dataHash2,
+           _dataHash,
            _dataSource,
            _dataType)
         );
@@ -197,15 +191,13 @@ contract Populous is withAccessManager {
         return depositAddress[clientId];
     }
     function getRecord(bytes32 _crowdsaleId, uint documentIndex) public view 
-    returns(bytes32, bytes, bytes, bytes32, bytes32) 
+    returns(bytes32, bytes, bytes32, bytes32) 
     {
         return (Blocks[_crowdsaleId].invoiceId,
-                Blocks[_crowdsaleId].documents[documentIndex].dataHash1,
-                Blocks[_crowdsaleId].documents[documentIndex].dataHash2,
+                Blocks[_crowdsaleId].documents[documentIndex].dataHash,
                 Blocks[_crowdsaleId].documents[documentIndex].dataSource,
                 Blocks[_crowdsaleId].documents[documentIndex].dataType
                 );
-
     }
 
     function getRecordDocumentIndexes(bytes32 _crowdsaleId) public view
