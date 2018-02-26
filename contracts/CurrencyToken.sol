@@ -62,8 +62,8 @@ contract CurrencyToken is ERC20Token, withAccessManager {
         }
     }
 
-     
-      /** @dev Destroys a specified amount of tokens, from a user.
+    
+    /** @dev Destroys a specified amount of tokens, from a user.
       * @dev The method uses a modifier from withAccessManager contract to only permit populous to use it.
       * @dev The method uses SafeMath to carry out safe token deductions/subtraction.
       * @param amount The amount of tokens to create.
