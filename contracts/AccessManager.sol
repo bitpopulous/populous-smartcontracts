@@ -9,7 +9,6 @@ contract AccessManager {
 
     address public server; // Address, which the platform website uses.
     address public populous; // Address of the Populous bank contract.
-    address public depositContractsManager; // Address of the deposit contracts manager contract
 
     // NON-CONSTANT METHODS
 
@@ -47,15 +46,6 @@ contract AccessManager {
         populous = _populous;
     }
 
-    /** @dev Changes the deposit contracts manager contract address.
-      * @dev The method requires the message sender to be the set server.
-      * @param _depositContractsManager The address to be set as deposit contracts manager.
-      */
-    function changeDCM(address _depositContractsManager) public {
-        require(isServer(msg.sender) == true);
-        depositContractsManager = _depositContractsManager;
-    }
-
     // CONSTANT METHODS
     
     /** @dev Checks a given address to determine whether it is the server.
@@ -64,10 +54,6 @@ contract AccessManager {
       */
     function isServer(address sender) public view returns (bool) {
         return sender == server;
-    }
-
-    function isDCM(address sender) public view returns (bool) {
-        return sender == depositContractsManager;
     }
 
     /** @dev Checks a given address to determine whether it is the guardian.
