@@ -98,7 +98,7 @@ contract Populous is withAccessManager {
         );
         EventNewCrowdsaleSource(_crowdsaleId, Blocks[_crowdsaleId].invoiceId, getRecordDocumentIndexes(_crowdsaleId));
     }
-       /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
+    /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
       * @return address The address of the deployed deposit contract instance.
       */
