@@ -10,7 +10,7 @@ pragma solidity ^0.4.17;
 import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
-
+import "./SafeMath.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
@@ -62,9 +62,7 @@ contract Populous is withAccessManager {
 
     // NON-CONSTANT METHODS
     function insertBlock(bytes32 _crowdsaleId, bytes32 _invoiceId, 
-        bytes _ipfsHash,
-        bytes _awsHash,
-        bytes32 _dataType) 
+        bytes _ipfsHash, bytes32 _dataType) 
     public
     onlyServer
     {
@@ -77,11 +75,6 @@ contract Populous is withAccessManager {
 
         // record the history of a crowdsale on the ledger, with internal and external logs, and interal address too so it can be easily audited using etherscan
         Blocks[_crowdsaleId].invoiceId = _invoiceId;
-        Blocks[_crowdsaleId].documents.push(storageSource(
-           _awsHash,
-           "aws",
-           _dataType)
-        );
 
         Blocks[_crowdsaleId].isSet = true;
         EventNewCrowdsaleBlock(_crowdsaleId, _invoiceId, getRecordDocumentIndexes(_crowdsaleId));
@@ -133,9 +126,10 @@ contract Populous is withAccessManager {
     }
 
     
-    function withdrawPPT(address pptAddress, bytes32 accountId, address depositContract, address to, uint amount) public onlyServer {
+    function withdrawPPT(address pptAddress, bytes32 accountId, address depositContract, address to, uint amount, uint inCollateral) public onlyServer {
         DepositContract o = DepositContract(depositContract);
-        require(o.transfer(pptAddress, to, amount) == true);
+        uint PPT_balance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
+        require((PPT_balance >= amount) && (o.transfer(pptAddress, to, amount) == true));
         EventWithdrawPPT(accountId, depositContract, to, amount);
     }
     
