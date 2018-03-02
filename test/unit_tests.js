@@ -171,6 +171,7 @@ describe("Bank", function() {
 
         var depositAmount = 100;
         var balances = 50;
+        var inCollateral = 49;
         var deposit_address;
         var depositContractPPTBalance, investorPPTBalance;
 
@@ -184,7 +185,7 @@ describe("Bank", function() {
             // checking the balance of depositAddress is 100
             assert.equal(result.toNumber(), 100, "failed depositing PPT");
             //withdraw 50 PPT from deposit contract to wallet
-            return P.withdrawPPT(global.PPT.address, config.INVESTOR1_ACC, deposit_address, config.INVESTOR1_WALLET, 50);
+            return P.withdrawPPT(global.PPT.address, config.INVESTOR1_ACC, deposit_address, config.INVESTOR1_WALLET, 50, inCollateral);
         }).then(function(withdrawPPT) {
             assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
             // get PPT token balance of deposit contract address
@@ -226,11 +227,11 @@ describe("Crowdsale data", function() {
         var _ipfsHash = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2tp";
         //var _ipfsHash2 = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVA";
         //var _awsHash1 = "QmT9qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6"; 
-        var _awsHash = "QmT2qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6";
+        //var _awsHash = "QmT2qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6";
         var _dataType = "pdf contract";
         // insert crowdsale block in populous.sol contract
         // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
-        P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash, _awsHash, _dataType).then(function(result){
+        P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash, _dataType).then(function(result){
             //console.log('insert block log', result.logs[0]);
             assert(result.logs.length, "Failed withdrawing PPT");
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
@@ -246,7 +247,7 @@ describe("Crowdsale data", function() {
             return P.getRecordDocumentIndexes(crowdsaleId);
         }).then(function(numberofBlocks) {
             // insertBlock pushes into two arrays
-            assert.equal(numberofBlocks.toNumber(), 2, "failed getting correct number of crowdsale blocks");
+            assert.equal(numberofBlocks.toNumber(), 1, "failed getting correct number of crowdsale blocks");
             done();
         });
     });
@@ -264,7 +265,7 @@ describe("Crowdsale data", function() {
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
             // get inserted record at index 2
-            return P.getRecord(crowdsaleId, 2);
+            return P.getRecord(crowdsaleId, 1);
         }).then(function(crowdsale_record){
             // check hash stored at index 0 for inserted block at index 2
             assert.equal(web3.toUtf8(crowdsale_record[0]), _invoiceId, "failed returning correct crowdsale record");
@@ -272,7 +273,7 @@ describe("Crowdsale data", function() {
             // get total number of inserted crowdsale document blocks for a crowdsale Id
             return P.getRecordDocumentIndexes(crowdsaleId);
         }).then(function(numberofBlocks) {
-            assert.equal(numberofBlocks.toNumber(), 3, "failed getting correct number of crowdsale blocks");
+            assert.equal(numberofBlocks.toNumber(), 2, "failed getting correct number of crowdsale blocks");
             done();
         });
     });
