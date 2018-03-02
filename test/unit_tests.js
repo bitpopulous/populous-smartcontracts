@@ -246,7 +246,7 @@ describe("Crowdsale data", function() {
             // get total number of blocks inserted for a crowdsale Id
             return P.getRecordDocumentIndexes(crowdsaleId);
         }).then(function(numberofBlocks) {
-            // insertBlock pushes into two arrays
+            // insertBlock pushes into one arrays
             assert.equal(numberofBlocks.toNumber(), 1, "failed getting correct number of crowdsale blocks");
             done();
         });
@@ -264,7 +264,7 @@ describe("Crowdsale data", function() {
             assert(result.logs.length, "Failed withdrawing PPT");
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
-            // get inserted record at index 2
+            // get inserted record at index 1
             return P.getRecord(crowdsaleId, 1);
         }).then(function(crowdsale_record){
             // check hash stored at index 0 for inserted block at index 2
