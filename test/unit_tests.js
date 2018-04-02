@@ -233,7 +233,7 @@ describe("Crowdsale data", function() {
         // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
         P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash, _dataType).then(function(result){
             //console.log('insert block log', result.logs[0]);
-            assert(result.logs.length, "Failed withdrawing PPT");
+            assert(result.logs.length, "Failed inserting block");
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
             // get inserted record at index 0
             return P.getRecord(crowdsaleId, 0);
@@ -261,7 +261,7 @@ describe("Crowdsale data", function() {
         // insert crowdsale record using public function inserSource in populous.sol
         // this will only make one array push only after 
         P.insertSource(crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
-            assert(result.logs.length, "Failed withdrawing PPT");
+            assert(result.logs.length, "Failed inserting source");
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
             // get inserted record at index 1
