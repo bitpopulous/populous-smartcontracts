@@ -135,14 +135,19 @@ describe("Bank", function() {
         var CT = CurrencyToken.at(global.currencies.USD);
         var externalAddress = config.INVESTOR1_WALLET;
         var withdrawalAmount = 370;
+        var _blockchainActionId = "actionId1"
         // withdraw withdrawal amount of USD tokens for client Id 'A' from platform and send to clients externalAddress
-        P.withdrawPoken(config.INVESTOR1_ACC, externalAddress, withdrawalAmount, 'USD').then(function(result) {
+        P.withdrawPoken(_blockchainActionId, config.INVESTOR1_ACC, externalAddress, withdrawalAmount, 'USD').then(function(result) {
             //console.log('withdraw pokens gas cost', result.receipt.gasUsed);
             // check balance of clients external address
             return CT.balanceOf(externalAddress);
         }).then(function(value) {
             // check withdrawal amount of USD tokens was correctly allocated externalAddress
             assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
+            return P.getActionStatus(_blockchainActionId);
+        }).then(function(actionStatus){
+            assert.equal(true, actionStatus, "Failed withdrawal of Pokens");
+            console.log("blockchain action status for "+ _blockchainActionId + "is ", actionStatus);
             done();
         });
     });
@@ -151,11 +156,12 @@ describe("Bank", function() {
     it("should import USD tokens of config.INVESTOR1_WALLET to an internal account Id, e.g., A", function(done) {
         assert(global.currencies.USD, "Currency required.");
         var CT = CurrencyToken.at(global.currencies.USD);
+        var _blockchainActionId = "import1"
         //check balance of clients external address is 370 sent to it earlier using withdraw function
         CT.balanceOf(config.INVESTOR1_WALLET).then(function(balance){
             assert.equal(balance.toNumber(), 370, "failed earlier withdrawal of tokens");
             // import all the tokens from external 
-            return P.importPokens('USD', config.INVESTOR1_WALLET, config.INVESTOR1_ACC);
+            return P.importPokens(_blockchainActionId, 'USD', config.INVESTOR1_WALLET, config.INVESTOR1_ACC);
         }).then(function(result) {
             // check token balance of wallet is 0
             return CT.balanceOf(config.INVESTOR1_WALLET);
@@ -174,6 +180,7 @@ describe("Bank", function() {
         var inCollateral = 49;
         var deposit_address;
         var depositContractPPTBalance, investorPPTBalance;
+        var _blockchainActionId = "withdrawppt1"
 
         // get address of deposit address for client Id 'A'
         P.getDepositAddress(config.INVESTOR1_ACC).then(function(depositAddress){
@@ -185,7 +192,7 @@ describe("Bank", function() {
             // checking the balance of depositAddress is 100
             assert.equal(result.toNumber(), 100, "failed depositing PPT");
             //withdraw 50 PPT from deposit contract to wallet
-            return P.withdrawPPT(global.PPT.address, config.INVESTOR1_ACC, deposit_address, config.INVESTOR1_WALLET, 50, inCollateral);
+            return P.withdrawPPT(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, deposit_address, config.INVESTOR1_WALLET, 50, inCollateral);
         }).then(function(withdrawPPT) {
             assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
             // get PPT token balance of deposit contract address
@@ -229,9 +236,10 @@ describe("Crowdsale data", function() {
         //var _awsHash1 = "QmT9qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6"; 
         //var _awsHash = "QmT2qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6";
         var _dataType = "pdf contract";
+        var _blockchainActionId = "insertBlock1"
         // insert crowdsale block in populous.sol contract
         // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
-        P.insertBlock(crowdsaleId, _invoiceId, _ipfsHash, _dataType).then(function(result){
+        P.insertBlock(_blockchainActionId, crowdsaleId, _invoiceId, _ipfsHash, _dataType).then(function(result){
             //console.log('insert block log', result.logs[0]);
             assert(result.logs.length, "Failed inserting block");
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
@@ -258,9 +266,10 @@ describe("Crowdsale data", function() {
         var _dataHash = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVL";
         var _dataSource = "ipfs"; 
         var _dataType = "pdf contract";
+        var _blockchainActionId = "insertSource1"
         // insert crowdsale record using public function inserSource in populous.sol
         // this will only make one array push only after 
-        P.insertSource(crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
+        P.insertSource(_blockchainActionId, crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
             assert(result.logs.length, "Failed inserting source");
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
