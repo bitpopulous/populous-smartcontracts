@@ -17,13 +17,14 @@ contract Populous is withAccessManager {
 
     // EVENTS
     event EventNewCrowdsaleBlock(bytes blockchainActionId, bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
-    event EventNewCrowdsaleSource(bytes blockchainActionId, bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
+    event EventNewCrowdsaleSource(bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
     // Bank events
     event EventWithdrawPPT(bytes blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPokens(bytes blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency);
     event EventImportPokens(bytes blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance);
     event EventNewCurrency(bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 clientId, address depositContractAddress);
+
 
     // FIELDS
     mapping(bytes32 => address) currencies;
@@ -77,6 +78,8 @@ contract Populous is withAccessManager {
     onlyServer
     {
         require(Blocks[_crowdsaleId].isSet == false);
+        require(actionStatus[_blockchainActionId] == false);
+
         Blocks[_crowdsaleId].documents.push(storageSource(
            _ipfsHash,
            "ipfs",
@@ -94,13 +97,12 @@ contract Populous is withAccessManager {
     }
 
     /** @dev Insert a crowdsale record for a specific invoice crowdsale id 
-      * @param _blockchainActionId the blockchain action id
       * @param _crowdsaleId the crowdsale identifier
       * @param _dataHash the hash of the data/record
       * @param _dataSource the data source
       * @param _dataType the data type
       */ 
-    function insertSource(bytes _blockchainActionId, bytes32 _crowdsaleId, bytes _dataHash, bytes32 _dataSource, bytes32 _dataType) public {
+    function insertSource(bytes32 _crowdsaleId, bytes _dataHash, bytes32 _dataSource, bytes32 _dataType) public {
         require(Blocks[_crowdsaleId].isSet == true);
 
         Blocks[_crowdsaleId].documents.push(storageSource(
@@ -108,8 +110,8 @@ contract Populous is withAccessManager {
            _dataSource,
            _dataType)
         );
-        actionStatus[_blockchainActionId] = true;
-        EventNewCrowdsaleSource(_blockchainActionId, _crowdsaleId, Blocks[_crowdsaleId].invoiceId, getRecordDocumentIndexes(_crowdsaleId));
+
+        EventNewCrowdsaleSource(_crowdsaleId, Blocks[_crowdsaleId].invoiceId, getRecordDocumentIndexes(_crowdsaleId));
     }
     /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
@@ -155,6 +157,7 @@ contract Populous is withAccessManager {
       * @param inCollateral the amount of pokens withheld by the platform
       */    
     function withdrawPPT(bytes _blockchainActionId, address pptAddress, bytes32 accountId, address depositContract, address to, uint amount, uint inCollateral) public onlyServer {
+        require(actionStatus[_blockchainActionId] == false);
         DepositContract o = DepositContract(depositContract);
         uint PPT_balance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
         require((PPT_balance >= amount) && (o.transfer(pptAddress, to, amount) == true));
@@ -169,6 +172,7 @@ contract Populous is withAccessManager {
       * @param currency the poken currency
       */
     function importPokens(bytes _blockchainActionId, bytes32 currency, address from, bytes32 accountId) public onlyServer {
+        require(actionStatus[_blockchainActionId] == false);
         CurrencyToken CT = CurrencyToken(currencies[currency]);
         
         //check balance.
@@ -188,6 +192,7 @@ contract Populous is withAccessManager {
       * @param currency the poken currency
       */
     function withdrawPoken(bytes _blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency) public onlyServer {
+        require(actionStatus[_blockchainActionId] == false);
         require(currencies[currency] != 0x0);
 
         CurrencyToken cT = CurrencyToken(currencies[currency]);
