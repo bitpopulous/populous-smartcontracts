@@ -3,10 +3,7 @@ Populous = artifacts.require("Populous"),
 CurrencyToken = artifacts.require("CurrencyToken"),
 PopulousToken = artifacts.require("PopulousToken")
 DepositContract = artifacts.require("DepositContract");
-/**
-* @TODO
-* Write tests for the restrictions: deadline checks, status checks, sent tokens checks, balances checks
-*/
+
 
 contract('Populous / CurrencyToken > ', function(accounts) {
 var
@@ -266,10 +263,9 @@ describe("Crowdsale data", function() {
         var _dataHash = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVL";
         var _dataSource = "ipfs"; 
         var _dataType = "pdf contract";
-        var _blockchainActionId = "insertSource1"
         // insert crowdsale record using public function inserSource in populous.sol
         // this will only make one array push only after 
-        P.insertSource(_blockchainActionId, crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
+        P.insertSource(crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
             assert(result.logs.length, "Failed inserting source");
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
@@ -288,97 +284,5 @@ describe("Crowdsale data", function() {
     });
 
 });
-
-
-
-/* describe("Bank", function() {
-
-    it("should mint USD tokens: " + (config.INVESTOR1_ACC_BALANCE + config.INVESTOR2_ACC_BALANCE + config.INVESTOR3_ACC_BALANCE), function(done) {
-        assert(global.currencies.USD, "Currency required.");
-        // amount of USD tokens to mint = balance of accountIDs 'A' + 'B' + 'C'
-        // amount of USD tokens to mint = 470 + 450 + 600 = 1,520
-        var mintAmount = config.INVESTOR1_ACC_BALANCE + config.INVESTOR2_ACC_BALANCE + config.INVESTOR3_ACC_BALANCE;
-        // mint mintAmount of USD tokens and allocate to LEDGER_ACC/"Populous"
-        P.getCurrency("USD").then(function(tokenAddress){
-            CT = CurrencyToken.at(tokenAddress);
-            console.log('Currency token address: ', tokenAddress);
-            return CT.mintTokens(mintAmount);
-        }).then(function(result) {
-            //console.log('mint tokens gas cost', result.receipt.gasUsed);
-            return CT.balanceOf(web3.eth.accounts[0]);
-        }).then(function(amount) {
-            assert.equal(amount.toNumber(), mintAmount, "Failed minting USD tokens");
-            done();
-        });
-    });
-
-    it("should transfer USD tokens to config.INVESTOR1_ACC, config.INVESTOR2_ACC, config.INVESTOR3_ACC_BALANCE", function(done) {
-        assert(global.currencies.USD, "Currency required.");
-        var CT = CurrencyToken.at(global.currencies.USD);
-        // transfer 470 USD tokens from 'Populous' to 'A'
-        CT.transfer(config.INVESTOR1_WALLET, config.INVESTOR1_ACC_BALANCE).then(function(result) {
-            //console.log('transfer pokens gas cost', result.receipt.gasUsed);
-            // transfer 450 USD tokens from 'Populous' to 'B'
-            return CT.transfer(config.INVESTOR2_WALLET, config.INVESTOR2_ACC_BALANCE);
-        }).then(function() {
-            // transfer 600 USD tokens from 'Populous' to 'C'
-            return CT.transfer(config.INVESTOR3_WALLET, config.INVESTOR3_ACC_BALANCE);
-        }).then(function() {
-            // check USD token balance of 'A' is 470
-            return CT.balanceOf(config.INVESTOR1_WALLET);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed transfer 1");
-            // check USD token balance of 'B' is 450
-            return CT.balanceOf(config.INVESTOR2_WALLET);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR2_ACC_BALANCE, "Failed transfer 2");
-            // check USD token balance of 'C' is 600
-            return CT.balanceOf(config.INVESTOR3_WALLET);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR3_ACC_BALANCE, "Failed transfer 3");
-            done();
-        });
-    });
-
-
-    it("should import USD tokens of config.INVESTOR1_WALLET to an internal account Id, e.g., A", function(done) {
-        assert(global.currencies.USD, "Currency required.");
-
-        var CT = CurrencyToken.at(global.currencies.USD);
-
-        P.importExternalPokens('USD', config.INVESTOR1_WALLET, config.INVESTOR1_ACC).then(function(result) {
-            return CT.balanceOf(config.INVESTOR1_WALLET);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), 0, "Failed importing tokens");
-            return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE, "Failed importing tokens");
-            done();
-        });
-    });
-
-
-    it("should withdraw USD tokens of config.INVESTOR1_ACC to an external address, e.g., 0x93123461712617b2f828494dbf5355b8a76d6051", function(done) {
-        assert(global.currencies.USD, "Currency required.");
-
-        var CT = CurrencyToken.at(global.currencies.USD);
-        var externalAddress = config.INVESTOR1_WALLET;
-        var withdrawalAmount = 370;
-
-        // withdraw withdrawal amount of USD tokens from 'A' and send to externalAddress
-        P.withdrawPoken(config.INVESTOR1_ACC, externalAddress, withdrawalAmount, 'USD').then(function(result) {
-            //console.log('withdraw pokens gas cost', result.receipt.gasUsed);
-            return CT.balanceOf(externalAddress);
-        }).then(function(value) {
-            // check withdrawal amount of USD tokens was allocated externalAddress
-            assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
-            // check withdrawal amount of USD tokens was withdrawn from 'A'
-            return P.getLedgerEntry.call("USD", config.INVESTOR1_ACC);
-        }).then(function(value) {
-            assert.equal(value.toNumber(), config.INVESTOR1_ACC_BALANCE - withdrawalAmount, "Failed withdrawal");
-            done();
-        });
-    });
-}); */
 
 });
