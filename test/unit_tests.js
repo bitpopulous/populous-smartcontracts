@@ -145,6 +145,15 @@ describe("Bank", function() {
         }).then(function(actionStatus){
             assert.equal(true, actionStatus, "Failed withdrawal of Pokens");
             console.log("blockchain action status for "+ _blockchainActionId + "is ", actionStatus);
+            
+
+            return P.getBlockchainActionIdData(_blockchainActionId);
+        }).then(function(actionData){
+            assert.equal(web3.toUtf8(actionData[0]), 'USD', "Failed getting correct currency");
+            assert.equal(actionData[1], withdrawalAmount, "Failed getting correct amount");
+            assert.equal(web3.toUtf8(actionData[2]), config.INVESTOR1_ACC, "Failed getting correct action id");
+            assert.equal(actionData[3], externalAddress, "Failed getting correct address to/from");
+        
             done();
         });
     });

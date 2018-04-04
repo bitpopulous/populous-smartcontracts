@@ -31,6 +31,14 @@ contract Populous is withAccessManager {
     mapping(address => bytes32) currenciesSymbols;
     mapping(bytes => bool) actionStatus;
 
+    struct actionData {
+        bytes32 currency;
+        uint amount;
+        bytes32 accountId;
+        address to;
+    }
+
+    mapping(bytes => actionData) blockchainActionIdData;
 
     // This variable will be used to keep track of client IDs and
     // their deposit addresses
@@ -162,6 +170,10 @@ contract Populous is withAccessManager {
         uint PPT_balance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
         require((PPT_balance >= amount) && (o.transfer(pptAddress, to, amount) == true));
         actionStatus[_blockchainActionId] = true;
+        blockchainActionIdData[_blockchainActionId].currency = "PPT";
+        blockchainActionIdData[_blockchainActionId].amount = amount;
+        blockchainActionIdData[_blockchainActionId].accountId = accountId;
+        blockchainActionIdData[_blockchainActionId].to = to;
         EventWithdrawPPT(_blockchainActionId, accountId, depositContract, to, amount);
     }
 
@@ -180,6 +192,10 @@ contract Populous is withAccessManager {
         //balance is more than 0, and balance has been destroyed.
         require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
         actionStatus[_blockchainActionId] = true;
+        blockchainActionIdData[_blockchainActionId].currency = currency;
+        blockchainActionIdData[_blockchainActionId].amount = balance;
+        blockchainActionIdData[_blockchainActionId].accountId = accountId;
+        blockchainActionIdData[_blockchainActionId].to = from;
         //emit event: Imported currency to system
         EventImportPokens(_blockchainActionId, from, accountId,currency,balance);
     }
@@ -202,11 +218,33 @@ contract Populous is withAccessManager {
         //credit account
         cT.transfer(to, amount);
         actionStatus[_blockchainActionId] = true;
+        blockchainActionIdData[_blockchainActionId].currency = currency;
+        blockchainActionIdData[_blockchainActionId].amount = amount;
+        blockchainActionIdData[_blockchainActionId].accountId = accountId;
+        blockchainActionIdData[_blockchainActionId].to = to;
         //emit event: Imported currency to system
         EventWithdrawPokens(_blockchainActionId, accountId, to, amount, currency);
     }
 
     // CONSTANT METHODS
+
+    /** @dev Get the blockchain action Id Data for a blockchain Action id
+      * @param _blockchainActionId the blockchain action id
+      * @return bytes32 currency
+      * @return uint amount
+      * @return bytes32 accountId
+      * @return address to
+      */
+    function getBlockchainActionIdData(bytes _blockchainActionId) public view 
+    returns (bytes32, uint, bytes32, address) 
+    {
+        require(actionStatus[_blockchainActionId] == true);
+
+        return (blockchainActionIdData[_blockchainActionId].currency, 
+                blockchainActionIdData[_blockchainActionId].amount,
+                blockchainActionIdData[_blockchainActionId].accountId,
+                blockchainActionIdData[_blockchainActionId].to);
+    }
 
     /** @dev Get the bool status of a blockchain Action id
       * @param _blockchainActionId the blockchain action id
