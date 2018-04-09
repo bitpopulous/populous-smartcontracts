@@ -25,13 +25,14 @@ module.exports = {
             // geth (go-ethereum client) instance on AWS with external IP 
             // and open RPC Port synced with ropsten blockchain network
             network_id: 3,
-            host: "35.177.79.70",
+            //host: "35.177.79.70",
+            host: "18.130.20.123",
             port: 8545,
             before_timeout: 900000, //  <=== NEW
             test_timeout: 900000, //  <=== NEW
             gas: 4700036,
             //gas: 4672388,
-            //from: "0x9a6b3778938400ee414780652ad29aea76d804f5"
+            //from: "0xf8b3d742b245ec366288160488a12e7a2f1d720d",
             gasPrice: 100000000000
         },
         "testrpc": {
