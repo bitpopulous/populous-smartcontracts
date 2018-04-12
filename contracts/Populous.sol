@@ -16,8 +16,8 @@ import "./SafeMath.sol";
 contract Populous is withAccessManager {
 
     // EVENTS
-    event EventNewCrowdsaleBlock(bytes blockchainActionId, bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
-    event EventNewCrowdsaleSource(bytes32 crowdsaleId, bytes32 invoiceId, uint sourceLength);
+    event EventNewCrowdsaleBlock(bytes blockchainActionId, bytes invoiceId, uint sourceLength);
+    event EventNewCrowdsaleSource(bytes invoiceId, uint sourceLength);
     // Bank events
     event EventWithdrawPPT(bytes blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPokens(bytes blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency);
@@ -43,22 +43,23 @@ contract Populous is withAccessManager {
     // This variable will be used to keep track of client IDs and
     // their deposit addresses
     // clientId => depositAddress
-    mapping (bytes32 => address) depositAddress;
+    mapping(bytes32 => address) depositAddress;
 
     struct storageSource {
         bytes dataHash;
-        bytes32 dataSource; // upload provider: ipfs / aws (uploaded to our aws server) / ... who provides the storage for this information.
         bytes32 dataType; // crowdsale (creators, bids) + addresses /exchange_date/deposit_history (latest)/ -- for external auditing.
     }
 
+    //actionId => invoiceId
+    mapping(bytes => bytes) actionIdToInvoiceId;
+
     struct record {
-       bytes32 invoiceId;
        bool isSet;
        storageSource[] documents; //source[0] = ["0x23222324"]
     }
 
-    //crowdsaleId => (invoiceId, documents ["crowdsale_log","exchange_history","deposit_history"])
-    mapping(bytes32 => record) Blocks;
+    //invoiceId => (isSet, documents ["crowdsale_log","exchange_history","deposit_history"])
+    mapping(bytes => record) Blocks;
 
 
     // NON-CONSTANT METHODS
@@ -75,51 +76,42 @@ contract Populous is withAccessManager {
     /** @dev Insert a crowdsale record for a specific invoice crowdsale id. 
       * Limited to only the server address or platform admin
       * @param _blockchainActionId the blockchain action id
-      * @param _crowdsaleId the crowdsale identifier
       * @param _invoiceId the invoice id      
       * @param _ipfsHash the ipfs hash of the invoice file
-      * @param _dataType the data type
       */ 
-    function insertBlock(bytes _blockchainActionId, bytes32 _crowdsaleId, bytes32 _invoiceId, 
-        bytes _ipfsHash, bytes32 _dataType) 
+    function insertBlock(bytes _blockchainActionId, bytes _invoiceId, bytes _ipfsHash) 
     public
     onlyServer
     {
-        require(Blocks[_crowdsaleId].isSet == false);
+        require(Blocks[_invoiceId].isSet == false);
         require(actionStatus[_blockchainActionId] == false);
 
-        Blocks[_crowdsaleId].documents.push(storageSource(
+        Blocks[_invoiceId].documents.push(storageSource(
            _ipfsHash,
-           "ipfs",
-           _dataType)
+           "ipfs_hash")
         );
 
         // record the history of a crowdsale on the ledger, with internal and external logs, and interal address too so it can be easily audited using etherscan
-        Blocks[_crowdsaleId].invoiceId = _invoiceId;
-
-        Blocks[_crowdsaleId].isSet = true;
+        Blocks[_invoiceId].isSet = true;
+        actionIdToInvoiceId[_blockchainActionId] = _invoiceId;
 
         actionStatus[_blockchainActionId] = true;
-        EventNewCrowdsaleBlock(_blockchainActionId, _crowdsaleId, _invoiceId, getRecordDocumentIndexes(_crowdsaleId));
+        EventNewCrowdsaleBlock(_blockchainActionId, _invoiceId, getRecordDocumentIndexes(_invoiceId));
 
     }
 
     /** @dev Insert a crowdsale record for a specific invoice crowdsale id 
-      * @param _crowdsaleId the crowdsale identifier
       * @param _dataHash the hash of the data/record
-      * @param _dataSource the data source
-      * @param _dataType the data type
       */ 
-    function insertSource(bytes32 _crowdsaleId, bytes _dataHash, bytes32 _dataSource, bytes32 _dataType) public {
-        require(Blocks[_crowdsaleId].isSet == true);
+    function insertSource(bytes _invoiceId, bytes _dataHash, bytes32 _dataType) public {
+        require(Blocks[_invoiceId].isSet == true);
 
-        Blocks[_crowdsaleId].documents.push(storageSource(
+        Blocks[_invoiceId].documents.push(storageSource(
            _dataHash,
-           _dataSource,
-           _dataType)
+           _dataType)        
         );
 
-        EventNewCrowdsaleSource(_crowdsaleId, Blocks[_crowdsaleId].invoiceId, getRecordDocumentIndexes(_crowdsaleId));
+        EventNewCrowdsaleSource(_invoiceId, getRecordDocumentIndexes(_invoiceId));
     }
     /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
@@ -228,6 +220,15 @@ contract Populous is withAccessManager {
 
     // CONSTANT METHODS
 
+    /** @dev Get the blockchain invoice Id with a blockchain Action id
+      * @param _blockchainActionId the blockchain action id
+      * @return bytes invoiceId
+      */
+    function getBlockInvoiceId(bytes _blockchainActionId) public view returns (bytes) {
+        require(actionIdToInvoiceId[_blockchainActionId].length != 0);
+        return actionIdToInvoiceId[_blockchainActionId];
+    }
+
     /** @dev Get the blockchain action Id Data for a blockchain Action id
       * @param _blockchainActionId the blockchain action id
       * @return bytes32 currency
@@ -278,30 +279,26 @@ contract Populous is withAccessManager {
     }
 
     /** @dev Gets the details of an inserted crowdsale record
-      * @param _crowdsaleId The crowdsale ID.
+      * @param _invoiceId The invoice ID.
       * @param documentIndex The crowdsale document index.
-      * @return invoiceId
       * @return dataHash
-      * @return dataSource
       * @return dataType
       */
-    function getRecord(bytes32 _crowdsaleId, uint documentIndex) public view 
-    returns(bytes32, bytes, bytes32, bytes32) 
+    function getRecord(bytes _invoiceId, uint documentIndex) public view 
+    returns(bytes, bytes32) 
     {
-        return (Blocks[_crowdsaleId].invoiceId,
-                Blocks[_crowdsaleId].documents[documentIndex].dataHash,
-                Blocks[_crowdsaleId].documents[documentIndex].dataSource,
-                Blocks[_crowdsaleId].documents[documentIndex].dataType
+        return (Blocks[_invoiceId].documents[documentIndex].dataHash,
+                Blocks[_invoiceId].documents[documentIndex].dataType
                 );
     }
 
     /** @dev Gets the total numnber of document indexes of a crowdsale record
-      * @param _crowdsaleId The crowdsale ID.
+      * @param _invoiceId The invoice ID.
       * @return total number of documents per crowdsale Id
       */
-    function getRecordDocumentIndexes(bytes32 _crowdsaleId) public view
+    function getRecordDocumentIndexes(bytes _invoiceId) public view
     returns(uint)
     {
-        return Blocks[_crowdsaleId].documents.length;
+        return Blocks[_invoiceId].documents.length;
     }
 }
