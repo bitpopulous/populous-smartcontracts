@@ -144,7 +144,7 @@ describe("Bank", function() {
             return P.getActionStatus(_blockchainActionId);
         }).then(function(actionStatus){
             assert.equal(true, actionStatus, "Failed withdrawal of Pokens");
-            console.log("blockchain action status for "+ _blockchainActionId + "is ", actionStatus);
+            console.log("blockchain action status for "+ _blockchainActionId + " is ", actionStatus);
             
 
             return P.getBlockchainActionIdData(_blockchainActionId);
@@ -223,11 +223,11 @@ describe("Bank", function() {
 
 describe("Crowdsale data", function() {
 
-    var crowdsaleId = "#AA001";
-
+    //var crowdsaleId = "#AA001";
+    var _invoiceId = "#invoice023";
     it("should get number of crowdsale document blocks", function(done) {
         // get crowdsale document records
-        P.getRecordDocumentIndexes(crowdsaleId).then(function(numberofBlocks) {
+        P.getRecordDocumentIndexes(_invoiceId).then(function(numberofBlocks) {
             assert.equal(numberofBlocks.toNumber(), 0, "failed getting correct number of crowdsale blocks");
             done();
         });
@@ -245,26 +245,37 @@ describe("Crowdsale data", function() {
         var _blockchainActionId = "insertBlock1"
         // insert crowdsale block in populous.sol contract
         // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
-        P.insertBlock(_blockchainActionId, crowdsaleId, _invoiceId, _ipfsHash, _dataType).then(function(result){
+        P.insertBlock(_blockchainActionId, _invoiceId, _ipfsHash).then(function(result){
             //console.log('insert block log', result.logs[0]);
             assert(result.logs.length, "Failed inserting block");
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
             // get inserted record at index 0
-            return P.getRecord(crowdsaleId, 0);
+            return P.getRecord(_invoiceId, 0);
         }).then(function(crowdsale_record){
             //console.log('crowdsale record', crowdsale_record);
-            assert.equal(web3.toUtf8(crowdsale_record[0]), _invoiceId, "failed returning correct crowdsale record");
-            console.log('hash from contract', web3.toUtf8(crowdsale_record[1]));
+            assert.equal(web3.toUtf8(crowdsale_record[0]), _ipfsHash, "failed returning correct crowdsale record");
+            console.log('hash from contract', web3.toUtf8(crowdsale_record[0]));
             console.log('hash param', _ipfsHash);
-            assert.equal(web3.toUtf8(crowdsale_record[1]), _ipfsHash, "failed returning correct crowdsale record");
+            //assert.equal(web3.toUtf8(crowdsale_record[1]), _dataType, "failed returning correct crowdsale record");
             // get total number of blocks inserted for a crowdsale Id
-            return P.getRecordDocumentIndexes(crowdsaleId);
+            return P.getRecordDocumentIndexes(_invoiceId);
         }).then(function(numberofBlocks) {
             // insertBlock pushes into one arrays
             assert.equal(numberofBlocks.toNumber(), 1, "failed getting correct number of crowdsale blocks");
             done();
         });
     });
+
+    it("should insert get invoice Id with action Id", function(done) {
+        var _invoiceId = "#invoice023";
+        var _blockchainActionId = "insertBlock1";
+
+        P.getBlockInvoiceId(_blockchainActionId).then(function(result){
+            assert.equal(web3.toUtf8(result), _invoiceId, "failed returning correct invoice id");
+            done();
+        });
+    });
+
 
     it("should insert crowdsale source", function(done) {
         var _invoiceId = "#invoice023";
@@ -274,18 +285,18 @@ describe("Crowdsale data", function() {
         var _dataType = "pdf contract";
         // insert crowdsale record using public function inserSource in populous.sol
         // this will only make one array push only after 
-        P.insertSource(crowdsaleId, _dataHash, _dataSource, _dataType).then(function(result){
+        P.insertSource(_invoiceId, _dataHash, _dataType).then(function(result){
             assert(result.logs.length, "Failed inserting source");
             //console.log('insert source log', result.logs[0]);
             console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
             // get inserted record at index 1
-            return P.getRecord(crowdsaleId, 1);
+            return P.getRecord(_invoiceId, 1);
         }).then(function(crowdsale_record){
             // check hash stored at index 0 for inserted block at index 2
-            assert.equal(web3.toUtf8(crowdsale_record[0]), _invoiceId, "failed returning correct crowdsale record");
+            assert.equal(web3.toUtf8(crowdsale_record[0]), _dataHash, "failed returning correct crowdsale record");
             //console.log('crowdsale record', crowdsale_record);
             // get total number of inserted crowdsale document blocks for a crowdsale Id
-            return P.getRecordDocumentIndexes(crowdsaleId);
+            return P.getRecordDocumentIndexes(_invoiceId);
         }).then(function(numberofBlocks) {
             assert.equal(numberofBlocks.toNumber(), 2, "failed getting correct number of crowdsale blocks");
             done();
