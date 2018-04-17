@@ -13,6 +13,7 @@ var
 
 describe("Init currency token", function() {
     it("should init currency token American Dollar USD", function(done) {
+        
         Populous.deployed().then(function(instance) {
             P = instance;
             console.log('Populous', P.address);
@@ -80,8 +81,10 @@ describe("Init and transfer PPT", function() {
     it("should create deposit contract for client", function(done) {
         assert(global.PPT, "PPT required.");
 
+        var _blockchainActionId = "createAddress1";
+
         // create new deposit smart contract for client Id 'A'
-        P.createAddress(config.INVESTOR1_ACC).then(function(instance) {
+        P.createAddress(_blockchainActionId, config.INVESTOR1_ACC).then(function(instance) {
             assert(instance);
             // get deposit address with client Id 'A'
             return P.getDepositAddress(config.INVESTOR1_ACC);

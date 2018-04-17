@@ -1,7 +1,9 @@
 module.exports = {
     createCurrency: function(P, name, decimals, symbol) {
+        var _blockchainActionId = "createCurrency1"
+
         var currencyPromise =
-            P.createCurrency(name, decimals, symbol).then(function(result) {
+            P.createCurrency(_blockchainActionId, name, decimals, symbol).then(function(result) {
                 //console.log("new currency", result.logs[0]);
                 return P.getCurrency.call(symbol);
             }).then(function(currencyAddress) {
