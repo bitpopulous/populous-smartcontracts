@@ -8,7 +8,7 @@ import "./withAccessManager.sol";
 /// @title DepositContract contract
 contract DepositContract is withAccessManager {
 
-    bytes clientId;// cliend ID.
+    bytes clientId;// client ID.
     address manager; // address of contract manager.
 
     // MODIFIERS
