@@ -31,8 +31,9 @@ module.exports = {
             before_timeout: 900000, //  <=== NEW
             test_timeout: 900000, //  <=== NEW
             //gas: 4700036,
-            gas: 4712394,
+            gas: 4700036,
             //from: "0xf8b3d742b245ec366288160488a12e7a2f1d720d",
+            //gasPrice: 100000000000
             gasPrice: 100000000000
         },
         "testrpc": {
@@ -43,6 +44,7 @@ module.exports = {
             before_timeout: 200000, //  <=== NEW
             test_timeout: 300000, //  <=== NEW
             gas: 4712388
+
         },
         "private": {
             // geth --dev --networkid 666 --rpc --rpcapi eth,web3,db,net,debug --rpccorsdomain * console

@@ -16,35 +16,35 @@ import "./SafeMath.sol";
 contract Populous is withAccessManager {
 
     // EVENTS
-    event EventNewCrowdsaleBlock(bytes blockchainActionId, bytes invoiceId, uint sourceLength);
-    event EventNewCrowdsaleSource(bytes invoiceId, uint sourceLength);
+    event EventNewCrowdsaleBlock(bytes32 blockchainActionId, bytes32 invoiceId, uint sourceLength);
+    event EventNewCrowdsaleSource(bytes32 invoiceId, uint sourceLength);
     // Bank events
-    event EventWithdrawPPT(bytes blockchainActionId, bytes accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPokens(bytes blockchainActionId, bytes accountId, address to, uint amount, bytes32 currency);
-    event EventImportPokens(bytes blockchainActionId, address from, bytes accountId, bytes32 currency, uint balance);
-    event EventNewCurrency(bytes blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
-    event EventNewDepositContract(bytes blockchainActionId, bytes clientId, address depositContractAddress);
+    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
+    event EventWithdrawPokens(bytes32 blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency);
+    event EventImportPokens(bytes32 blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance);
+    event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
+    event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
 
     
     // FIELDS
     mapping(bytes32 => address) currencies;
     mapping(address => bytes32) currenciesSymbols;
     // blockchainActionId => boolean 
-    mapping(bytes => bool) actionStatus;
+    mapping(bytes32 => bool) actionStatus;
 
     struct actionData {
         bytes32 currency;
         uint amount;
-        bytes accountId;
+        bytes32 accountId;
         address to;
     }
 
-    mapping(bytes => actionData) blockchainActionIdData;
+    mapping(bytes32 => actionData) blockchainActionIdData;
 
     // This variable will be used to keep track of client IDs and
     // their deposit addresses
     // clientId => depositAddress
-    mapping(bytes => address) depositAddress;
+    mapping(bytes32 => address) depositAddress;
 
     struct storageSource {
         bytes dataHash;
@@ -52,15 +52,14 @@ contract Populous is withAccessManager {
     }
 
     //actionId => invoiceId
-    mapping(bytes => bytes) actionIdToInvoiceId;
+    mapping(bytes32 => bytes32) actionIdToInvoiceId;
 
     struct record {
        bool isSet;
        storageSource[] documents; //source[0] = ["0x23222324"]
     }
-
     //invoiceId => (isSet, documents ["crowdsale_log","exchange_history","deposit_history"])
-    mapping(bytes => record) Blocks;
+    mapping(bytes32 => record) Blocks;
 
 
     // NON-CONSTANT METHODS
@@ -80,7 +79,7 @@ contract Populous is withAccessManager {
       * @param _invoiceId the invoice id      
       * @param _ipfsHash the ipfs hash of the invoice file
       */ 
-    function insertBlock(bytes _blockchainActionId, bytes _invoiceId, bytes _ipfsHash) 
+    function insertBlock(bytes32 _blockchainActionId, bytes32 _invoiceId, bytes _ipfsHash) 
     public
     onlyServer
     {
@@ -102,7 +101,7 @@ contract Populous is withAccessManager {
     /** @dev Insert a crowdsale record for a specific invoice crowdsale id 
       * @param _dataHash the hash of the data/record
       */ 
-    function insertSource(bytes _invoiceId, bytes _dataHash, bytes32 _dataType) public {
+    function insertSource(bytes32 _invoiceId, bytes _dataHash, bytes32 _dataType) public {
         require(Blocks[_invoiceId].isSet == true);
         Blocks[_invoiceId].documents.push(storageSource(
            _dataHash,
@@ -111,17 +110,18 @@ contract Populous is withAccessManager {
         EventNewCrowdsaleSource(_invoiceId, getRecordDocumentIndexes(_invoiceId));
     }
     /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
-      * @param clientId The bytes client ID
+      * @param clientId The bytes32 client ID
       * @return address The address of the deployed deposit contract instance.
       */
-    function createAddress(bytes _blockchainActionId, bytes clientId) public
+    function createAddress(bytes32 _blockchainActionId, bytes32 clientId) public
         onlyServer
     {
         require(actionStatus[_blockchainActionId] == false);
         depositAddress[clientId] = new DepositContract(clientId, AM);
         assert(depositAddress[clientId] != 0x0);
         actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, depositAddress[clientId]);
+        blockchainActionIdData[_blockchainActionId].accountId = clientId;
+        blockchainActionIdData[_blockchainActionId].to = depositAddress[clientId];
         EventNewDepositContract(_blockchainActionId, clientId, depositAddress[clientId]);
     }
 
@@ -130,7 +130,8 @@ contract Populous is withAccessManager {
       * @param _decimalUnits The number of decimals the currency has.
       * @param _tokenSymbol The cyrrency symbol, e.g., GBP
       */
-    function createCurrency(bytes _blockchainActionId, bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
+    function createCurrency(bytes32 _blockchainActionId, bytes32 _tokenName, uint8 _decimalUnits, 
+        bytes32 _tokenSymbol)
         public
         onlyServer
     {   
@@ -142,7 +143,8 @@ contract Populous is withAccessManager {
         currenciesSymbols[currencies[_tokenSymbol]] = _tokenSymbol;
         actionStatus[_blockchainActionId] = true;
         blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
-        setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, "", currencies[_tokenSymbol]);
+        blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
+
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, currencies[_tokenSymbol]);
     }
 
@@ -155,12 +157,13 @@ contract Populous is withAccessManager {
       * @param to the blockchain address to withdraw and transfer the pokens to
       * @param inCollateral the amount of pokens withheld by the platform
       */    
-    function withdrawPPT(bytes _blockchainActionId, address pptAddress, bytes accountId, address depositContract, address to, uint amount, uint inCollateral) public onlyServer {
+    function withdrawPPT(bytes32 _blockchainActionId, address pptAddress, bytes32 accountId, address depositContract, address to, uint amount, uint inCollateral) public onlyServer {
         require(actionStatus[_blockchainActionId] == false);
         DepositContract o = DepositContract(depositContract);
         uint pptBalance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
         require((pptBalance >= amount) && (o.transfer(pptAddress, to, amount) == true));        
         actionStatus[_blockchainActionId] = true;
+
         setBlockchainActionData(_blockchainActionId, "PPT", amount, accountId, to);
         EventWithdrawPPT(_blockchainActionId, accountId, depositContract, to, amount);
     }
@@ -171,7 +174,7 @@ contract Populous is withAccessManager {
       * @param from the blockchain address to import pokens from
       * @param currency the poken currency
       */
-    function importPokens(bytes _blockchainActionId, bytes32 currency, address from, bytes accountId) public onlyServer {
+    function importPokens(bytes32 _blockchainActionId, bytes32 currency, address from, bytes32 accountId) public onlyServer {
         require(actionStatus[_blockchainActionId] == false);
         CurrencyToken CT = CurrencyToken(currencies[currency]);
         //check balance.
@@ -180,7 +183,9 @@ contract Populous is withAccessManager {
         require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
         
         actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, currency, balance, accountId, from);
+
+        setBlockchainActionData(_blockchainActionId, currency, balance, accountId, from); 
+
         //emit event: Imported currency to system
         EventImportPokens(_blockchainActionId, from, accountId, currency, balance);
     }
@@ -192,7 +197,11 @@ contract Populous is withAccessManager {
       * @param amount the amount of pokens to transfer
       * @param currency the poken currency
       */
-    function withdrawPoken(bytes _blockchainActionId, bytes accountId, address to, uint amount, bytes32 currency) public onlyServer {
+    function withdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, address to, 
+        uint amount, bytes32 currency) 
+        public 
+        onlyServer 
+    {
         require(actionStatus[_blockchainActionId] == false);
         require(currencies[currency] != 0x0);
         CurrencyToken cT = CurrencyToken(currencies[currency]);
@@ -202,13 +211,21 @@ contract Populous is withAccessManager {
         cT.transfer(to, amount);
         
         actionStatus[_blockchainActionId] = true;
+        
         setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to);
         //emit event: Imported currency to system
         EventWithdrawPokens(_blockchainActionId, accountId, to, amount, currency);
     }
 
-    
-    function setBlockchainActionData(bytes _blockchainActionId, bytes32 currency, uint amount, bytes accountId, address to) 
+
+    /** @dev set blockchain action data in struct 
+      * @param _blockchainActionId the blockchain action id
+      * @param currency the token currency symbol
+      * @param accountId the clientId
+      * @param to the blockchain address or smart contract address used in the transaction
+      * @param amount the amount of tokens in the transaction
+      */
+    function setBlockchainActionData(bytes32 _blockchainActionId, bytes32 currency, uint amount, bytes32 accountId, address to) 
         private 
     {
         require(actionStatus[_blockchainActionId] == true);
@@ -217,14 +234,15 @@ contract Populous is withAccessManager {
         blockchainActionIdData[_blockchainActionId].accountId = accountId;
         blockchainActionIdData[_blockchainActionId].to = to;
     }
+
     // CONSTANT METHODS
 
     /** @dev Get the blockchain invoice Id with a blockchain Action id
       * @param _blockchainActionId the blockchain action id
-      * @return bytes invoiceId
+      * @return bytes32 invoiceId
       */
-    function getBlockInvoiceId(bytes _blockchainActionId) public view returns (bytes) {
-        require(actionIdToInvoiceId[_blockchainActionId].length != 0);
+    function getBlockInvoiceId(bytes32 _blockchainActionId) public view returns (bytes32) {
+        require(actionIdToInvoiceId[_blockchainActionId] != 0x0);
         return actionIdToInvoiceId[_blockchainActionId];
     }
 
@@ -235,8 +253,8 @@ contract Populous is withAccessManager {
       * @return bytes32 accountId
       * @return address to
       */
-    function getBlockchainActionIdData(bytes _blockchainActionId) public view 
-    returns (bytes32, uint, bytes, address) 
+    function getBlockchainActionIdData(bytes32 _blockchainActionId) public view 
+    returns (bytes32, uint, bytes32, address) 
     {
         require(actionStatus[_blockchainActionId] == true);
 
@@ -250,7 +268,7 @@ contract Populous is withAccessManager {
       * @param _blockchainActionId the blockchain action id
       * @return bool actionStatus
       */
-    function getActionStatus(bytes _blockchainActionId) public view returns (bool) {
+    function getActionStatus(bytes32 _blockchainActionId) public view returns (bool) {
         return actionStatus[_blockchainActionId];
     }
 
@@ -274,7 +292,7 @@ contract Populous is withAccessManager {
       * @param clientId The client ID.
       * @return address The deposit address.
       */
-    function getDepositAddress(bytes clientId) public view returns (address) {
+    function getDepositAddress(bytes32 clientId) public view returns (address) {
         return depositAddress[clientId];
     }
 
@@ -284,7 +302,7 @@ contract Populous is withAccessManager {
       * @return dataHash
       * @return dataType
       */
-    function getRecord(bytes _invoiceId, uint documentIndex) public view 
+    function getRecord(bytes32 _invoiceId, uint documentIndex) public view 
     returns(bytes, bytes32) 
     {
         return (Blocks[_invoiceId].documents[documentIndex].dataHash,
@@ -296,7 +314,7 @@ contract Populous is withAccessManager {
       * @param _invoiceId The invoice ID.
       * @return total number of documents per crowdsale Id
       */
-    function getRecordDocumentIndexes(bytes _invoiceId) public view
+    function getRecordDocumentIndexes(bytes32 _invoiceId) public view
     returns(uint)
     {
         return Blocks[_invoiceId].documents.length;
