@@ -36,6 +36,13 @@ module.exports = {
             //gasPrice: 100000000000
             gasPrice: 100000000000
         },
+        "live": {
+            network_id: 1,
+            host: "35.176.131.242",
+            port: 8545,
+            before_timeout: 900000, //  <=== NEW
+            test_timeout: 900000, //  <=== NEW
+        },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
             network_id: "*",
