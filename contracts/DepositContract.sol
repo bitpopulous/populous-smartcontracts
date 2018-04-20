@@ -8,7 +8,7 @@ import "./withAccessManager.sol";
 /// @title DepositContract contract
 contract DepositContract is withAccessManager {
 
-    bytes clientId;// cliend ID.
+    bytes32 clientId;// client ID.
     address manager; // address of contract manager.
 
     // MODIFIERS
@@ -24,7 +24,7 @@ contract DepositContract is withAccessManager {
       * @dev The method also sets the manager to the msg.sender.
       * @param _clientId A string of fixed length representing the client ID.
       */
-    function DepositContract(bytes _clientId, address accessManager) public withAccessManager(accessManager) {
+    function DepositContract(bytes32 _clientId, address accessManager) public withAccessManager(accessManager) {
         clientId = _clientId;
     }
      

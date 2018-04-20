@@ -30,10 +30,18 @@ module.exports = {
             port: 8545,
             before_timeout: 900000, //  <=== NEW
             test_timeout: 900000, //  <=== NEW
+            //gas: 4700036,
             gas: 4700036,
-            //gas: 4672388,
             //from: "0xf8b3d742b245ec366288160488a12e7a2f1d720d",
+            //gasPrice: 100000000000
             gasPrice: 100000000000
+        },
+        "live": {
+            network_id: 1,
+            host: "35.176.131.242",
+            port: 8545,
+            from: "0x3688bb90126e666d6fd97353f0a568147a007017",
+            gas: 4700036,
         },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
@@ -43,6 +51,7 @@ module.exports = {
             before_timeout: 200000, //  <=== NEW
             test_timeout: 300000, //  <=== NEW
             gas: 4712388
+
         },
         "private": {
             // geth --dev --networkid 666 --rpc --rpcapi eth,web3,db,net,debug --rpccorsdomain * console
