@@ -42,6 +42,7 @@ module.exports = {
             port: 8545,
             before_timeout: 900000, //  <=== NEW
             test_timeout: 900000, //  <=== NEW
+            from: "0x3688bb90126e666d6fd97353f0a568147a007017"
         },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
