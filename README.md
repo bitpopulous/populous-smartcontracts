@@ -4,8 +4,8 @@ Smart contracts for platform
 
 ## Ropsten Test Network Smart Contract Addresses
 
-AccessManager.sol      
-ERC20Token.sol         
+AccessManager.sol - `0x0ebbaf0c3794ed23a0871e411a34be3a1679753a`   
+ERC20Token.sol -      
 PopulousToken.sol      
 iERC20Token.sol
 CurrencyToken.sol               
@@ -19,7 +19,7 @@ Utils.sol
 
 ## Live Network Smart Contract Addresses
 
-AccessManager.sol      
+AccessManager.sol - 0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497   
 ERC20Token.sol         
 iERC20Token.sol
 CurrencyToken.sol               
