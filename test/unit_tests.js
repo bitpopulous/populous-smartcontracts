@@ -6,7 +6,11 @@ var
 
 // to do - test createAddress, createCurrency, withdrawERC20 (old withdraw ppt), enableProvider, disableProvider, 
 // addProvider, addInvoice, withdrawBank (old import pokens), withdrawPoken, setBlockchainActionData, getBlockInvoiceId, getBlockchainActionIdData
-// getActionStatus, getCurrency, getCurrencySymbol, getDepositAddress
+// getActionStatus, getCurrency, getCurrencySymbol, getDepositAddress, getProviderStatus, getInvoice, getProvider
+// to do - test length of stored data = e.g., company code, 
+// to do - check lower case hex returned for company data e.g., company name
+// to do - create getInvoice and getProvider
+// to do - utils and populous deploy
 
 contract('Populous / CurrencyToken > ', function (accounts) {
     var

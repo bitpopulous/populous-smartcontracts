@@ -21,15 +21,15 @@ contract Populous is withAccessManager {
     event EventNewCrowdsaleBlock(bytes32 blockchainActionId, bytes32 invoiceId, uint sourceLength);
     event EventNewCrowdsaleSource(bytes32 invoiceId, uint sourceLength);
     // Bank events
-    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPokens(bytes32 blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency);
-    event EventWithdrawBank(bytes32 blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance);
+    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount, uint pptFee);
+    event EventWithdrawPokens(bytes32 blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency, uint pptFee);
+    event EventWithdrawBank(bytes32 blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance, uint pptFee);
     event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
     event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
-    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes invoiceCountryCode, bytes invoiceCompanyNumber, bytes invoiceCompanyName, bytes invoiceNumber);
-    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, string response);
-    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, string response);
+    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2, bytes32);
+    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2, bytes32);
     
     // FIELDS
     // currency symbol => currency erc20 contract address
@@ -44,6 +44,7 @@ contract Populous is withAccessManager {
         uint amount;
         bytes32 accountId;
         address to;
+        uint pptFee;
     }
     // blockchainActionId => actionData
     mapping(bytes32 => actionData) blockchainActionIdData;
@@ -62,6 +63,8 @@ contract Populous is withAccessManager {
         bytes32 companyName;
         bytes2 countryCode;
     }
+    // companyCode => companyNumber => providerId
+    mapping(bytes2 => mapping(bytes32 => bytes32)) providerData;
     // providedId => providerCompany
     mapping(bytes32 => providerCompany) providerCompanyData;
     // crowdsale invoiceDetails
@@ -78,7 +81,7 @@ contract Populous is withAccessManager {
     }
 
     // country code => company number => invoice number => invoice data
-    mapping(bytes => mapping(bytes => mapping(bytes => invoiceData))) invoices;
+    mapping(bytes2 => mapping(bytes32 => mapping(bytes32 => invoiceData))) invoices;
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
@@ -131,7 +134,137 @@ contract Populous is withAccessManager {
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, currencies[_tokenSymbol]);
     }
 
-    /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
+    /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the invoiceProvider
+      */
+    function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
+        public
+        onlyServer
+    {
+        require(actionStatus[_blockchainActionId] == false);
+        require(providerCompanyData[_userId].isEnabled == false);
+        providerCompanyData[_userId].isEnabled == true;
+        actionStatus[_blockchainActionId] = true;
+        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
+        EventProviderEnabled(_blockchainActionId, _userId, providerCompanyData[_userId].countryCode, providerCompanyData[_userId].companyNumber);
+    }
+
+    /** @dev Disable access granted to a previously added invoice provider
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the invoiceProvider
+      */
+    function disableProvider(bytes32 _blockchainActionId, bytes32 _userId)
+        public
+        onlyServer
+    {
+        require(actionStatus[_blockchainActionId] == false);
+        require(providerCompanyData[_userId].isEnabled == true);  
+        providerCompanyData[_userId].isEnabled == false;
+        actionStatus[_blockchainActionId] = true;
+        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
+        EventProviderDisabled(_blockchainActionId, _userId, providerCompanyData[_userId].countryCode, providerCompanyData[_userId].companyNumber);
+    }
+
+    /** @dev Add a new invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the provider
+      * @param _companyNumber the providers company number
+      * @param _companyName the providers company name
+      * @param _countryCode the providers country code
+      */
+    function addProvider(
+        bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
+        bytes32 _companyName, bytes2 _countryCode) 
+        public 
+        onlyServer
+    {   
+        require(actionStatus[_blockchainActionId] == false);
+        require(providerCompanyData[_userId].companyNumber == 0x0);
+        providerCompanyData[_userId].countryCode = _countryCode;
+        providerCompanyData[_userId].companyName = _companyName;
+        providerCompanyData[_userId].companyNumber = _companyNumber;
+        providerCompanyData[_userId].isEnabled = true;
+
+        providerData[_countryCode][_companyNumber] = _userId;
+        
+        actionStatus[_blockchainActionId] = true;
+        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
+        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
+    }
+
+    /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _providerUserId the user id of the provider
+      * @param _invoiceCompanyNumber the providers company number
+      * @param _invoiceCompanyName the providers company name
+      * @param _invoiceCountryCode the providers country code
+      * @param _invoiceNumber the invoice identification number
+      */
+    function addInvoice(
+        bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
+        bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
+        public
+    {
+        require(actionStatus[_blockchainActionId] == false);
+        require(providerCompanyData[_providerUserId].isEnabled == true);
+        
+        require(invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].providerUserId == 0x0);
+        // country code => company number => invoice number => invoice data
+        invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].providerUserId = _providerUserId;
+        invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].invoiceCompanyName = _invoiceCompanyName;
+        actionStatus[_blockchainActionId] = true;
+        setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0);
+        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
+    }
+
+    /** @dev Import an amount of pokens of a particular currency from an ethereum wallet/address to bank
+      * @param _blockchainActionId the blockchain action id
+      * @param accountId the account id of the client
+      * @param from the blockchain address to import pokens from
+      * @param currency the poken currency
+      */
+
+    function withdrawPoken(
+        bytes32 _blockchainActionId, bytes32 currency, uint amount,
+        address from, address to, bytes32 accountId, uint inCollateral,
+        address pptAddress, uint pptFee, address adminExternalWallet, bool toBank) 
+        public 
+        onlyServer 
+    {
+        require(actionStatus[_blockchainActionId] == false);
+        require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0 && currencies[currency] != 0x0);
+        DepositContract o = DepositContract(getDepositAddress(accountId));
+        // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
+        require((SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee) && (o.transfer(pptAddress, adminExternalWallet, pptFee) == true));
+        CurrencyToken cT = CurrencyToken(currencies[currency]);
+        if (toBank == true) {
+            //WITHDRAW BANK
+
+            // transfer pokens in specified amount and destroy
+            require((cT.balanceOf(from) >= amount) && (cT.destroyTokensFrom(amount, from) == true));
+            
+            actionStatus[_blockchainActionId] = true;
+            setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee); 
+            //emit event: Imported currency to system
+            EventWithdrawBank(_blockchainActionId, from, accountId, currency, amount, pptFee);
+        
+        } else {
+            // WITHDRAW POKEN        
+        
+            //credit ledger
+            cT.mintTokens(amount);
+            //credit account
+            cT.transfer(to, amount);
+
+            actionStatus[_blockchainActionId] = true;            
+            setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee); 
+            //emit event: Imported currency to system
+            EventWithdrawBank(_blockchainActionId, from, accountId, currency, amount, pptFee);
+        }   
+    }
+
+        /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
       * @param _blockchainActionId the blockchain action id
       * @param pptAddress the address of the PPT smart contract
       * @param accountId the account id of the client
@@ -154,153 +287,10 @@ contract Populous is withAccessManager {
         actionStatus[_blockchainActionId] = true;
         
         iERC20Token token = iERC20Token(pptAddress);
-        setBlockchainActionData(_blockchainActionId, token.symbol(), amount, accountId, to);
-        EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount);
+        setBlockchainActionData(_blockchainActionId, token.symbol(), amount, accountId, to, pptFee);
+        EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount, pptFee);
     }
 
-    /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the invoiceProvider
-      */
-    function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
-        public
-        onlyServer
-    {
-        require(actionStatus[_blockchainActionId] == false);
-        require(providerCompanyData[_userId].isEnabled == false);
-        providerCompanyData[_userId].isEnabled == true;
-        actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0);
-        EventProviderEnabled(_blockchainActionId, _userId, "enabled");
-    }
-
-    /** @dev Disable access granted to a previously added invoice provider
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the invoiceProvider
-      */
-    function disableProvider(bytes32 _blockchainActionId, bytes32 _userId)
-        public
-        onlyServer
-    {
-        require(actionStatus[_blockchainActionId] == false);
-        require(providerCompanyData[_userId].isEnabled == true);  
-        providerCompanyData[_userId].isEnabled == false;
-        actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0);
-        EventProviderDisabled(_blockchainActionId, _userId, "disabled");
-    }
-
-    /** @dev Add a new invoice provider to the platform  
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the provider
-      * @param _companyNumber the providers company number
-      * @param _companyName the providers company name
-      * @param _countryCode the providers country code
-      */
-    function addProvider(
-        bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
-        bytes32 _companyName, bytes2 _countryCode) 
-        public 
-        onlyServer
-    {   
-        require(actionStatus[_blockchainActionId] == false);
-        require(providerCompanyData[_userId].companyNumber == 0x0);
-        providerCompanyData[_userId].countryCode = _countryCode;
-        providerCompanyData[_userId].companyName = _companyName;
-        providerCompanyData[_userId].companyNumber = _companyNumber;
-        providerCompanyData[_userId].isEnabled = true;
-        actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0);
-        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
-    }
-
-    /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
-      * @param _blockchainActionId the blockchain action id
-      * @param _providerUserId the user id of the provider
-      * @param _invoiceCompanyNumber the providers company number
-      * @param _invoiceCompanyName the providers company name
-      * @param _invoiceCountryCode the providers country code
-      * @param _invoiceNumber the invoice identification number
-      */
-    function addInvoice(
-        bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
-        bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
-        public
-    {
-        require(actionStatus[_blockchainActionId] == false);
-        require(providerCompanyData[_providerUserId].isEnabled == true);
-        //change all bytes32 invoice information to lower case
-    
-        bytes memory invoiceCountryCode = bytes(Utils.lower(Utils.bytes2ToString(_invoiceCountryCode)));
-        bytes memory invoiceCompanyNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyNumber)));
-        bytes memory invoiceCompanyName = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyName)));
-        bytes memory invoiceNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceNumber)));
-
-        require(invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].providerUserId == 0x0);
-        // country code => company number => invoice number => invoice data
-        invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].providerUserId = _providerUserId;
-        invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].invoiceCompanyName = _invoiceCompanyName;
-        actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0);
-        EventNewInvoice(_blockchainActionId, _providerUserId, invoiceCountryCode, invoiceCompanyNumber, invoiceCompanyName, invoiceNumber);
-    }
-
-    /** @dev Import all pokens of a particular currency from an ethereum wallet/address 
-      * @param _blockchainActionId the blockchain action id
-      * @param accountId the account id of the client
-      * @param from the blockchain address to import pokens from
-      * @param currency the poken currency
-      */
-    function withdrawBank(bytes32 _blockchainActionId, bytes32 currency, address from, bytes32 accountId) public onlyServer {
-        require(actionStatus[_blockchainActionId] == false);
-        CurrencyToken CT = CurrencyToken(currencies[currency]);
-        //check balance.
-        uint256 balance = CT.balanceOf(from);
-        //balance is more than 0, and balance has been destroyed.
-        require(CT.balanceOf(from) > 0 && CT.destroyTokensFrom(balance, from) == true);
-        
-        actionStatus[_blockchainActionId] = true;
-
-        setBlockchainActionData(_blockchainActionId, currency, balance, accountId, from); 
-
-        //emit event: Imported currency to system
-        EventWithdrawBank(_blockchainActionId, from, accountId, currency, balance);
-    }
-
-    /** @dev Withdraw an amount of pokens to an ethereum wallet/address
-      * @dev This function will mint pokens of a particular currency and transfer to a specified wallet address
-      * @param _blockchainActionId the blockchain action id
-      * @param accountId the account id of the client
-      * @param to the blockchain address to send pokens to
-      * @param amount the amount of pokens to transfer
-      * @param currency the poken currency
-      */
-    function withdrawPoken(
-        bytes32 _blockchainActionId, address pptAddress, bytes32 accountId, address to, 
-        uint amount, bytes32 currency, uint inCollateral, uint pptFee, address adminExternalWallet) 
-        public 
-        onlyServer 
-    {
-        require(actionStatus[_blockchainActionId] == false);
-        require(currencies[currency] != 0x0);
-
-        require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
-        DepositContract o = DepositContract(getDepositAddress(accountId));
-        uint pptBalance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
-        require(pptBalance >= (SafeMath.safeAdd(amount, pptFee)) && (o.transfer(pptAddress, to, amount) == true) && (o.transfer(pptAddress, adminExternalWallet, pptFee) == true));        
-        
-        CurrencyToken cT = CurrencyToken(currencies[currency]);
-        //credit ledger
-        cT.mintTokens(amount);
-        //credit account
-        cT.transfer(to, amount);
-        
-        actionStatus[_blockchainActionId] = true;
-        
-        setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to);
-        //emit event: Imported currency to system
-        EventWithdrawPokens(_blockchainActionId, accountId, to, amount, currency);
-    }
 
     /** @dev set blockchain action data in struct 
       * @param _blockchainActionId the blockchain action id
@@ -309,7 +299,9 @@ contract Populous is withAccessManager {
       * @param to the blockchain address or smart contract address used in the transaction
       * @param amount the amount of tokens in the transaction
       */
-    function setBlockchainActionData(bytes32 _blockchainActionId, bytes32 currency, uint amount, bytes32 accountId, address to) 
+    function setBlockchainActionData(
+        bytes32 _blockchainActionId, bytes32 currency, 
+        uint amount, bytes32 accountId, address to, uint pptFee) 
         private 
     {
         require(actionStatus[_blockchainActionId] == true);
@@ -317,18 +309,10 @@ contract Populous is withAccessManager {
         blockchainActionIdData[_blockchainActionId].amount = amount;
         blockchainActionIdData[_blockchainActionId].accountId = accountId;
         blockchainActionIdData[_blockchainActionId].to = to;
+        blockchainActionIdData[_blockchainActionId].pptFee = pptFee;
     }
 
     // CONSTANT METHODS
-
-    /** @dev Get the blockchain invoice Id with a blockchain Action id
-      * @param _blockchainActionId the blockchain action id
-      * @return bytes32 invoiceId
-      */
-    function getBlockInvoiceId(bytes32 _blockchainActionId) public view returns (bytes32) {
-        require(actionIdToInvoiceId[_blockchainActionId] != 0x0);
-        return actionIdToInvoiceId[_blockchainActionId];
-    }
 
     /** @dev Get the blockchain action Id Data for a blockchain Action id
       * @param _blockchainActionId the blockchain action id
@@ -338,7 +322,7 @@ contract Populous is withAccessManager {
       * @return address to
       */
     function getBlockchainActionIdData(bytes32 _blockchainActionId) public view 
-    returns (bytes32, uint, bytes32, address) 
+    returns (bytes32 _currency, uint _amount, bytes32 _accountId, address _to) 
     {
         require(actionStatus[_blockchainActionId] == true);
 
@@ -352,7 +336,7 @@ contract Populous is withAccessManager {
       * @param _blockchainActionId the blockchain action id
       * @return bool actionStatus
       */
-    function getActionStatus(bytes32 _blockchainActionId) public view returns (bool) {
+    function getActionStatus(bytes32 _blockchainActionId) public view returns (bool _blockchainActionStatus) {
         return actionStatus[_blockchainActionId];
     }
 
@@ -360,7 +344,7 @@ contract Populous is withAccessManager {
       * @param currency The currency.
       * @return address The currency address.
       */
-    function getCurrency(bytes32 currency) public view returns (address) {
+    function getCurrency(bytes32 currency) public view returns (address _currencyAddress) {
         return currencies[currency];
     }
 
@@ -368,7 +352,7 @@ contract Populous is withAccessManager {
       * @param currency The currency.
       * @return bytes32 The currency sybmol, e.g., GBP.
       */
-    function getCurrencySymbol(address currency) public view returns (bytes32) {
+    function getCurrencySymbol(address currency) public view returns (bytes32 currencySymbol) {
         return currenciesSymbols[currency];
     }
 
@@ -376,8 +360,46 @@ contract Populous is withAccessManager {
       * @param clientId The client ID.
       * @return address The deposit address.
       */
-    function getDepositAddress(bytes32 clientId) public view returns (address) {
+    function getDepositAddress(bytes32 clientId) public view returns (address _depositAddress) {
         return depositAddress[clientId];
     }
 
+    function getInvoice(bytes2 _invoiceCountryCode, bytes32 _invoiceCompanyNumber, bytes32 _invoiceNumber) 
+        public 
+        view 
+        returns (bytes32 providerUserId, bytes32 invoiceCompanyName) 
+    {   
+        bytes32 _providerUserId = invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].providerUserId;
+        bytes32 _invoiceCompanyName = invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].invoiceCompanyName;
+        require(_providerUserId != 0x0 && _invoiceCompanyName != 0x0);
+
+        return (_providerUserId, _invoiceCompanyName);
+    }
+
+
+    function getProviderByCountryCodeCompanyNumber(bytes2 _providerCountryCode, bytes32 _providerCompanyNumber) 
+        public 
+        view 
+        returns (bytes32 providerId, bytes32 companyName, bool isEnabled) 
+    {
+        bytes32 providerUserId = providerData[_providerCountryCode][_providerCompanyNumber];
+
+        return (providerUserId, 
+        providerCompanyData[providerUserId].companyName, 
+        providerCompanyData[providerUserId].isEnabled);
+    }
+
+    function getProviderByUserId(bytes32 _providerUserId) public view 
+        returns (bytes2 countryCode, bytes32 companyName, bytes32 companyNumber, bool isEnabled) 
+    {
+        return (providerCompanyData[_providerUserId].countryCode,
+        providerCompanyData[_providerUserId].companyName,
+        providerCompanyData[_providerUserId].companyNumber,
+        providerCompanyData[_providerUserId].isEnabled);
+    }
+    
+    function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
+        return providerCompanyData[_userId].isEnabled;
+    }
+    
 }
