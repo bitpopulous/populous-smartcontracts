@@ -4,7 +4,8 @@ var
 
 module.exports = function(deployer) {
     var AM;
-
+    // to do - re-deploy populous and update changePopulous in AccessManager and test
+    // comment out other deployments and re-deploy only libs and populous
     deployer.then(function() {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;

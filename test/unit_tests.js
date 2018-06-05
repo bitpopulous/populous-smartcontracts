@@ -4,7 +4,7 @@ var
     PopulousToken = artifacts.require("PopulousToken"),
     DepositContract = artifacts.require("DepositContract");
 
-
+// to do - test 
 contract('Populous / CurrencyToken > ', function (accounts) {
     var
         config = require('../include/test/config.js'),
