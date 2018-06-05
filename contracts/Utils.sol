@@ -9,7 +9,7 @@ library Utils {
      * @param _bytes the hex value to convert to string
      * @return string The resulting string from converting bytes
      */
-    function bytes32ToString(bytes32 _bytes) internal returns(string) { 
+    function bytes32ToString(bytes32 _bytes) internal pure returns(string) { 
         bytes memory bytesArray = new bytes(_bytes.length);
        
         for (uint256 i; i < _bytes.length; i++) {
@@ -24,7 +24,7 @@ library Utils {
      * @param _bytes the hex value to convert to string
      * @return string The resulting string from converting bytes
      */
-    function bytes2ToString(bytes2 _bytes) internal returns(string) { 
+    function bytes2ToString(bytes2 _bytes) internal pure returns(string) { 
         bytes memory bytesArray = new bytes(_bytes.length);
        
         for (uint256 i; i < _bytes.length; i++) {
@@ -41,6 +41,7 @@ library Utils {
      */
     function concat(string _base, string _value)
         internal
+        pure
         returns (string) {
         bytes memory _baseBytes = bytes(_base);
         bytes memory _valueBytes = bytes(_value);
@@ -80,6 +81,7 @@ library Utils {
      */
     function indexOf(string _base, string _value)
         internal
+        pure
         returns (int) {
         return _indexOf(_base, _value, 0);
     }
@@ -102,6 +104,7 @@ library Utils {
      */
     function _indexOf(string _base, string _value, uint _offset)
         internal
+        pure
         returns (int) {
         bytes memory _baseBytes = bytes(_base);
         bytes memory _valueBytes = bytes(_value);
@@ -128,6 +131,7 @@ library Utils {
      */
     function length(string _base)
         internal
+        pure
         returns (uint) {
         bytes memory _baseBytes = bytes(_base);
         return _baseBytes.length;
@@ -146,6 +150,7 @@ library Utils {
      */
     function substring(string _base, int _length)
         internal
+        pure
         returns (string) {
         return _substring(_base, _length, 0);
     }
@@ -165,6 +170,7 @@ library Utils {
      */
     function _substring(string _base, int _length, int _offset)
         internal
+        pure
         returns (string) {
         bytes memory _baseBytes = bytes(_base);
 
@@ -194,6 +200,7 @@ library Utils {
      */
     function compareTo(string _base, string _value) 
         internal 
+        pure
         returns (bool) {
         bytes memory _baseBytes = bytes(_base);
         bytes memory _valueBytes = bytes(_value);
@@ -226,6 +233,7 @@ library Utils {
      */
     function compareToIgnoreCase(string _base, string _value)
         internal
+        pure
         returns (bool) {
         bytes memory _baseBytes = bytes(_base);
         bytes memory _valueBytes = bytes(_value);
@@ -255,7 +263,8 @@ library Utils {
      * @return string 
      */
     function upper(string _base) 
-        internal 
+        internal
+        pure 
         returns (string) {
         bytes memory _baseBytes = bytes(_base);
         for (uint i = 0; i < _baseBytes.length; i++) {
@@ -276,6 +285,7 @@ library Utils {
      */
     function lower(string _base) 
         internal 
+        pure
         returns (string) {
         bytes memory _baseBytes = bytes(_base);
         for (uint i = 0; i < _baseBytes.length; i++) {
@@ -296,7 +306,7 @@ library Utils {
      */
     function _upper(bytes1 _b1)
         private
-        constant
+        pure
         returns (bytes1) {
 
         if (_b1 >= 0x61 && _b1 <= 0x7A) {
@@ -318,7 +328,7 @@ library Utils {
      */
     function _lower(bytes1 _b1)
         private
-        constant
+        pure
         returns (bytes1) {
 
         if (_b1 >= 0x41 && _b1 <= 0x5A) {

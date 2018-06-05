@@ -4,7 +4,10 @@ var
     PopulousToken = artifacts.require("PopulousToken"),
     DepositContract = artifacts.require("DepositContract");
 
-// to do - test 
+// to do - test createAddress, createCurrency, withdrawERC20 (old withdraw ppt), enableProvider, disableProvider, 
+// addProvider, addInvoice, withdrawBank (old import pokens), withdrawPoken, setBlockchainActionData, getBlockInvoiceId, getBlockchainActionIdData
+// getActionStatus, getCurrency, getCurrencySymbol, getDepositAddress
+
 contract('Populous / CurrencyToken > ', function (accounts) {
     var
         config = require('../include/test/config.js'),
