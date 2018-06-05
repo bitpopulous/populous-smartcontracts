@@ -11,9 +11,9 @@ library SafeMath {
     * @return uint The expected result.
     */
     function safeMul(uint a, uint b) internal pure returns (uint) {
-      uint c = a * b;
-      assert(a == 0 || c / a == b);
-      return c;
+        uint c = a * b;
+        assert(a == 0 || c / a == b);
+        return c;
     }
 
   /** @dev Safely subtracts one number from another
@@ -23,8 +23,8 @@ library SafeMath {
     * @return uint The expected result.
     */
     function safeSub(uint a, uint b) internal pure returns (uint) {
-      assert(b <= a);
-      return a - b;
+        assert(b <= a);
+        return a - b;
     }
 
   /** @dev Safely adds two unsigned/non-negative integers.
@@ -34,9 +34,9 @@ library SafeMath {
     * @return uint The expected result.
     */
     function safeAdd(uint a, uint b) internal pure returns (uint) {
-      uint c = a + b;
-      assert(c>=a && c>=b);
-      return c;
+        uint c = a + b;
+        assert(c>=a && c>=b);
+        return c;
     }
 
     function div(uint256 a, uint256 b) internal pure returns (uint256) {

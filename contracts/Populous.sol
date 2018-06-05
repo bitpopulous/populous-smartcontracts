@@ -17,7 +17,6 @@ import "./Utils.sol";
 /// @title Populous contract
 contract Populous is withAccessManager {
 
-
     // EVENTS
     event EventNewCrowdsaleBlock(bytes32 blockchainActionId, bytes32 invoiceId, uint sourceLength);
     event EventNewCrowdsaleSource(bytes32 invoiceId, uint sourceLength);
@@ -33,11 +32,13 @@ contract Populous is withAccessManager {
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, string response);
     
     // FIELDS
+    // currency symbol => currency erc20 contract address
     mapping(bytes32 => address) currencies;
+    // currency address => currency symbol
     mapping(address => bytes32) currenciesSymbols;
     // blockchainActionId => boolean 
     mapping(bytes32 => bool) actionStatus;
-
+    // blockchainActionData
     struct actionData {
         bytes32 currency;
         uint amount;
@@ -54,7 +55,7 @@ contract Populous is withAccessManager {
 
     //actionId => invoiceId
     mapping(bytes32 => bytes32) actionIdToInvoiceId;
-    
+    // invoice provider company data
     struct providerCompany {
         bool isEnabled;
         bytes32 companyNumber;
@@ -63,15 +64,14 @@ contract Populous is withAccessManager {
     }
     // providedId => providerCompany
     mapping(bytes32 => providerCompany) providerCompanyData;
-
-
+    // crowdsale invoiceDetails
     struct _invoiceDetails {
         bytes2 invoiceCountryCode;
         bytes32 invoiceCompanyNumber;
         bytes32 invoiceCompanyName;
         bytes32 invoiceNumber;
     }
-
+    // crowdsale invoiceData
     struct invoiceData {
         bytes32 providerUserId;
         bytes32 invoiceCompanyName;
@@ -135,7 +135,8 @@ contract Populous is withAccessManager {
       * @param _blockchainActionId the blockchain action id
       * @param pptAddress the address of the PPT smart contract
       * @param accountId the account id of the client
-      * @param depositContract the address of the deposit smart contract
+      * @param pptFee the amount of fees to pay in PPT tokens
+      * @param adminExternalWallet the platform admin wallet address to pay the fees to 
       * @param to the blockchain address to withdraw and transfer the pokens to
       * @param inCollateral the amount of pokens withheld by the platform
       */    
@@ -157,6 +158,13 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount);
     }
 
+    /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the invoiceProvider
+      * @param to the blockchain address to send pokens to
+      * @param amount the amount of pokens to transfer
+      * @param currency the poken currency
+      */
     function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
         public
         onlyServer
@@ -209,10 +217,10 @@ contract Populous is withAccessManager {
         require(providerCompanyData[_providerUserId].isEnabled == true);
         //change all bytes32 invoice information to lower case
     
-          bytes memory invoiceCountryCode = bytes(Utils.lower(Utils.bytes2ToString(_invoiceCountryCode)));
-          bytes memory invoiceCompanyNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyNumber)));
-          bytes memory invoiceCompanyName = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyName)));
-          bytes memory invoiceNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceNumber)));
+        bytes memory invoiceCountryCode = bytes(Utils.lower(Utils.bytes2ToString(_invoiceCountryCode)));
+        bytes memory invoiceCompanyNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyNumber)));
+        bytes memory invoiceCompanyName = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyName)));
+        bytes memory invoiceNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceNumber)));
 
         require(invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].providerUserId == 0x0);
         // country code => company number => invoice number => invoice data
@@ -224,6 +232,12 @@ contract Populous is withAccessManager {
     }
 
 
+    /** @dev Import all pokens of a particular currency from an ethereum wallet/address 
+      * @param _blockchainActionId the blockchain action id
+      * @param accountId the account id of the client
+      * @param from the blockchain address to import pokens from
+      * @param currency the poken currency
+      */
     function withdrawBank(bytes32 _blockchainActionId, bytes32 currency, address from, bytes32 accountId) public onlyServer {
         require(actionStatus[_blockchainActionId] == false);
         CurrencyToken CT = CurrencyToken(currencies[currency]);
@@ -240,7 +254,8 @@ contract Populous is withAccessManager {
         EventWithdrawBank(_blockchainActionId, from, accountId, currency, balance);
     }
 
-    /** @dev Withdraw an amount of pokens to an ethereum wallet/address 
+    /** @dev Withdraw an amount of pokens to an ethereum wallet/address
+      * @dev This function will mint pokens of a particular currency and transfer to a specified wallet address
       * @param _blockchainActionId the blockchain action id
       * @param accountId the account id of the client
       * @param to the blockchain address to send pokens to

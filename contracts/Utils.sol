@@ -3,34 +3,42 @@ pragma solidity ^0.4.17;
 /// @title Library used when comparing pairs of strings for the condiiton of equality
 library Utils {
 
-        /**
-     * Concat (High gas cost)
+    /**
+     * Converts a bytes32 hex to strings
      * 
-     * Appends two strings together and returns a new value
-     * 
-     * @param _base When being used for a data type this is the extended object
-     *              otherwise this is the string which will be the concatenated
-     *              prefix
-     * @param _value The value to be the concatenated suffix
-     * @return string The resulting string from combinging the base and value
+     * @param _bytes the hex value to convert to string
+     * @return string The resulting string from converting bytes
      */
-     function bytes32ToString(bytes32 _bytes) internal returns(string) { 
-         bytes memory bytesArray = new bytes(_bytes.length);
+    function bytes32ToString(bytes32 _bytes) internal returns(string) { 
+        bytes memory bytesArray = new bytes(_bytes.length);
        
-         for (uint256 i; i < _bytes.length; i++) {
-            bytesArray[i] = _bytes[i];
-            }
-        return string(bytesArray);
-    }
-    function bytes2ToString(bytes2 _bytes) internal returns(string) { 
-         bytes memory bytesArray = new bytes(_bytes.length);
-       
-         for (uint256 i; i < _bytes.length; i++) {
+        for (uint256 i; i < _bytes.length; i++) {
             bytesArray[i] = _bytes[i];
             }
         return string(bytesArray);
     }
 
+    /**
+     * Converts a bytes2 hex to strings
+     * 
+     * @param _bytes the hex value to convert to string
+     * @return string The resulting string from converting bytes
+     */
+    function bytes2ToString(bytes2 _bytes) internal returns(string) { 
+        bytes memory bytesArray = new bytes(_bytes.length);
+       
+        for (uint256 i; i < _bytes.length; i++) {
+            bytesArray[i] = _bytes[i];
+            }
+        return string(bytesArray);
+    }
+
+    /**
+     * Contactenates two strings into one string
+     * @param _base the first string value
+     * @param _value the second string value
+     * @return string The resulting string from converting bytes
+     */
     function concat(string _base, string _value)
         internal
         returns (string) {
@@ -167,7 +175,7 @@ library Utils {
 
         uint j = 0;
         for(uint i = uint(_offset); i < uint(_offset+_length); i++) {
-          _tmpBytes[j++] = _baseBytes[i];
+            _tmpBytes[j++] = _baseBytes[i];
         }
 
         return string(_tmpBytes);
