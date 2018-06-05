@@ -1,3 +1,5 @@
+pragma solidity ^0.4.17;
+
 /**
 This is the core module of the system. Currently it holds the code of
 the Bank and crowdsale modules to avoid external calls and higher gas costs.
@@ -5,7 +7,6 @@ It might be a good idea in the future to split the code, separate Bank
 and crowdsale modules into external files and have the core interact with them
 with addresses and interfaces. 
 */
-pragma solidity ^0.4.17;
 
 import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
@@ -27,7 +28,7 @@ contract Populous is withAccessManager {
     event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
     event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
-    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes invoiceCountryCode, bytes invoiceCompanyNumber, bytes invoiceCompanyName, bytes invoiceNumber);
     event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, string response);
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, string response);
     
@@ -77,7 +78,7 @@ contract Populous is withAccessManager {
     }
 
     // country code => company number => invoice number => invoice data
-    mapping(bytes2 => mapping(bytes32 => mapping(bytes32 => invoiceData))) invoices;
+    mapping(bytes => mapping(bytes => mapping(bytes => invoiceData))) invoices;
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
@@ -207,20 +208,19 @@ contract Populous is withAccessManager {
         require(actionStatus[_blockchainActionId] == false);
         require(providerCompanyData[_providerUserId].isEnabled == true);
         //change all bytes32 invoice information to lower case
-        string storage invoiceCountryCode = string(_invoiceCountryCode);
-        _invoiceDetails memory _invoiceInfo = _invoiceDetails(
-            Utils.lower(string(_invoiceCountryCode)), 
-            Utils.lower(string(_invoiceCompanyNumber)), 
-            Utils.lower(string(_invoiceCompanyName)), 
-            Utils.lower(string(_invoiceNumber)));
+    
+          bytes memory invoiceCountryCode = bytes(Utils.lower(Utils.bytes2ToString(_invoiceCountryCode)));
+          bytes memory invoiceCompanyNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyNumber)));
+          bytes memory invoiceCompanyName = bytes(Utils.lower(Utils.bytes32ToString(_invoiceCompanyName)));
+          bytes memory invoiceNumber = bytes(Utils.lower(Utils.bytes32ToString(_invoiceNumber)));
 
-        require(invoices[_invoiceInfo.invoiceCountryCode][_invoiceInfo.invoiceCompanyNumber][_invoiceInfo.invoiceNumber].providerUserId == 0x0);
+        require(invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].providerUserId == 0x0);
         // country code => company number => invoice number => invoice data
-        invoices[_invoiceInfo.invoiceCountryCode][_invoiceInfo.invoiceCompanyNumber][_invoiceInfo.invoiceNumber].providerUserId = _providerUserId;
-        invoices[_invoiceInfo.invoiceCountryCode][_invoiceInfo.invoiceCompanyNumber][_invoiceInfo.invoiceNumber].invoiceCompanyName = _invoiceCompanyName;
+        invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].providerUserId = _providerUserId;
+        invoices[invoiceCountryCode][invoiceCompanyNumber][invoiceNumber].invoiceCompanyName = _invoiceCompanyName;
         actionStatus[_blockchainActionId] = true;
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0);
-        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceInfo.invoiceCountryCode, _invoiceInfo.invoiceCompanyNumber, _invoiceInfo.invoiceCompanyName, _invoiceInfo.invoiceNumber);
+        EventNewInvoice(_blockchainActionId, _providerUserId, invoiceCountryCode, invoiceCompanyNumber, invoiceCompanyName, invoiceNumber);
     }
 
 

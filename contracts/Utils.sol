@@ -14,6 +14,23 @@ library Utils {
      * @param _value The value to be the concatenated suffix
      * @return string The resulting string from combinging the base and value
      */
+     function bytes32ToString(bytes32 _bytes) internal returns(string) { 
+         bytes memory bytesArray = new bytes(_bytes.length);
+       
+         for (uint256 i; i < _bytes.length; i++) {
+            bytesArray[i] = _bytes[i];
+            }
+        return string(bytesArray);
+    }
+    function bytes2ToString(bytes2 _bytes) internal returns(string) { 
+         bytes memory bytesArray = new bytes(_bytes.length);
+       
+         for (uint256 i; i < _bytes.length; i++) {
+            bytesArray[i] = _bytes[i];
+            }
+        return string(bytesArray);
+    }
+
     function concat(string _base, string _value)
         internal
         returns (string) {
