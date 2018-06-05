@@ -161,9 +161,6 @@ contract Populous is withAccessManager {
     /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
       * @param _blockchainActionId the blockchain action id
       * @param _userId the user id of the invoiceProvider
-      * @param to the blockchain address to send pokens to
-      * @param amount the amount of pokens to transfer
-      * @param currency the poken currency
       */
     function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
         public
@@ -177,6 +174,10 @@ contract Populous is withAccessManager {
         EventProviderEnabled(_blockchainActionId, _userId, "enabled");
     }
 
+    /** @dev Disable access granted to a previously added invoice provider
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the invoiceProvider
+      */
     function disableProvider(bytes32 _blockchainActionId, bytes32 _userId)
         public
         onlyServer
@@ -189,6 +190,13 @@ contract Populous is withAccessManager {
         EventProviderDisabled(_blockchainActionId, _userId, "disabled");
     }
 
+    /** @dev Add a new invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the provider
+      * @param _companyNumber the providers company number
+      * @param _companyName the providers company name
+      * @param _countryCode the providers country code
+      */
     function addProvider(
         bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
         bytes32 _companyName, bytes2 _countryCode) 
@@ -206,8 +214,14 @@ contract Populous is withAccessManager {
         EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
     }
 
-    
-
+    /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _providerUserId the user id of the provider
+      * @param _invoiceCompanyNumber the providers company number
+      * @param _invoiceCompanyName the providers company name
+      * @param _invoiceCountryCode the providers country code
+      * @param _invoiceNumber the invoice identification number
+      */
     function addInvoice(
         bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
         bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
@@ -230,7 +244,6 @@ contract Populous is withAccessManager {
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0);
         EventNewInvoice(_blockchainActionId, _providerUserId, invoiceCountryCode, invoiceCompanyNumber, invoiceCompanyName, invoiceNumber);
     }
-
 
     /** @dev Import all pokens of a particular currency from an ethereum wallet/address 
       * @param _blockchainActionId the blockchain action id
@@ -276,7 +289,6 @@ contract Populous is withAccessManager {
         uint pptBalance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
         require(pptBalance >= (SafeMath.safeAdd(amount, pptFee)) && (o.transfer(pptAddress, to, amount) == true) && (o.transfer(pptAddress, adminExternalWallet, pptFee) == true));        
         
-
         CurrencyToken cT = CurrencyToken(currencies[currency]);
         //credit ledger
         cT.mintTokens(amount);
@@ -289,7 +301,6 @@ contract Populous is withAccessManager {
         //emit event: Imported currency to system
         EventWithdrawPokens(_blockchainActionId, accountId, to, amount, currency);
     }
-
 
     /** @dev set blockchain action data in struct 
       * @param _blockchainActionId the blockchain action id
