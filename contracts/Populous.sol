@@ -30,8 +30,8 @@ contract Populous is withAccessManager {
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
     event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
-    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2, bytes32);
-    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2, bytes32);
+    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
+    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
     // FIELDS
     // currency symbol => currency erc20 contract address
@@ -146,7 +146,7 @@ contract Populous is withAccessManager {
     {
         require(actionStatus[_blockchainActionId] == false);
         require(providerCompanyData[_userId].isEnabled == false);
-        providerCompanyData[_userId].isEnabled == true;
+        providerCompanyData[_userId].isEnabled = true;
         actionStatus[_blockchainActionId] = true;
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
         EventProviderEnabled(_blockchainActionId, _userId, providerCompanyData[_userId].countryCode, providerCompanyData[_userId].companyNumber);
@@ -162,7 +162,7 @@ contract Populous is withAccessManager {
     {
         require(actionStatus[_blockchainActionId] == false);
         require(providerCompanyData[_userId].isEnabled == true);  
-        providerCompanyData[_userId].isEnabled == false;
+        providerCompanyData[_userId].isEnabled = false;
         actionStatus[_blockchainActionId] = true;
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
         EventProviderDisabled(_blockchainActionId, _userId, providerCompanyData[_userId].countryCode, providerCompanyData[_userId].companyNumber);

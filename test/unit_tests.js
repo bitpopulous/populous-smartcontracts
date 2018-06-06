@@ -4,7 +4,7 @@ var
     PopulousToken = artifacts.require("PopulousToken"),
     DepositContract = artifacts.require("DepositContract");
 
-contract('Populous > ', function (accounts) {
+contract('Populous/Currency Token/ Deposit > ', function (accounts) {
     var
         config = require('../include/test/config.js'),
         commonTests = require('../include/test/common.js'),
@@ -188,11 +188,12 @@ contract('Populous > ', function (accounts) {
                 assert.equal(actionData[1], withdrawalAmount, "Failed getting correct amount");
                 assert.equal(web3.toUtf8(actionData[2]), config.INVESTOR1_ACC, "Failed getting correct action id");
                 assert.equal(actionData[3], externalAddress, "Failed getting correct address to/from");
+                // ppt balance of deposit contract = deposit amount - pptfee
                 done();
             });
         });
 
-        it("should import USD tokens of config.INVESTOR1_WALLET to an internal account Id, e.g., A", function (done) {
+        it("should withdraw USD tokens of config.INVESTOR1_WALLET to internal platform/bank and destroy", function (done) {
             assert(global.currencies.USD, "Currency required.");
             var CT = CurrencyToken.at(global.currencies.USD);
             var _blockchainActionId = "import1"
@@ -214,11 +215,12 @@ contract('Populous > ', function (accounts) {
             }).then(function (value) {
                 assert.equal(value.toNumber(), 0, "Failed importing tokens");
                 done();
+                // ppt balance of deposit contract = deposit amount - (pptfee * 2)
+
             });
         });
 
-
-        it("should fail create withdraw PPT when balance is less than amount + fee + collateral", function (done) {
+        it("should fail create withdraw PPT when balance minus collateral is less than amount + fee", function (done) {
             var isCaught = false;
             var depositAmount = 102;
             var balances = 50;
@@ -283,6 +285,7 @@ contract('Populous > ', function (accounts) {
                 // check balance of admin wallet to see if pptFee has been transferred
                 assert.equal(admin_ppt_balance.toNumber(), pptFee * 3, "failed withdrawing PPT");
                 done();
+                // ppt balance of deposit contract = deposit amount - (pptfee * 3) - toWithdraw
             });
         });
 
@@ -299,40 +302,43 @@ contract('Populous > ', function (accounts) {
             var _companyName = "populous test provider";
             var _countryCode = "44";
     
-            P.addProvider(_providerBlockchainActionId, _providerUserId, _companyNumber, _companyName, _countryCode).then(function(){
+            P.addProvider(_providerBlockchainActionId, _providerUserId, web3.fromAscii(_companyNumber), _companyName, web3.fromAscii(_countryCode)).then(function(){
                 return P.getProviderByUserId(_providerUserId);
             }).then(function(providerInfo){
-                assert.equal(web3.toUtf8(providerInfo[0]), _countryCode, "failed getting provider country code");
+                assert.equal(web3.toAscii(providerInfo[0]), _countryCode, "failed getting provider country code");
                 assert.equal(web3.toUtf8(providerInfo[1]), _companyName, "failed getting provider country code");
+                // ascii failing, utf8 passing
+                // console.log("comp utf", web3.toUtf8(providerInfo[2]));
                 assert.equal(web3.toUtf8(providerInfo[2]), _companyNumber, "failed getting provider country code");
-                assert.equal(web3.toUtf8(providerInfo[3]), true, "failed getting provider enabled status");
+                assert.equal(providerInfo[3], true, "failed getting provider enabled status");
 
-                return P.getProviderByCountryCodeCompanyNumber();
+                return P.getProviderByCountryCodeCompanyNumber(web3.fromAscii(_countryCode), web3.fromAscii(_companyNumber));
             }).then(function(providerInfowithCode){
-                assert.equal(web3.toUtf8(providerInfo[0]), _providerUserId, "failed getting provider user Id");
-                assert.equal(web3.toUtf8(providerInfo[1]), _companyName, "failed getting provider company name");
-                assert.equal(web3.toUtf8(providerInfo[2]), true, "failed getting provider enabled status");
-                return P.getProviderStatus();
+                assert.equal(web3.toUtf8(providerInfowithCode[0]), _providerUserId, "failed getting provider user Id");
+                assert.equal(web3.toUtf8(providerInfowithCode[1]), _companyName, "failed getting provider company name");
+                assert.equal(providerInfowithCode[2], true, "failed getting provider enabled status");
+                return P.getProviderStatus(_providerUserId);
             }).then(function(providerStatus){
                 assert.equal(true, providerStatus, "failed disabling provider");
                 done();
             });
         });
-            
-    
+
+           
         it("should disable provider and get the enabled status of an invoice provider", function (done) {
+
             var _blockchainActionId = "disableProvider1";
             var _providerUserId = "providerA";
-
-            P.disableProvider(_blockchainActionId, _providerUserId).then(function(){
-                P.getProviderStatus(_providerUserId);
-            }).then(function(providerStatus){
-                assert.equal(false, providerStatus, "failed disabling provider");
+            P.disableProvider(_blockchainActionId, _providerUserId).then(function(_providerStatu){
+                // disable provider event log
+                //console.log("disable log", _providerStatu.logs[0]);
+                return P.getProviderStatus(_providerUserId);
+            }).then(function(_providerStatus){
+                assert.equal(_providerStatus, false, "failed disabling provider");
                 done();
-            })
-
+            });
         });
-
+        
         it("should fail create invoice for disabled invoice provider user Id", function (done) {
             var isCaught = false;
 
@@ -344,7 +350,29 @@ contract('Populous > ', function (accounts) {
             var _invoiceCompanyName = "populous test provider";
             var _invoiceNumber = "#223";
 
-            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber)
+            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, web3.fromAscii(_invoiceCountryCode), web3.fromAscii(_invoiceCompanyNumber), _invoiceCompanyName, _invoiceNumber)
+                .catch(function () { isCaught = true; }
+                ).then(function () {
+                    if (isCaught === false) {
+                        throw new Error('Not allowed invoice creation passed !!!');
+                    }
+                    done();
+                });
+        });
+
+
+        it("should fail create invoice with non-existing invoice provider user Id", function (done) {
+            var isCaught = false;
+
+            // INVOICE
+            var _providerUserId = "xxxxA";
+            var _invoiceBlockchainActionId = "createInvoice1";
+            var _invoiceCountryCode = "44";
+            var _invoiceCompanyNumber = "112233445";
+            var _invoiceCompanyName = "populous test provider";
+            var _invoiceNumber = "#223";
+
+            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, web3.fromAscii(_invoiceCountryCode), web3.fromAscii(_invoiceCompanyNumber), _invoiceCompanyName, _invoiceNumber)
                 .catch(function () { isCaught = true; }
                 ).then(function () {
                     if (isCaught === false) {
@@ -367,8 +395,7 @@ contract('Populous > ', function (accounts) {
                 done();
             });
 
-        });
-            
+        });            
             
         it("should add invoice for enabled provider", function (done){
 
@@ -379,17 +406,15 @@ contract('Populous > ', function (accounts) {
             var _invoiceCompanyName = "populous test provider";
             var _invoiceNumber = "#223";
             //pass
-            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, 
+            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, web3.toAscii(_invoiceCountryCode), web3.toAscii(_invoiceCompanyNumber), 
                 _invoiceCompanyName, _invoiceNumber).then(function(){
-                return P.getInvoice(_invoiceCountryCode, _invoiceCompanyNumber, _invoiceNumber);
+                return P.getInvoice(web3.toAscii(_invoiceCountryCode), web3.toAscii(_invoiceCompanyNumber), _invoiceNumber);
             }).then(function(invoiceDetails){
                 assert.equal(web3.toUtf8(invoiceDetails[0]), _providerUserId, "failed getting invoice provider user id");
                 assert.equal(web3.toUtf8(invoiceDetails[1]), _invoiceCompanyName, "failed getting invoice company name");
                 done();
             })
-            
         });
-
 
     });
 
