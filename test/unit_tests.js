@@ -4,15 +4,7 @@ var
     PopulousToken = artifacts.require("PopulousToken"),
     DepositContract = artifacts.require("DepositContract");
 
-// to do - test createAddress, createCurrency, withdrawERC20 (old withdraw ppt), enableProvider, disableProvider, 
-// addProvider, addInvoice, withdrawBank (old import pokens), withdrawPoken, setBlockchainActionData, getBlockInvoiceId, getBlockchainActionIdData
-// getActionStatus, getCurrency, getCurrencySymbol, getDepositAddress, getProviderStatus, getInvoice, getProvider
-// to do - test length of stored data = e.g., company code, 
-// to do - check lower case hex returned for company data e.g., company name
-// to do - create getInvoice and getProvider
-// to do - utils and populous deploy
-
-contract('Populous / CurrencyToken > ', function (accounts) {
+contract('Populous > ', function (accounts) {
     var
         config = require('../include/test/config.js'),
         commonTests = require('../include/test/common.js'),
@@ -222,6 +214,8 @@ contract('Populous / CurrencyToken > ', function (accounts) {
             var deposit_address;
             var depositContractPPTBalance, investorPPTBalance;
             var _blockchainActionId = "withdrawppt1"
+            var pptFee = 1;
+            
 
             // get address of deposit address for client Id 'A'
             P.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
@@ -233,105 +227,25 @@ contract('Populous / CurrencyToken > ', function (accounts) {
                 // checking the balance of depositAddress is 100
                 assert.equal(result.toNumber(), 100, "failed depositing PPT");
                 //withdraw 50 PPT from deposit contract to wallet
-                return P.withdrawPPT(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, deposit_address, config.INVESTOR1_WALLET, 50, inCollateral);
+                return P.withdrawERC20(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, 50, inCollateral, pptFee, config.ADMIN_WALLET);
             }).then(function (withdrawPPT) {
                 assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
                 return global.PPT.balanceOf(deposit_address);
             }).then(function (balanceOfDepositContract) {
-                assert.equal(balanceOfDepositContract.toNumber(), balances, "failed withdrawing PPT");
+                console.log("dummy", balanceOfDepositContract.toNumber());
+                assert.equal(balanceOfDepositContract.toNumber(), 49, "failed withdrawing PPT");
                 depositContractPPTBalance = balanceOfDepositContract.toNumber();
                 // check balance of external address is deposit contract balance - amount withdrawn
                 return global.PPT.balanceOf(config.INVESTOR1_WALLET);
             }).then(function (balanceOfInvestor) {
                 investorPPTBalance = balanceOfInvestor.toNumber();
-                // check balance of external wallet and deposit contract address are equal
+                // check balance of external wallet and deposit contract address
                 assert.equal(balanceOfInvestor.toNumber(), balances, "failed withdrawing PPT");
-                assert.equal(investorPPTBalance, depositContractPPTBalance, "failed withdrawing PPT");
-                done();
-            });
-        });
-
-    });
-
-
-    describe("Crowdsale data", function () {
-
-        //var crowdsaleId = "#AA001";
-        var _invoiceId = "#invoice023";
-        it("should get number of crowdsale document blocks", function (done) {
-            // get crowdsale document records
-            P.getRecordDocumentIndexes(_invoiceId).then(function (numberofBlocks) {
-                assert.equal(numberofBlocks.toNumber(), 0, "failed getting correct number of crowdsale blocks");
-                done();
-            });
-        });
-
-        it("should insert crowdsale block", function (done) {
-            var _invoiceId = "#invoice023";
-            //var _ipfsHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t";
-            //length 47
-            var _ipfsHash = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2tp";
-            //var _ipfsHash2 = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVA";
-            //var _awsHash1 = "QmT9qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6"; 
-            //var _awsHash = "QmT2qk3CRYbFDWpDFYeAv8T8H1gnongwKhh5J68NLkLir6";
-            var _dataType = "pdf contract";
-            var _blockchainActionId = "insertBlock1"
-            // insert crowdsale block in populous.sol contract
-            // ipfs hashes are length 46 and need to be stored as bytes and not bytes32
-            P.insertBlock(_blockchainActionId, _invoiceId, _ipfsHash).then(function (result) {
-                //console.log('insert block log', result.logs[0]);
-                assert(result.logs.length, "Failed inserting block");
-                console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
-                // get inserted record at index 0
-                return P.getRecord(_invoiceId, 0);
-            }).then(function (crowdsale_record) {
-                //console.log('crowdsale record', crowdsale_record);
-                assert.equal(web3.toUtf8(crowdsale_record[0]), _ipfsHash, "failed returning correct crowdsale record");
-                console.log('hash from contract', web3.toUtf8(crowdsale_record[0]));
-                console.log('hash param', _ipfsHash);
-                //assert.equal(web3.toUtf8(crowdsale_record[1]), _dataType, "failed returning correct crowdsale record");
-                // get total number of blocks inserted for a crowdsale Id
-                return P.getRecordDocumentIndexes(_invoiceId);
-            }).then(function (numberofBlocks) {
-                // insertBlock pushes into one arrays
-                assert.equal(numberofBlocks.toNumber(), 1, "failed getting correct number of crowdsale blocks");
-                done();
-            });
-        });
-
-        it("should insert get invoice Id with action Id", function (done) {
-            var _invoiceId = "#invoice023";
-            var _blockchainActionId = "insertBlock1";
-
-            P.getBlockInvoiceId(_blockchainActionId).then(function (result) {
-                assert.equal(web3.toUtf8(result), _invoiceId, "failed returning correct invoice id");
-                done();
-            });
-        });
-
-        it("should insert crowdsale source", function (done) {
-            var _invoiceId = "#invoice023";
-            //var _dataHash1 = "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2z";
-            var _dataHash = "QmT4AeWE9Q9EaoyLJiqaZuYQ8mJeq4ZBncjjFH9dQ9uDVL";
-            var _dataSource = "ipfs";
-            var _dataType = "pdf contract";
-            // insert crowdsale record using public function inserSource in populous.sol
-            // this will only make one array push only after 
-            P.insertSource(_invoiceId, _dataHash, _dataType).then(function (result) {
-                assert(result.logs.length, "Failed inserting source");
-                //console.log('insert source log', result.logs[0]);
-                console.log('insert block source length', result.logs[0].args.sourceLength.toNumber());
-                // get inserted record at index 1
-                return P.getRecord(_invoiceId, 1);
-            }).then(function (crowdsale_record) {
-                // check hash stored at index 0 for inserted block at index 2
-                assert.equal(web3.toUtf8(crowdsale_record[0]), _dataHash, "failed returning correct crowdsale record");
-                //console.log('crowdsale record', crowdsale_record);
-                // get total number of inserted crowdsale document blocks for a crowdsale Id
-                return P.getRecordDocumentIndexes(_invoiceId);
-            }).then(function (numberofBlocks) {
-                assert.equal(numberofBlocks.toNumber(), 2, "failed getting correct number of crowdsale blocks");
+                // check balance of external address is deposit contract balance - amount withdrawn
+                return global.PPT.balanceOf(config.ADMIN_WALLET);
+            }).then(function(admin_ppt_balance){
+                assert.equal(admin_ppt_balance.toNumber(), pptFee, "failed withdrawing PPT");
                 done();
             });
         });

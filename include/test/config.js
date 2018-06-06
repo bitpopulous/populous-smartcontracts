@@ -9,4 +9,5 @@ module.exports = {
     INVESTOR1_ACC_BALANCE: 470,
     INVESTOR2_ACC_BALANCE: 450,
     INVESTOR3_ACC_BALANCE: 600,
+    ADMIN_WALLET: web3.eth.accounts[4],
 };
