@@ -264,7 +264,7 @@ contract Populous is withAccessManager {
         }   
     }
 
-        /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
+    /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
       * @param _blockchainActionId the blockchain action id
       * @param pptAddress the address of the PPT smart contract
       * @param accountId the account id of the client
@@ -364,6 +364,13 @@ contract Populous is withAccessManager {
         return depositAddress[clientId];
     }
 
+    /** @dev Gets the details of an invoice with the country code, company number and invocie number.
+      * @param _invoiceCountryCode The country code.
+      * @param _invoiceCompanyNumber The company number.
+      * @param _invoiceNumber The invoice number
+      * @return providerUserId The invoice provider user Id
+      * @return invoiceCompanyName the invoice company name
+      */
     function getInvoice(bytes2 _invoiceCountryCode, bytes32 _invoiceCompanyNumber, bytes32 _invoiceNumber) 
         public 
         view 
@@ -376,7 +383,13 @@ contract Populous is withAccessManager {
         return (_providerUserId, _invoiceCompanyName);
     }
 
-
+    /** @dev Gets the details of an invoice provider with the country code and company number.
+      * @param _providerCountryCode The country code.
+      * @param _providerCompanyNumber The company number.
+      * @return isEnabled The boolean value true/false indicating whether invoice provider is enabled or not
+      * @return providerId The invoice provider user Id
+      * @return companyName the invoice company name
+      */
     function getProviderByCountryCodeCompanyNumber(bytes2 _providerCountryCode, bytes32 _providerCompanyNumber) 
         public 
         view 
@@ -389,6 +402,12 @@ contract Populous is withAccessManager {
         providerCompanyData[providerUserId].isEnabled);
     }
 
+    /** @dev Gets the details of an invoice provider with the providers user Id.
+      * @param _providerUserId The provider user Id.
+      * @return isEnabled The boolean value true/false indicating whether invoice provider is enabled or not
+      * @return countryCode The invoice provider country code
+      * @return companyName the invoice company name
+      */
     function getProviderByUserId(bytes32 _providerUserId) public view 
         returns (bytes2 countryCode, bytes32 companyName, bytes32 companyNumber, bool isEnabled) 
     {
@@ -398,6 +417,10 @@ contract Populous is withAccessManager {
         providerCompanyData[_providerUserId].isEnabled);
     }
     
+    /** @dev Gets the enabled status of an invoice provider with the providers user Id.
+      * @param _userId The provider user Id.
+      * @return isEnabled The boolean value true/false indicating whether invoice provider is enabled or not
+      */
     function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
         return providerCompanyData[_userId].isEnabled;
     }
