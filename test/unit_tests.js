@@ -10,6 +10,8 @@ contract('Populous > ', function (accounts) {
         commonTests = require('../include/test/common.js'),
         P, CT, DC;
 
+    var pptFee = 1;
+
     describe("Init currency token", function () {
         it("should init currency token American Dollar USD", function (done) {
 
@@ -28,7 +30,7 @@ contract('Populous > ', function (accounts) {
             });
         });
 
-        it("should get blockchain id information", function (done){
+        it("should get blockchain action id information", function (done){
             var _blockchainActionId = "createCurrency1";
             P.getBlockchainActionIdData(_blockchainActionId).then(function (actionData) {
                 assert.equal(web3.toUtf8(actionData[0]), 'USD', "Failed getting correct currency");
@@ -76,7 +78,7 @@ contract('Populous > ', function (accounts) {
         it("should transfer PPT to investors ethereum wallet", function (done) {
             assert(global.PPT, "PPT required.");
 
-            var transferAmount = 100;
+            var transferAmount = 102;
             // transferring 100 PPT tokens to accounts[1] from accounts[0]
             global.PPT.transfer(config.INVESTOR1_WALLET, transferAmount).catch(console.log).then(function (result) {
                 console.log('transfer to address gas cost', result.receipt.gasUsed);
@@ -113,7 +115,7 @@ contract('Populous > ', function (accounts) {
         });
 
         it("should fail create deposit contract for client config.INVESTOR2_ACC with config.INVESTOR1_ACC blockchainActionId", function (done) {
-            assert(global.PPT, "Crowdsale required.");
+            assert(global.PPT, "PPT required.");
 
             var _blockchainActionId = "createAddress1";
             var isCaught = false;
@@ -122,7 +124,7 @@ contract('Populous > ', function (accounts) {
                 .catch(function () { isCaught = true; }
                 ).then(function () {
                     if (isCaught === false) {
-                        throw new Error('Not allowed deposit address creatin passed !!!');
+                        throw new Error('Not allowed deposit address creation passed !!!');
                     }
                     done();
                 });
@@ -131,7 +133,7 @@ contract('Populous > ', function (accounts) {
         it("should transfer PPT to deposit address", function (done) {
             assert(global.PPT, "PPT required.");
 
-            var depositAmount = 100;
+            var depositAmount = 102;
             var deposit_address;
             // transferring 100 PPT tokens to depositAddress for client from accounts[0]
             // depositAddress is the address of the deposit contract for client Id 'A'
@@ -161,9 +163,15 @@ contract('Populous > ', function (accounts) {
             var CT = CurrencyToken.at(global.currencies.USD);
             var externalAddress = config.INVESTOR1_WALLET;
             var withdrawalAmount = 370;
-            var _blockchainActionId = "actionId1"
+            var _blockchainActionId = "actionId1";
+            var toBank = false;
+            var inCollateral = 49;
+
             // withdraw withdrawal amount of USD tokens for client Id 'A' from platform and send to clients externalAddress
-            P.withdrawPoken(_blockchainActionId, config.INVESTOR1_ACC, externalAddress, withdrawalAmount, 'USD').then(function (result) {
+            P.withdrawPoken(_blockchainActionId, 'USD', withdrawalAmount, externalAddress, 
+                externalAddress, config.INVESTOR1_ACC, inCollateral, global.PPT.address, pptFee, 
+                config.ADMIN_WALLET, toBank)
+            .then(function (result) {
                 //console.log('withdraw pokens gas cost', result.receipt.gasUsed);
                 // check balance of clients external address
                 return CT.balanceOf(externalAddress);
@@ -174,15 +182,12 @@ contract('Populous > ', function (accounts) {
             }).then(function (actionStatus) {
                 assert.equal(true, actionStatus, "Failed withdrawal of Pokens");
                 console.log("blockchain action status for " + _blockchainActionId + " is ", actionStatus);
-
-
                 return P.getBlockchainActionIdData(_blockchainActionId);
             }).then(function (actionData) {
                 assert.equal(web3.toUtf8(actionData[0]), 'USD', "Failed getting correct currency");
                 assert.equal(actionData[1], withdrawalAmount, "Failed getting correct amount");
                 assert.equal(web3.toUtf8(actionData[2]), config.INVESTOR1_ACC, "Failed getting correct action id");
                 assert.equal(actionData[3], externalAddress, "Failed getting correct address to/from");
-
                 done();
             });
         });
@@ -191,13 +196,20 @@ contract('Populous > ', function (accounts) {
             assert(global.currencies.USD, "Currency required.");
             var CT = CurrencyToken.at(global.currencies.USD);
             var _blockchainActionId = "import1"
+            var toBank = true;
+            var inCollateral = 49;
+            var withdrawalAmount = 370;
+            var externalAddress = config.INVESTOR1_WALLET;
+
             //check balance of clients external address is 370 sent to it earlier using withdraw function
             CT.balanceOf(config.INVESTOR1_WALLET).then(function (balance) {
-                assert.equal(balance.toNumber(), 370, "failed earlier withdrawal of tokens");
-                // import all the tokens from external 
-                return P.importPokens(_blockchainActionId, 'USD', config.INVESTOR1_WALLET, config.INVESTOR1_ACC);
+                assert.equal(balance.toNumber(), 370, "failed earlier withdrawal of newly minted tokens to investors wallet");
+                // import and destroy withdrawal amount of USD tokens from client Id 'A' external wallet to platform
+                return P.withdrawPoken(_blockchainActionId, 'USD', withdrawalAmount, externalAddress, 
+                externalAddress, config.INVESTOR1_ACC, inCollateral, global.PPT.address, pptFee, 
+                config.ADMIN_WALLET, toBank);
             }).then(function (result) {
-                // check token balance of wallet is 0
+                // check token balance of wallet is original balance minus withdrawn amount
                 return CT.balanceOf(config.INVESTOR1_WALLET);
             }).then(function (value) {
                 assert.equal(value.toNumber(), 0, "Failed importing tokens");
@@ -205,17 +217,39 @@ contract('Populous > ', function (accounts) {
             });
         });
 
+
+        it("should fail create withdraw PPT when balance is less than amount + fee + collateral", function (done) {
+            var isCaught = false;
+            var depositAmount = 102;
+            var balances = 50;
+            var inCollateral = 49;
+            var deposit_address;
+            var _blockchainActionId = "withdrawppt2";            
+            var toWithdraw = 50;
+            var highPPTFee = 20;
+            
+            //withdraw 50 PPT from deposit contract to wallet
+            P.withdrawERC20(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, highPPTFee, config.ADMIN_WALLET)
+            .catch(function () { isCaught = true; }
+                ).then(function () {
+                    if (isCaught === false) {
+                        throw new Error('Not allowed invoice creation passed !!!');
+                    }
+                    done();
+                });
+        });
+
+
         it("should withdraw PPT to investor wallet", function (done) {
             assert(global.PPT, "PPT required.");
 
-            var depositAmount = 100;
+            var depositAmount = 102;
             var balances = 50;
             var inCollateral = 49;
             var deposit_address;
             var depositContractPPTBalance, investorPPTBalance;
-            var _blockchainActionId = "withdrawppt1"
-            var pptFee = 1;
-            
+            var _blockchainActionId = "withdrawppt1";            
+            var toWithdraw = 50;
 
             // get address of deposit address for client Id 'A'
             P.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
@@ -224,16 +258,17 @@ contract('Populous > ', function (accounts) {
                 // get PPT balance of the address is 100 PPT sent to it as deposit amount
                 return global.PPT.balanceOf(depositAddress);
             }).then(function (result) {
-                // checking the balance of depositAddress is 100
-                assert.equal(result.toNumber(), 100, "failed depositing PPT");
+                // checking the balance of depositAddress is amount deposited minue earlier collected pptFee for withdrawing pokens
+                assert.equal(result.toNumber(), depositAmount - (pptFee * 2), "failed depositing PPT");
                 //withdraw 50 PPT from deposit contract to wallet
-                return P.withdrawERC20(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, 50, inCollateral, pptFee, config.ADMIN_WALLET);
+                return P.withdrawERC20(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET);
             }).then(function (withdrawPPT) {
-                assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
+                // to do - update solidity compiler to see events
+                //assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
                 return global.PPT.balanceOf(deposit_address);
             }).then(function (balanceOfDepositContract) {
-                console.log("dummy", balanceOfDepositContract.toNumber());
+                // check that balance of deposit address is now amount deposited minus amount withdrawn + pptFee
                 assert.equal(balanceOfDepositContract.toNumber(), 49, "failed withdrawing PPT");
                 depositContractPPTBalance = balanceOfDepositContract.toNumber();
                 // check balance of external address is deposit contract balance - amount withdrawn
@@ -245,10 +280,116 @@ contract('Populous > ', function (accounts) {
                 // check balance of external address is deposit contract balance - amount withdrawn
                 return global.PPT.balanceOf(config.ADMIN_WALLET);
             }).then(function(admin_ppt_balance){
-                assert.equal(admin_ppt_balance.toNumber(), pptFee, "failed withdrawing PPT");
+                // check balance of admin wallet to see if pptFee has been transferred
+                assert.equal(admin_ppt_balance.toNumber(), pptFee * 3, "failed withdrawing PPT");
                 done();
             });
         });
+
+    });
+
+
+    describe("Invoice and Provider", function () { 
+
+        it("should add an invoice provider", function (done) {
+            // PROVIDER
+            var _providerBlockchainActionId = "provider1";
+            var _providerUserId = "providerA";
+            var _companyNumber = "112233445";
+            var _companyName = "populous test provider";
+            var _countryCode = "44";
+    
+            P.addProvider(_providerBlockchainActionId, _providerUserId, _companyNumber, _companyName, _countryCode).then(function(){
+                return P.getProviderByUserId(_providerUserId);
+            }).then(function(providerInfo){
+                assert.equal(web3.toUtf8(providerInfo[0]), _countryCode, "failed getting provider country code");
+                assert.equal(web3.toUtf8(providerInfo[1]), _companyName, "failed getting provider country code");
+                assert.equal(web3.toUtf8(providerInfo[2]), _companyNumber, "failed getting provider country code");
+                assert.equal(web3.toUtf8(providerInfo[3]), true, "failed getting provider enabled status");
+
+                return P.getProviderByCountryCodeCompanyNumber();
+            }).then(function(providerInfowithCode){
+                assert.equal(web3.toUtf8(providerInfo[0]), _providerUserId, "failed getting provider user Id");
+                assert.equal(web3.toUtf8(providerInfo[1]), _companyName, "failed getting provider company name");
+                assert.equal(web3.toUtf8(providerInfo[2]), true, "failed getting provider enabled status");
+                return P.getProviderStatus();
+            }).then(function(providerStatus){
+                assert.equal(true, providerStatus, "failed disabling provider");
+                done();
+            });
+        });
+            
+    
+        it("should disable provider and get the enabled status of an invoice provider", function (done) {
+            var _blockchainActionId = "disableProvider1";
+            var _providerUserId = "providerA";
+
+            P.disableProvider(_blockchainActionId, _providerUserId).then(function(){
+                P.getProviderStatus(_providerUserId);
+            }).then(function(providerStatus){
+                assert.equal(false, providerStatus, "failed disabling provider");
+                done();
+            })
+
+        });
+
+        it("should fail create invoice for disabled invoice provider user Id", function (done) {
+            var isCaught = false;
+
+            // INVOICE
+            var _providerUserId = "providerA";
+            var _invoiceBlockchainActionId = "createInvoice1";
+            var _invoiceCountryCode = "44";
+            var _invoiceCompanyNumber = "112233445";
+            var _invoiceCompanyName = "populous test provider";
+            var _invoiceNumber = "#223";
+
+            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber)
+                .catch(function () { isCaught = true; }
+                ).then(function () {
+                    if (isCaught === false) {
+                        throw new Error('Not allowed invoice creation passed !!!');
+                    }
+                    done();
+                });
+        });
+
+    
+        it("should enable provider and get the enabled status of an invoice provider", function (done) {
+
+            var _blockchainActionId = "enableProvider1";
+            var _providerUserId = "providerA";
+
+            P.enableProvider(_blockchainActionId, _providerUserId).then(function(){
+                return P.getProviderStatus(_providerUserId);
+            }).then(function(providerStatus){
+                assert.equal(true, providerStatus, "failed enabling provider");
+                done();
+            });
+
+        });
+            
+            
+        it("should add invoice for enabled provider", function (done){
+
+            var _providerUserId = "providerA";
+            var _invoiceBlockchainActionId = "createInvoice2";
+            var _invoiceCountryCode = "44";
+            var _invoiceCompanyNumber = "112233445";
+            var _invoiceCompanyName = "populous test provider";
+            var _invoiceNumber = "#223";
+            //pass
+            P.addInvoice(_invoiceBlockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, 
+                _invoiceCompanyName, _invoiceNumber).then(function(){
+                return P.getInvoice(_invoiceCountryCode, _invoiceCompanyNumber, _invoiceNumber);
+            }).then(function(invoiceDetails){
+                assert.equal(web3.toUtf8(invoiceDetails[0]), _providerUserId, "failed getting invoice provider user id");
+                assert.equal(web3.toUtf8(invoiceDetails[1]), _invoiceCompanyName, "failed getting invoice company name");
+                done();
+            })
+            
+        });
+
 
     });
 

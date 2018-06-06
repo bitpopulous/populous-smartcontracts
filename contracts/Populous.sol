@@ -21,9 +21,11 @@ contract Populous is withAccessManager {
     event EventNewCrowdsaleBlock(bytes32 blockchainActionId, bytes32 invoiceId, uint sourceLength);
     event EventNewCrowdsaleSource(bytes32 invoiceId, uint sourceLength);
     // Bank events
-    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount, uint pptFee);
-    event EventWithdrawPokens(bytes32 blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency, uint pptFee);
-    event EventWithdrawBank(bytes32 blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance, uint pptFee);
+    //event EventWithdrawPoken(bytes32 _blockchainActionId, address from, address to, bytes32 accountId, bytes32 currency, uint amount, uint pptFee, bool toBank);
+    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
+    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
+    //event EventWithdrawPokens(bytes32 blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency);
+    //event EventWithdrawBank(bytes32 blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance);
     event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
     event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
@@ -247,8 +249,7 @@ contract Populous is withAccessManager {
             actionStatus[_blockchainActionId] = true;
             setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee); 
             //emit event: Imported currency to system
-            EventWithdrawBank(_blockchainActionId, from, accountId, currency, amount, pptFee);
-        
+            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         } else {
             // WITHDRAW POKEN        
         
@@ -258,9 +259,9 @@ contract Populous is withAccessManager {
             cT.transfer(to, amount);
 
             actionStatus[_blockchainActionId] = true;            
-            setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee); 
-            //emit event: Imported currency to system
-            EventWithdrawBank(_blockchainActionId, from, accountId, currency, amount, pptFee);
+            setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee); 
+            //emit event: Exported currency to wallet
+            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         }   
     }
 
@@ -288,7 +289,7 @@ contract Populous is withAccessManager {
         
         iERC20Token token = iERC20Token(pptAddress);
         setBlockchainActionData(_blockchainActionId, token.symbol(), amount, accountId, to, pptFee);
-        EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount, pptFee);
+        EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount);
     }
 
 
