@@ -257,6 +257,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             P.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
                 assert(depositAddress);
                 deposit_address = depositAddress;
+                console.log("client deposit address", depositAddress);
                 // get PPT balance of the address is 100 PPT sent to it as deposit amount
                 return global.PPT.balanceOf(depositAddress);
             }).then(function (result) {
@@ -265,6 +266,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 //withdraw 50 PPT from deposit contract to wallet
                 return P.withdrawERC20(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET);
             }).then(function (withdrawPPT) {
+                console.log("Deposit address log", withdrawPPT.logs[0]);
                 // to do - update solidity compiler to see events
                 //assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
