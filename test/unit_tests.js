@@ -79,7 +79,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             assert(global.PPT, "PPT required.");
 
             var transferAmount = 102;
-            // transferring 100 PPT tokens to accounts[1] from accounts[0]
+            // transferring transferAmount of PPT tokens to accounts[1] from accounts[0]
             global.PPT.transfer(config.INVESTOR1_WALLET, transferAmount).catch(console.log).then(function (result) {
                 console.log('transfer to address gas cost', result.receipt.gasUsed);
                 // checking the balance of accounts[1] is 100
@@ -324,7 +324,6 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             });
         });
 
-           
         it("should disable provider and get the enabled status of an invoice provider", function (done) {
 
             var _blockchainActionId = "disableProvider1";
