@@ -12,7 +12,7 @@ import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
 import "./SafeMath.sol";
-import "./Utils.sol";
+//import "./Utils.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
