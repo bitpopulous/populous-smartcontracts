@@ -9,7 +9,6 @@ import "./withAccessManager.sol";
 contract CurrencyToken is ERC20Token, withAccessManager {
 
     //EVENTS
-
     event EventMintTokens(bytes32 currency, uint amount);
 
     // NON-CONSTANT METHODS
