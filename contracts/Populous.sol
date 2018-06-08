@@ -17,23 +17,26 @@ import "./SafeMath.sol";
 /// @title Populous contract
 contract Populous is withAccessManager {
 
+    
     // EVENTS
-    event EventNewCrowdsaleBlock(bytes32 blockchainActionId, bytes32 invoiceId, uint sourceLength);
-    event EventNewCrowdsaleSource(bytes32 invoiceId, uint sourceLength);
     // Bank events
-    //event EventWithdrawPoken(bytes32 _blockchainActionId, address from, address to, bytes32 accountId, bytes32 currency, uint amount, uint pptFee, bool toBank);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
-    //event EventWithdrawPokens(bytes32 blockchainActionId, bytes32 accountId, address to, uint amount, bytes32 currency);
-    //event EventWithdrawBank(bytes32 blockchainActionId, address from, bytes32 accountId, bytes32 currency, uint balance);
+    
     event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
+    event EventUpgradeCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr, uint256 version);
+    
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
+    event EventUpgradeDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
+    
     event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
     event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
     // FIELDS
+
+    uint256 public version = 1;
     // currency symbol => currency erc20 contract address
     mapping(bytes32 => address) currencies;
     // currency address => currency symbol
@@ -84,7 +87,7 @@ contract Populous is withAccessManager {
 
     // country code => company number => invoice number => invoice data
     mapping(bytes2 => mapping(bytes32 => mapping(bytes32 => invoiceData))) invoices;
-
+    
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
@@ -112,6 +115,27 @@ contract Populous is withAccessManager {
         EventNewDepositContract(_blockchainActionId, clientId, depositAddress[clientId]);
     }
 
+
+    function upgradeDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
+        onlyServer
+    {
+        require(actionStatus[_blockchainActionId] == false);
+        // check that client does not already have a stored deposit address
+        require(depositAddress[_clientId] == 0x0 && depositAddress[_clientId] != _depositContract);
+        // DepositContract(_clientId).clientId() == _clientId
+        // store the deposit address for the client Id
+        //DepositContract(_clientId, address(AM));
+
+        depositAddress[_clientId] = _depositContract;
+        // check that deposit address has been stored for client Id
+        assert(depositAddress[_clientId] != 0x0);
+        // set blockchain action data
+        actionStatus[_blockchainActionId] = true;
+        blockchainActionIdData[_blockchainActionId].accountId = _clientId;
+        blockchainActionIdData[_blockchainActionId].to = depositAddress[_clientId];
+        EventUpgradeDepositContract(_blockchainActionId, _clientId, depositAddress[_clientId], version);
+    }
+
     /** @dev Creates a new token/currency.
       * @param _tokenName  The name of the currency.
       * @param _decimalUnits The number of decimals the currency has.
@@ -134,6 +158,28 @@ contract Populous is withAccessManager {
         blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
 
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, currencies[_tokenSymbol]);
+    }
+
+
+    function upgradeCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
+    {   
+        // check if blockchain action id is already used
+        require(actionStatus[_blockchainActionId] == false);
+        // Check if currency exists as erc20
+        require(CurrencyToken(_currencyAddress).symbol() != 0x0 && CurrencyToken(_currencyAddress).name() != 0x0 && CurrencyToken(_currencyAddress).symbol() == _tokenSymbol);
+        // Check if currency is saved in current populous version
+        require(currencies[_tokenSymbol] == 0x0);
+        // token symbol => address
+        currencies[_tokenSymbol] = _currencyAddress;
+        // token address => symbol
+        currenciesSymbols[_currencyAddress] = _tokenSymbol;
+        assert(currencies[_tokenSymbol] != 0x0 && currenciesSymbols[_currencyAddress] != 0x0);
+        
+        actionStatus[_blockchainActionId] = true;
+        blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
+        blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
+
+        EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, currencies[_tokenSymbol], version);
     }
 
     /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
@@ -424,6 +470,11 @@ contract Populous is withAccessManager {
       */
     function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
         return providerCompanyData[_userId].isEnabled;
+    }
+
+
+    function getVersion() public view returns (uint256 _version) {
+        return version;
     }
     
 }

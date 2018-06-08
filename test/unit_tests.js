@@ -12,6 +12,25 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
 
     var pptFee = 1;
 
+    describe("Populous version", function (){
+        it("should get populous version through public variable and function", function (done){
+
+            Populous.deployed().then(function (instance) {
+                P = instance;
+                return P.version.call();
+            }).then(function (populous_version) {
+                assert.equal(populous_version.toNumber(), 1, "Failed getting correct verison");
+                return P.getVersion();
+            }).then(function(populous_version_getter){
+                assert.equal(populous_version_getter.toNumber(), 1, "Failed getting correct verison");
+                done();
+            });
+        });
+
+    });
+
+
+
     describe("Init currency token", function () {
         it("should init currency token American Dollar USD", function (done) {
 
@@ -29,7 +48,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 done();
             });
         });
-
+        
         it("should get blockchain action id information", function (done){
             var _blockchainActionId = "createCurrency1";
             P.getBlockchainActionIdData(_blockchainActionId).then(function (actionData) {
@@ -58,6 +77,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 done();
             });
         });
+        
 
         it("should get PPT from faucet", function (done) {
             assert(global.PPT, "PPT required.");
@@ -166,9 +186,10 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _blockchainActionId = "actionId1";
             var toBank = false;
             var inCollateral = 49;
+            var addressFrom = "0x0";
 
             // withdraw withdrawal amount of USD tokens for client Id 'A' from platform and send to clients externalAddress
-            P.withdrawPoken(_blockchainActionId, 'USD', withdrawalAmount, externalAddress, 
+            P.withdrawPoken(_blockchainActionId, 'USD', withdrawalAmount, addressFrom, 
                 externalAddress, config.INVESTOR1_ACC, inCollateral, global.PPT.address, pptFee, 
                 config.ADMIN_WALLET, toBank)
             .then(function (result) {
@@ -193,21 +214,22 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             });
         });
 
-        it("should withdraw USD tokens of config.INVESTOR1_WALLET to internal platform/bank and destroy", function (done) {
+        it("should withdraw USD tokens from config.INVESTOR1_WALLET to internal platform/bank and destroy", function (done) {
             assert(global.currencies.USD, "Currency required.");
             var CT = CurrencyToken.at(global.currencies.USD);
-            var _blockchainActionId = "import1"
+            var _blockchainActionId = "import1";
             var toBank = true;
             var inCollateral = 49;
             var withdrawalAmount = 370;
             var externalAddress = config.INVESTOR1_WALLET;
+            var addressTo = "0x0";
 
             //check balance of clients external address is 370 sent to it earlier using withdraw function
             CT.balanceOf(config.INVESTOR1_WALLET).then(function (balance) {
                 assert.equal(balance.toNumber(), 370, "failed earlier withdrawal of newly minted tokens to investors wallet");
                 // import and destroy withdrawal amount of USD tokens from client Id 'A' external wallet to platform
                 return P.withdrawPoken(_blockchainActionId, 'USD', withdrawalAmount, externalAddress, 
-                externalAddress, config.INVESTOR1_ACC, inCollateral, global.PPT.address, pptFee, 
+                addressTo, config.INVESTOR1_ACC, inCollateral, global.PPT.address, pptFee, 
                 config.ADMIN_WALLET, toBank);
             }).then(function (result) {
                 // check token balance of wallet is original balance minus withdrawn amount
@@ -216,7 +238,6 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 assert.equal(value.toNumber(), 0, "Failed importing tokens");
                 done();
                 // ppt balance of deposit contract = deposit amount - (pptfee * 2)
-
             });
         });
 
@@ -257,7 +278,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             P.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
                 assert(depositAddress);
                 deposit_address = depositAddress;
-                console.log("client deposit address", depositAddress);
+                //console.log("client deposit address", depositAddress);
                 // get PPT balance of the address is 100 PPT sent to it as deposit amount
                 return global.PPT.balanceOf(depositAddress);
             }).then(function (result) {
@@ -266,7 +287,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 //withdraw 50 PPT from deposit contract to wallet
                 return P.withdrawERC20(_blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET);
             }).then(function (withdrawPPT) {
-                console.log("Deposit address log", withdrawPPT.logs[0]);
+                //console.log("Deposit address log", withdrawPPT.logs[0]);
                 // to do - update solidity compiler to see events
                 //assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
@@ -324,6 +345,24 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 assert.equal(true, providerStatus, "failed disabling provider");
                 done();
             });
+        });
+
+        it("should fail adding an invoice provider with a used company number linked to a user id", function (done) {
+            // PROVIDER
+            var _providerBlockchainActionId = "provider2";
+            var _providerUserId = "providerA";
+            var _companyNumber = "112233445";
+            var _companyName = "populous test provider";
+            var _countryCode = "44";
+    
+            P.addProvider(_providerBlockchainActionId, _providerUserId, web3.fromAscii(_companyNumber), _companyName, web3.fromAscii(_countryCode))
+            .catch(function () { isCaught = true; }
+                ).then(function () {
+                    if (isCaught === false) {
+                        throw new Error('Not allowed provider creation passed !!!');
+                    }
+                    done();
+                });
         });
 
         it("should disable provider and get the enabled status of an invoice provider", function (done) {
