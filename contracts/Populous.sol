@@ -12,6 +12,7 @@ import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
 import "./SafeMath.sol";
+import "./DataManager.sol";
 //import "./Utils.sol";
 
 /// @title Populous contract
@@ -35,6 +36,12 @@ contract Populous is withAccessManager {
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
     // FIELDS
+    DataManager dm;
+
+    //in constructor
+    // dm = DataManager(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
+    //deploy DM before populous or set DM address when deploying populous
+
 
     uint256 public version = 1;
     // currency symbol => currency erc20 contract address
