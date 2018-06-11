@@ -2,15 +2,28 @@ var
     Populous = artifacts.require("Populous"),
     CurrencyToken = artifacts.require("CurrencyToken"),
     PopulousToken = artifacts.require("PopulousToken"),
-    DepositContract = artifacts.require("DepositContract");
+    DepositContract = artifacts.require("DepositContract"),
+    DataManager = artifacts.require("DataManager");
 
 contract('Populous/Currency Token/ Deposit > ', function (accounts) {
     var
         config = require('../include/test/config.js'),
         commonTests = require('../include/test/common.js'),
-        P, CT, DC;
+        P, CT, DC, DM;
 
     var pptFee = 1;
+
+
+    describe("Populous version", function (){
+        it("should get deployed DataManager instance", function (done){
+            DataManager.deployed().then(function (instance) {
+                DM = instance;
+                console.log("DataManager ", DM.address);
+                done();
+            });
+        });
+
+    });
 
     describe("Populous version", function (){
         it("should get populous version through public variable and function", function (done){
@@ -29,8 +42,6 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
 
     });
 
-
-
     describe("Init currency token", function () {
         it("should init currency token American Dollar USD", function (done) {
 
@@ -40,7 +51,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 // creating a new currency USD for which to mint and use tokens
                 if (!global.currencies || !global.currencies.USD) {
                     //create new currency/token
-                    return commonTests.createCurrency(P, "USD Pokens", 8, "USD");
+                    return commonTests.createCurrency(P, DM, "USD Pokens", 8, "USD");
                 } else {
                     return Promise.resolve();
                 }
@@ -51,7 +62,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
         
         it("should get blockchain action id information", function (done){
             var _blockchainActionId = "createCurrency1";
-            P.getBlockchainActionIdData(_blockchainActionId).then(function (actionData) {
+            // get blockchain action data from datamanager
+            DM.getBlockchainActionIdData(_blockchainActionId).then(function (actionData) {
                 assert.equal(web3.toUtf8(actionData[0]), 'USD', "Failed getting correct currency");
                 assert.equal(actionData[1], 0, "Failed getting correct amount");
                 assert.equal(web3.toUtf8(actionData[2]), '', "Failed getting correct action id");
@@ -119,8 +131,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             // create new deposit smart contract for client Id 'A'
             P.createAddress(_blockchainActionId, config.INVESTOR1_ACC).then(function (instance) {
                 assert(instance);
-                // get deposit address with client Id 'A'
-                return P.getDepositAddress(config.INVESTOR1_ACC);
+                // get deposit address with client Id 'A' from data manager
+                return DM.getDepositAddress(config.INVESTOR1_ACC);
             }).then(function (deposit_contract_address) {
                 // display deposit smart contract address
                 console.log('deposit contract address', deposit_contract_address);
@@ -157,7 +169,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var deposit_address;
             // transferring 100 PPT tokens to depositAddress for client from accounts[0]
             // depositAddress is the address of the deposit contract for client Id 'A'
-            P.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
+            // get depositAddtess from data manager
+            DM.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
                 assert(depositAddress);
                 deposit_address = depositAddress;
                 // transfer PPT from accounts[1] to deposit contract address as PPT crowdsale deposit
@@ -199,11 +212,13 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             }).then(function (value) {
                 // check withdrawal amount of USD tokens was correctly allocated externalAddress
                 assert.equal(value.toNumber(), withdrawalAmount, "Failed withdrawal");
-                return P.getActionStatus(_blockchainActionId);
+                // get action status for blockchain action id from data manager
+                return DM.getActionStatus(_blockchainActionId);
             }).then(function (actionStatus) {
                 assert.equal(true, actionStatus, "Failed withdrawal of Pokens");
                 console.log("blockchain action status for " + _blockchainActionId + " is ", actionStatus);
-                return P.getBlockchainActionIdData(_blockchainActionId);
+                // get blockchain action data for blockchain action id from data manager
+                return DM.getBlockchainActionIdData(_blockchainActionId);
             }).then(function (actionData) {
                 assert.equal(web3.toUtf8(actionData[0]), 'USD', "Failed getting correct currency");
                 assert.equal(actionData[1], withdrawalAmount, "Failed getting correct amount");
@@ -220,7 +235,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _blockchainActionId = "import1";
             var toBank = true;
             var inCollateral = 49;
-            var withdrawalAmount = 370;
+            var withdrawalAmount = 373;
             var externalAddress = config.INVESTOR1_WALLET;
             var addressTo = "0x0";
 
@@ -235,7 +250,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 // check token balance of wallet is original balance minus withdrawn amount
                 return CT.balanceOf(config.INVESTOR1_WALLET);
             }).then(function (value) {
-                assert.equal(value.toNumber(), 0, "Failed importing tokens");
+                assert.equal(value.toNumber(), 367, "Failed importing tokens");
                 done();
                 // ppt balance of deposit contract = deposit amount - (pptfee * 2)
             });
@@ -274,8 +289,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _blockchainActionId = "withdrawppt1";            
             var toWithdraw = 50;
 
-            // get address of deposit address for client Id 'A'
-            P.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
+            // get address of deposit address for client Id 'A' from data manager
+            DM.getDepositAddress(config.INVESTOR1_ACC).then(function (depositAddress) {
                 assert(depositAddress);
                 deposit_address = depositAddress;
                 //console.log("client deposit address", depositAddress);
@@ -326,7 +341,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _countryCode = "44";
     
             P.addProvider(_providerBlockchainActionId, _providerUserId, web3.fromAscii(_companyNumber), _companyName, web3.fromAscii(_countryCode)).then(function(){
-                return P.getProviderByUserId(_providerUserId);
+                // get provider by user id from data manager
+                return DM.getProviderByUserId(_providerUserId);
             }).then(function(providerInfo){
                 assert.equal(web3.toAscii(providerInfo[0]), _countryCode, "failed getting provider country code");
                 assert.equal(web3.toUtf8(providerInfo[1]), _companyName, "failed getting provider country code");
@@ -334,13 +350,14 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 // console.log("comp utf", web3.toUtf8(providerInfo[2]));
                 assert.equal(web3.toUtf8(providerInfo[2]), _companyNumber, "failed getting provider country code");
                 assert.equal(providerInfo[3], true, "failed getting provider enabled status");
-
-                return P.getProviderByCountryCodeCompanyNumber(web3.fromAscii(_countryCode), web3.fromAscii(_companyNumber));
+                // get provider by country code and company number from data manager
+                return DM.getProviderByCountryCodeCompanyNumber(web3.fromAscii(_countryCode), web3.fromAscii(_companyNumber));
             }).then(function(providerInfowithCode){
                 assert.equal(web3.toUtf8(providerInfowithCode[0]), _providerUserId, "failed getting provider user Id");
                 assert.equal(web3.toUtf8(providerInfowithCode[1]), _companyName, "failed getting provider company name");
                 assert.equal(providerInfowithCode[2], true, "failed getting provider enabled status");
-                return P.getProviderStatus(_providerUserId);
+                // get provider status from data manager
+                return DM.getProviderStatus(_providerUserId);
             }).then(function(providerStatus){
                 assert.equal(true, providerStatus, "failed disabling provider");
                 done();
@@ -369,10 +386,11 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
 
             var _blockchainActionId = "disableProvider1";
             var _providerUserId = "providerA";
-            P.disableProvider(_blockchainActionId, _providerUserId).then(function(_providerStatu){
+            P.disableProvider(_blockchainActionId, _providerUserId).then(function(){
                 // disable provider event log
                 //console.log("disable log", _providerStatu.logs[0]);
-                return P.getProviderStatus(_providerUserId);
+                // get provider status from data manager
+                return DM.getProviderStatus(_providerUserId);
             }).then(function(_providerStatus){
                 assert.equal(_providerStatus, false, "failed disabling provider");
                 done();
@@ -429,7 +447,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _providerUserId = "providerA";
 
             P.enableProvider(_blockchainActionId, _providerUserId).then(function(){
-                return P.getProviderStatus(_providerUserId);
+                // get provider status from data manager
+                return DM.getProviderStatus(_providerUserId);
             }).then(function(providerStatus){
                 assert.equal(true, providerStatus, "failed enabling provider");
                 done();
@@ -448,7 +467,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             //pass
             P.addInvoice(_invoiceBlockchainActionId, _providerUserId, web3.toAscii(_invoiceCountryCode), web3.toAscii(_invoiceCompanyNumber), 
                 _invoiceCompanyName, _invoiceNumber).then(function(){
-                return P.getInvoice(web3.toAscii(_invoiceCountryCode), web3.toAscii(_invoiceCompanyNumber), _invoiceNumber);
+                //get invoice data from data manager
+                return DM.getInvoice(web3.toAscii(_invoiceCountryCode), web3.toAscii(_invoiceCompanyNumber), _invoiceNumber);
             }).then(function(invoiceDetails){
                 assert.equal(web3.toUtf8(invoiceDetails[0]), _providerUserId, "failed getting invoice provider user id");
                 assert.equal(web3.toUtf8(invoiceDetails[1]), _invoiceCompanyName, "failed getting invoice company name");
