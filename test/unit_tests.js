@@ -25,8 +25,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
 
     });
 
-    describe("Populous version", function (){
-        it("should get populous version through public variable and function", function (done){
+    describe("Populous version and data manager address", function (){
+        it("should get populous version through public variable and getter function", function (done){
 
             Populous.deployed().then(function (instance) {
                 P = instance;
@@ -38,6 +38,15 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 assert.equal(populous_version_getter.toNumber(), 1, "Failed getting correct verison");
                 done();
             });
+        });
+
+        it("should get data manager address from populous", function (done){
+            P.getDataManager().then(function(dataManager_address){
+                assert.equal(dataManager_address, DM.address, "failed getting the address of data manager smart contract");
+                console.log("DataManager address", DM.address);
+                console.log("DataManager address from populous", dataManager_address);
+                done();
+            })
         });
 
     });
