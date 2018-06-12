@@ -10,7 +10,6 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
         config = require('../include/test/config.js'),
         commonTests = require('../include/test/common.js'),
         P, CT, DC, DM;
-
     var pptFee = 1;
 
 
