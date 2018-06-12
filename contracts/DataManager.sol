@@ -27,16 +27,12 @@ contract DataManager is withAccessManager {
     }
     // blockchainActionId => actionData
     mapping(bytes32 => actionData) public blockchainActionIdData;
-
-    //address ppt = ;
-
-    // to do 
     
     //actionId => invoiceId
     mapping(bytes32 => bytes32) public actionIdToInvoiceId;
     // invoice provider company data
     struct providerCompany {
-        bool isEnabled;
+        //bool isEnabled;
         bytes32 companyNumber;
         bytes32 companyName;
         bytes2 countryCode;
@@ -140,11 +136,11 @@ contract DataManager is withAccessManager {
         return true;
     }
 
-    function setProviderStatus(bytes32 _userId, bool _status) public onlyServerOrOnlyPopulous returns (bool success) {
+    /* function setProviderStatus(bytes32 _userId, bool _status) public onlyServerOrOnlyPopulous returns (bool success) {
         require(providerCompanyData[_userId].companyNumber != 0x0);
         providerCompanyData[_userId].isEnabled = _status;
         return true;
-    }
+    } */
 
     function setInvoice(
         bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
@@ -187,7 +183,7 @@ contract DataManager is withAccessManager {
         providerCompanyData[_userId].countryCode = _countryCode;
         providerCompanyData[_userId].companyName = _companyName;
         providerCompanyData[_userId].companyNumber = _companyNumber;
-        providerCompanyData[_userId].isEnabled = true;
+        //providerCompanyData[_userId].isEnabled = true;
 
         providerData[_countryCode][_companyNumber] = _userId;
         
@@ -268,36 +264,34 @@ contract DataManager is withAccessManager {
     function getProviderByCountryCodeCompanyNumber(bytes2 _providerCountryCode, bytes32 _providerCompanyNumber) 
         public 
         view 
-        returns (bytes32 providerId, bytes32 companyName, bool isEnabled) 
+        returns (bytes32 providerId, bytes32 companyName) 
     {
         bytes32 providerUserId = providerData[_providerCountryCode][_providerCompanyNumber];
 
         return (providerUserId, 
-        providerCompanyData[providerUserId].companyName, 
-        providerCompanyData[providerUserId].isEnabled);
+        providerCompanyData[providerUserId].companyName);
+        //providerCompanyData[providerUserId].isEnabled);
     }
 
     /** @dev Gets the details of an invoice provider with the providers user Id.
       * @param _providerUserId The provider user Id.
-      * @return isEnabled The boolean value true/false indicating whether invoice provider is enabled or not
       * @return countryCode The invoice provider country code
       * @return companyName the invoice company name
       */
     function getProviderByUserId(bytes32 _providerUserId) public view 
-        returns (bytes2 countryCode, bytes32 companyName, bytes32 companyNumber, bool isEnabled) 
+        returns (bytes2 countryCode, bytes32 companyName, bytes32 companyNumber) 
     {
         return (providerCompanyData[_providerUserId].countryCode,
         providerCompanyData[_providerUserId].companyName,
-        providerCompanyData[_providerUserId].companyNumber,
-        providerCompanyData[_providerUserId].isEnabled);
+        providerCompanyData[_providerUserId].companyNumber);
     }
     
     /** @dev Gets the enabled status of an invoice provider with the providers user Id.
       * @param _userId The provider user Id.
       * @return isEnabled The boolean value true/false indicating whether invoice provider is enabled or not
       */
-    function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
+    /* function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
         return providerCompanyData[_userId].isEnabled;
-    }
+    } */
 
 }

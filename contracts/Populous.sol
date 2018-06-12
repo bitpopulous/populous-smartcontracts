@@ -131,27 +131,27 @@ contract Populous is withAccessManager {
       * @param _blockchainActionId the blockchain action id
       * @param _userId the user id of the invoiceProvider
       */
-    function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
+    /* function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
         public
         onlyServer
     {
         require(dm.getActionStatus(_blockchainActionId) == false);
-        require(dm.getProviderStatus(_userId) == false);
+        //require(dm.getProviderStatus(_userId) == false);
         require(dm.setProviderStatus(_userId, true) == true);
         require(dm.setActionStatus(_blockchainActionId) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
-        //bytes2 countryCode, bytes32 companyName, bytes32 companyNumber, bool isEnabled
+        //bytes2 countryCode, bytes32 companyName, bytes32 companyNumber
         bytes2 countryCode;
         bytes32 companyNumber;
-        (countryCode, , companyNumber, ) = dm.getProviderByUserId(_userId);
+        (countryCode, , companyNumber) = dm.getProviderByUserId(_userId);
         EventProviderEnabled(_blockchainActionId, _userId, countryCode, companyNumber);
-    }
+    } */
 
     /** @dev Disable access granted to a previously added invoice provider
       * @param _blockchainActionId the blockchain action id
       * @param _userId the user id of the invoiceProvider
       */
-    function disableProvider(bytes32 _blockchainActionId, bytes32 _userId)
+    /* function disableProvider(bytes32 _blockchainActionId, bytes32 _userId)
         public
         onlyServer
     {
@@ -164,7 +164,7 @@ contract Populous is withAccessManager {
         bytes32 companyNumber;
         (countryCode, , companyNumber, ) = dm.getProviderByUserId(_userId);
         EventProviderDisabled(_blockchainActionId, _userId, countryCode, companyNumber);
-    }
+    } */
 
     /** @dev Add a new invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
@@ -197,7 +197,12 @@ contract Populous is withAccessManager {
         public
     {
         require(dm.getActionStatus(_blockchainActionId) == false);
-        require(dm.getProviderStatus(_providerUserId) == true);
+        bytes2 countryCode; 
+        bytes32 companyName; 
+        bytes32 companyNumber;
+        (countryCode, companyName, companyNumber) = dm.getProviderByUserId(_providerUserId);
+        //require(dm.getProviderStatus(_providerUserId) == true);
+        require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
         require(dm.setInvoice(_providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
         require(dm.setActionStatus(_blockchainActionId) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);

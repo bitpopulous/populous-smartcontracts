@@ -359,17 +359,17 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 // ascii failing, utf8 passing
                 // console.log("comp utf", web3.toUtf8(providerInfo[2]));
                 assert.equal(web3.toUtf8(providerInfo[2]), _companyNumber, "failed getting provider country code");
-                assert.equal(providerInfo[3], true, "failed getting provider enabled status");
+                //assert.equal(providerInfo[3], true, "failed getting provider enabled status");
                 // get provider by country code and company number from data manager
                 return DM.getProviderByCountryCodeCompanyNumber(web3.fromAscii(_countryCode), web3.fromAscii(_companyNumber));
             }).then(function(providerInfowithCode){
                 assert.equal(web3.toUtf8(providerInfowithCode[0]), _providerUserId, "failed getting provider user Id");
                 assert.equal(web3.toUtf8(providerInfowithCode[1]), _companyName, "failed getting provider company name");
-                assert.equal(providerInfowithCode[2], true, "failed getting provider enabled status");
+                //assert.equal(providerInfowithCode[2], true, "failed getting provider enabled status");
                 // get provider status from data manager
-                return DM.getProviderStatus(_providerUserId);
-            }).then(function(providerStatus){
-                assert.equal(true, providerStatus, "failed disabling provider");
+                //return DM.getProviderStatus(_providerUserId);
+            //}).then(function(providerStatus){
+            //    assert.equal(true, providerStatus, "failed disabling provider");
                 done();
             });
         });
@@ -392,7 +392,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 });
         });
 
-        it("should disable provider and get the enabled status of an invoice provider", function (done) {
+        /* it("should disable provider and get the enabled status of an invoice provider", function (done) {
 
             var _blockchainActionId = "disableProvider1";
             var _providerUserId = "providerA";
@@ -405,9 +405,9 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 assert.equal(_providerStatus, false, "failed disabling provider");
                 done();
             });
-        });
+        }); */
         
-        it("should fail create invoice for disabled invoice provider user Id", function (done) {
+        /* it("should fail create invoice for disabled invoice provider user Id", function (done) {
             var isCaught = false;
 
             // INVOICE
@@ -426,7 +426,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                     }
                     done();
                 });
-        });
+        }); */
 
 
         it("should fail create invoice with non-existing invoice provider user Id", function (done) {
@@ -451,7 +451,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
         });
 
     
-        it("should enable provider and get the enabled status of an invoice provider", function (done) {
+        /* it("should enable provider and get the enabled status of an invoice provider", function (done) {
 
             var _blockchainActionId = "enableProvider1";
             var _providerUserId = "providerA";
@@ -464,7 +464,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 done();
             });
 
-        });            
+        });   */          
             
         it("should add invoice for enabled provider", function (done){
 
