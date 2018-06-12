@@ -43,7 +43,7 @@ contract Populous is withAccessManager {
     //deploy DM before populous or set DM address when deploying populous
 
 
-    uint256 public version = 1;
+    //uint256 public version = 1;
  
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
@@ -81,7 +81,7 @@ contract Populous is withAccessManager {
       onlyServer
     {
         require(dm.upgradeDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
-        EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), version);
+        EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
     }
 
     /** @dev Creates a new token/currency.
@@ -124,7 +124,7 @@ contract Populous is withAccessManager {
         //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
         //blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
 
-        EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), version);
+        EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
     }
 
     /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
@@ -286,9 +286,9 @@ contract Populous is withAccessManager {
 
     // CONSTANT METHODS
 
-    function getVersion() public view returns (uint256 _version) {
+    /** function getVersion() public view returns (uint256 _version) {
         return version;
-    }
+    } */
 
     function getDataManager() public view returns (DataManager _dm) {
         return dm;

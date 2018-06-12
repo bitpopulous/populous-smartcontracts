@@ -7,6 +7,7 @@ import "./withAccessManager.sol";
 /// @title DataManager contract
 contract DataManager is withAccessManager {
     // FIELDS
+    uint256 public version = 1;
     // currency symbol => currency erc20 contract address
     mapping(bytes32 => address) public currencyAddresses;
     // currency address => currency symbol
@@ -286,12 +287,14 @@ contract DataManager is withAccessManager {
         providerCompanyData[_providerUserId].companyNumber);
     }
     
-    /** @dev Gets the enabled status of an invoice provider with the providers user Id.
-      * @param _userId The provider user Id.
-      * @return isEnabled The boolean value true/false indicating whether invoice provider is enabled or not
-      */
-    /* function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
+    
+    /**
+    function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
         return providerCompanyData[_userId].isEnabled;
     } */
+
+    function getVersion() public view returns (uint256 _version) {
+        return version;
+    }
 
 }
