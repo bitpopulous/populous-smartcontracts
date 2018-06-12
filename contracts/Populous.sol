@@ -227,10 +227,10 @@ contract Populous is withAccessManager {
         if (toBank == true) {
             //WITHDRAW BANK
             if (amount > cT.balanceOf(from)) {
-                // destroying (interest from winning crowdsale) from balance
-                require(cT.destroyTokensFrom(SafeMath.safeSub(amount, cT.balanceOf(from)), from) == true);
+                // destroying total balance
+                require(cT.destroyTokensFrom(cT.balanceOf(from), from) == true);
             } else {
-                // destroy (amount) from balance
+                // destroy amount from balance
                 require((cT.balanceOf(from) >= amount) && (cT.destroyTokensFrom(amount, from) == true));
             }
             require(dm.setActionStatus(_blockchainActionId) == true);

@@ -244,6 +244,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _blockchainActionId = "import1";
             var toBank = true;
             var inCollateral = 49;
+            //withdrawal amount is more than balance, so total USDp poken balance should be destroyed
             var withdrawalAmount = 373;
             var externalAddress = config.INVESTOR1_WALLET;
             var addressTo = "0x0";
@@ -259,7 +260,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 // check token balance of wallet is original balance minus withdrawn amount
                 return CT.balanceOf(config.INVESTOR1_WALLET);
             }).then(function (value) {
-                assert.equal(value.toNumber(), 367, "Failed importing tokens");
+                assert.equal(value.toNumber(), 0, "Failed importing tokens");
                 done();
                 // ppt balance of deposit contract = deposit amount - (pptfee * 2)
             });
