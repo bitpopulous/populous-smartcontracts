@@ -77,6 +77,11 @@ contract Populous is withAccessManager {
         EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId));
     }
 
+    /** @dev Adds a deposit address for a client id from older version of populous
+      * @param _blockchainActionId the blockchain action id
+      * @param _clientId the client id
+      * @param _depositContract The address of the deposit smartt contract
+      */
     function upgradeDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
       onlyServer
     {
@@ -109,7 +114,11 @@ contract Populous is withAccessManager {
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
     }
 
-
+    /** @dev Adds a currency from older version of populous
+      * @param _blockchainActionId the blockchain action id
+      * @param _currencyAddress the currency smart contract address
+      * @param _tokenSymbol The token symbol of the currency
+      */
     function upgradeCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
     {   
         // check if blockchain action id is already used
@@ -126,45 +135,6 @@ contract Populous is withAccessManager {
 
         EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
     }
-
-    /** @dev Enable a previously added invoice provider with access to add an invoice to the blockchain
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the invoiceProvider
-      */
-    /* function enableProvider(bytes32 _blockchainActionId, bytes32 _userId)
-        public
-        onlyServer
-    {
-        require(dm.getActionStatus(_blockchainActionId) == false);
-        //require(dm.getProviderStatus(_userId) == false);
-        require(dm.setProviderStatus(_userId, true) == true);
-        require(dm.setActionStatus(_blockchainActionId) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
-        //bytes2 countryCode, bytes32 companyName, bytes32 companyNumber
-        bytes2 countryCode;
-        bytes32 companyNumber;
-        (countryCode, , companyNumber) = dm.getProviderByUserId(_userId);
-        EventProviderEnabled(_blockchainActionId, _userId, countryCode, companyNumber);
-    } */
-
-    /** @dev Disable access granted to a previously added invoice provider
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the invoiceProvider
-      */
-    /* function disableProvider(bytes32 _blockchainActionId, bytes32 _userId)
-        public
-        onlyServer
-    {
-        require(dm.getActionStatus(_blockchainActionId) == false);
-        require(dm.getProviderStatus(_userId) == true);  
-        require(dm.setProviderStatus(_userId, false) == true);
-        require(dm.setActionStatus(_blockchainActionId) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
-        bytes2 countryCode;
-        bytes32 companyNumber;
-        (countryCode, , companyNumber, ) = dm.getProviderByUserId(_userId);
-        EventProviderDisabled(_blockchainActionId, _userId, countryCode, companyNumber);
-    } */
 
     /** @dev Add a new invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
@@ -215,7 +185,6 @@ contract Populous is withAccessManager {
       * @param from the blockchain address to import pokens from
       * @param currency the poken currency
       */
-
     function withdrawPoken(
         bytes32 _blockchainActionId, bytes32 currency, uint amount,
         address from, address to, bytes32 accountId, uint inCollateral,
@@ -286,10 +255,9 @@ contract Populous is withAccessManager {
 
     // CONSTANT METHODS
 
-    /** function getVersion() public view returns (uint256 _version) {
-        return version;
-    } */
-
+    /** @dev Gets the address of the data manager smart contract
+      * @return _dm The address of the data manager smart contract
+      */
     function getDataManager() public view returns (DataManager _dm) {
         return dm;
     }

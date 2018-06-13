@@ -63,10 +63,13 @@ contract DataManager is withAccessManager {
     /** @dev Constructor that sets the server when contract is deployed.
       * @param _accessManager The address to set as the access manager.
       */
-    function DataManager(address _accessManager) public withAccessManager(_accessManager) {
-        
-    }
+    function DataManager(address _accessManager) public withAccessManager(_accessManager) { }
 
+    /** @dev Adds a new deposit smart contract address linked to a client id
+      * @param _depositAddress the deposit smart contract address
+      * @param _clientId the client id
+      * @return success true/false denoting successful function call
+      */
     function setDepositAddress(address _depositAddress, bytes32 _clientId) public onlyServerOrOnlyPopulous returns (bool success) {
         if (depositAddresses[_clientId] != 0x0 && depositClientIds[_depositAddress] != 0x0){
             return false;
@@ -77,6 +80,11 @@ contract DataManager is withAccessManager {
         }
     }
 
+    /** @dev Adds a new currency sumbol and smart contract address  
+      * @param _currencyAddress the currency smart contract address
+      * @param _currencySymbol the currency symbol
+      * @return success true/false denoting successful function call
+      */
     function setCurrency(address _currencyAddress, bytes32 _currencySymbol) public onlyServerOrOnlyPopulous returns (bool success) {
         if (currencySymbols[_currencyAddress] != 0x0 && currencyAddresses[_currencySymbol] != 0x0){
             return false;
@@ -94,6 +102,7 @@ contract DataManager is withAccessManager {
       * @param accountId the clientId
       * @param to the blockchain address or smart contract address used in the transaction
       * @param amount the amount of tokens in the transaction
+      * @return success true/false denoting successful function call
       */
     function setBlockchainActionData(
         bytes32 _blockchainActionId, bytes32 currency, 
@@ -111,6 +120,12 @@ contract DataManager is withAccessManager {
         return true;
     }
 
+    /** @dev upgrade deposit address 
+      * @param _blockchainActionId the blockchain action id
+      * @param _clientId the client id
+      * @param _depositContract the deposit contract address for the client
+      * @return success true/false denoting successful function call
+      */
     function upgradeDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
       onlyServerOrOnlyPopulous
       returns (bool success)
@@ -130,19 +145,25 @@ contract DataManager is withAccessManager {
         blockchainActionIdData[_blockchainActionId].to = depositAddresses[_clientId];
         return true;
     }
-
+  
+    /** @dev Set action status for blockchain action  
+      * @param _blockchainActionId the action id
+      * @return success true or false if function call is successful
+      */
     function setActionStatus(bytes32 _blockchainActionId) public onlyServerOrOnlyPopulous returns (bool success) {
         require(actionStatus[_blockchainActionId] == false);
         actionStatus[_blockchainActionId] = true;
         return true;
     }
 
-    /* function setProviderStatus(bytes32 _userId, bool _status) public onlyServerOrOnlyPopulous returns (bool success) {
-        require(providerCompanyData[_userId].companyNumber != 0x0);
-        providerCompanyData[_userId].isEnabled = _status;
-        return true;
-    } */
-
+    /** @dev Add a new invoice to the platform  
+      * @param _providerUserId the providers user id
+      * @param _invoiceCountryCode the country code of the provider
+      * @param _invoiceCompanyNumber the providers company number
+      * @param _invoiceCompanyName the providers company name
+      * @param _invoiceNumber the invoice number
+      * @return success true or false if function call is successful
+      */
     function setInvoice(
         bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
         bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber) 
@@ -171,6 +192,7 @@ contract DataManager is withAccessManager {
       * @param _companyNumber the providers company number
       * @param _companyName the providers company name
       * @param _countryCode the providers country code
+      * @return success true or false if function call is successful
       */
     function setProvider(
         bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
@@ -195,23 +217,35 @@ contract DataManager is withAccessManager {
 
     // CONSTANT METHODS
 
+    /** @dev Gets a deposit address with the client id 
+      * @return clientDepositAddress The client's deposit address
+      */
     function getDepositAddress(bytes32 _clientId) public view returns (address clientDepositAddress){
         return depositAddresses[_clientId];
     }
 
+    /** @dev Gets a client id linked to a deposit address 
+      * @return depositClientId The client id
+      */
     function getClientIdWithDepositAddress(address _depositContract) public view returns (bytes32 depositClientId){
         return depositClientIds[_depositContract];
     }
 
+    /** @dev Gets a currency smart contract address 
+      * @return currencyAddress The currency address
+      */
     function getCurrency(bytes32 _currencySymbol) public view returns (address currencyAddress) {
         return currencyAddresses[_currencySymbol];
     }
    
+    /** @dev Gets a currency symbol given it's smart contract address 
+      * @return currencySymbol The currency symbol
+      */
     function getCurrencySymbol(address _currencyAddress) public view returns (bytes32 currencySymbol) {
         return currencySymbols[_currencyAddress];
     }
 
-        /** @dev Get the blockchain action Id Data for a blockchain Action id
+    /** @dev Get the blockchain action Id Data for a blockchain Action id
       * @param _blockchainActionId the blockchain action id
       * @return bytes32 currency
       * @return uint amount
@@ -293,6 +327,9 @@ contract DataManager is withAccessManager {
         return providerCompanyData[_userId].isEnabled;
     } */
 
+    /** @dev Gets the version number for the current contract instance
+      * @return _version The version number
+      */
     function getVersion() public view returns (uint256 _version) {
         return version;
     }
