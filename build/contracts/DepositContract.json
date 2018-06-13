@@ -1,0 +1,957 @@
+{
+  "contractName": "DepositContract",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_accessManager",
+          "type": "address"
+        }
+      ],
+      "name": "updateAccessManager",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "populousTokenContract",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "populousTokenContract",
+          "type": "address"
+        },
+        {
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "AM",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_clientId",
+          "type": "bytes32"
+        },
+        {
+          "name": "accessManager",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    }
+  ],
+  "bytecode": "0x6060604052341561000f57600080fd5b60405160408061044b833981016040528080519190602001805160008054600160a060020a03909216600160a060020a031990921691909117905550506001556103ed8061005e6000396000f300606060405263ffffffff60e060020a60003504166302ab72c4811461004457806370a0823114610065578063beabacc814610096578063f7f01b4b146100d257600080fd5b341561004f57600080fd5b610063600160a060020a0360043516610101565b005b341561007057600080fd5b610084600160a060020a03600435166101b4565b60405190815260200160405180910390f35b34156100a157600080fd5b6100be600160a060020a036004358116906024351660443561022d565b604051901515815260200160405180910390f35b34156100dd57600080fd5b6100e56103b2565b604051600160a060020a03909116815260200160405180910390f35b60008054600160a060020a03169063fda089589033906040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561015c57600080fd5b6102c65a03f1151561016d57600080fd5b50505060405180511515600114905061018557600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600081600160a060020a03166370a082313060006040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561020d57600080fd5b6102c65a03f1151561021e57600080fd5b50505060405180519392505050565b60008054600160a060020a031663fda0895833836040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561028657600080fd5b6102c65a03f1151561029757600080fd5b50505060405180511515600114905080610328575060008054600160a060020a0316906305fd22d09033906040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561030757600080fd5b6102c65a03f1151561031857600080fd5b5050506040518051151560011490505b151561033357600080fd5b83600160a060020a031663a9059cbb848460006040516020015260405160e060020a63ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b151561039057600080fd5b6102c65a03f115156103a157600080fd5b505050604051805195945050505050565b600054600160a060020a0316815600a165627a7a72305820aa6b00f4bb58e86009b6b26aa3b35733ea3d9e8b343423b70006bf2958ef9a310029",
+  "deployedBytecode": "0x606060405263ffffffff60e060020a60003504166302ab72c4811461004457806370a0823114610065578063beabacc814610096578063f7f01b4b146100d257600080fd5b341561004f57600080fd5b610063600160a060020a0360043516610101565b005b341561007057600080fd5b610084600160a060020a03600435166101b4565b60405190815260200160405180910390f35b34156100a157600080fd5b6100be600160a060020a036004358116906024351660443561022d565b604051901515815260200160405180910390f35b34156100dd57600080fd5b6100e56103b2565b604051600160a060020a03909116815260200160405180910390f35b60008054600160a060020a03169063fda089589033906040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561015c57600080fd5b6102c65a03f1151561016d57600080fd5b50505060405180511515600114905061018557600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b600081600160a060020a03166370a082313060006040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561020d57600080fd5b6102c65a03f1151561021e57600080fd5b50505060405180519392505050565b60008054600160a060020a031663fda0895833836040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561028657600080fd5b6102c65a03f1151561029757600080fd5b50505060405180511515600114905080610328575060008054600160a060020a0316906305fd22d09033906040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561030757600080fd5b6102c65a03f1151561031857600080fd5b5050506040518051151560011490505b151561033357600080fd5b83600160a060020a031663a9059cbb848460006040516020015260405160e060020a63ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b151561039057600080fd5b6102c65a03f115156103a157600080fd5b505050604051805195945050505050565b600054600160a060020a0316815600a165627a7a72305820aa6b00f4bb58e86009b6b26aa3b35733ea3d9e8b343423b70006bf2958ef9a310029",
+  "sourceMap": "127:1796:3:-;;;642:144;;;;;;;;;;;;;;;;;;;;;;;;;;;;1314:2:11;:34;;-1:-1:-1;;;;;1314:34:11;;;-1:-1:-1;;;;;;1314:34:11;;;;;;;;;-1:-1:-1;;1314:34:11;759:20:3;127:1796;;;;;;",
+  "deployedSourceMap": "127:1796:3:-;;;-1:-1:-1;;;127:1796:3;;;;;;;;;;;;;;;;;;;;;;;;;;;;1507:122:11;;;;;;;;;;;;-1:-1:-1;;;;;1507:122:11;;;;;1768:151:3;;;;;;;;;;;;-1:-1:-1;;;;;1768:151:3;;;;;;;;;;;;;;;;;;1222:226;;;;;;;;;;-1:-1:-1;;;;;1222:226:3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;149:23:11;;;;;;;;;;;;;;;-1:-1:-1;;;;;149:23:11;;;;;;;;;;;;;;;1507:122;376:2;;;-1:-1:-1;;;;;376:2:11;;:11;;388:10;;376:23;;;;;;;;;;-1:-1:-1;;;376:23:11;;;-1:-1:-1;;;;;376:23:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:31;;403:4;376:31;;-1:-1:-1;368:40:11;;;;;;1588:2;:34;;-1:-1:-1;;1588:34:11;-1:-1:-1;;;;;1588:34:11;;;;;;;;;;1507:122::o;1768:151:3:-;1839:4;-1:-1:-1;;;;;1862:44:3;;;1907:4;1839;1862:50;;;;;;;;;;-1:-1:-1;;;1862:50:3;;;-1:-1:-1;;;;;1862:50:3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1768:151;-1:-1:-1;;;1768:151:3:o;1222:226::-;1349:12;484:2:11;;-1:-1:-1;;;;;484:2:11;:11;496:10;1349:12:3;484:23:11;;;;;;;;;;-1:-1:-1;;;484:23:11;;;-1:-1:-1;;;;;484:23:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:31;;511:4;484:31;;-1:-1:-1;484:31:11;:68;;-1:-1:-1;519:2:11;;;-1:-1:-1;;;;;519:2:11;;:13;;533:10;;519:25;;;;;;;;;;-1:-1:-1;;;519:25:11;;;-1:-1:-1;;;;;519:25:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:33;;548:4;519:33;;-1:-1:-1;484:68:11;476:77;;;;;;;;-1:-1:-1;;;;;1385:43:3;;;1429:3;1434:6;1385:56;;;;;;;;;;;-1:-1:-1;;;1385:56:3;;;-1:-1:-1;;;;;1385:56:3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1222:226;-1:-1:-1;;;;;1222:226:3:o;149:23:11:-;;;-1:-1:-1;;;;;149:23:11;;:::o",
+  "source": "pragma solidity ^0.4.17;\n\nimport \"./iERC20Token.sol\";\nimport \"./withAccessManager.sol\";\n\n\n\n/// @title DepositContract contract\ncontract DepositContract is withAccessManager {\n\n    bytes32 clientId;// client ID.\n    address manager; // address of contract manager.\n\n    // MODIFIERS\n\n    /* modifier onlyManager() {\n        require(msg.sender == manager);\n        _;\n    } */\n\n    // NON-CONSTANT METHODS \n\n    /** @dev Constructor that sets the _clientID when the contract is deployed.\n      * @dev The method also sets the manager to the msg.sender.\n      * @param _clientId A string of fixed length representing the client ID.\n      */\n    function DepositContract(bytes32 _clientId, address accessManager) public withAccessManager(accessManager) {\n        clientId = _clientId;\n    }\n     \n\n    /** @dev Transfers an amount '_value' of tokens from msg.sender to '_to' address/wallet.\n      * @param populousTokenContract The address of the ERC20 token contract which implements the transfer method.\n      * @param _value the amount of tokens to transfer.\n      * @param _to The address/wallet to send to.\n      * @return success boolean true or false indicating whether the transfer was successful or not.\n      */\n    function transfer(address populousTokenContract, address _to, uint256 _value) public\n        onlyServerOrOnlyPopulous returns (bool success) \n    {\n        return iERC20Token(populousTokenContract).transfer(_to, _value);\n    }\n\n    // CONSTANT METHODS\n    \n    /** @dev Returns the token balance of the current contract instance using the ERC20 balanceOf method.\n      * @param populousTokenContract An address implementing the ERC20 token standard. \n      * @return uint An unsigned integer representing the returned token balance.\n      */\n    function balanceOf(address populousTokenContract) public view returns (uint) {\n        return iERC20Token(populousTokenContract).balanceOf(this);\n    }\n\n\n}",
+  "sourcePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/DepositContract.sol",
+  "ast": {
+    "attributes": {
+      "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/DepositContract.sol",
+      "exportedSymbols": {
+        "DepositContract": [
+          1042
+        ]
+      }
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "^",
+            "0.4",
+            ".17"
+          ]
+        },
+        "id": 981,
+        "name": "PragmaDirective",
+        "src": "0:24:3"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 3107,
+          "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/iERC20Token.sol",
+          "file": "./iERC20Token.sol",
+          "scope": 1043,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 982,
+        "name": "ImportDirective",
+        "src": "26:27:3"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 3246,
+          "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/withAccessManager.sol",
+          "file": "./withAccessManager.sol",
+          "scope": 1043,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 983,
+        "name": "ImportDirective",
+        "src": "54:33:3"
+      },
+      {
+        "attributes": {
+          "contractDependencies": [
+            3245
+          ],
+          "contractKind": "contract",
+          "documentation": "@title DepositContract contract",
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            1042,
+            3245
+          ],
+          "name": "DepositContract",
+          "scope": 1043
+        },
+        "children": [
+          {
+            "attributes": {
+              "arguments": [
+                null
+              ]
+            },
+            "children": [
+              {
+                "attributes": {
+                  "contractScope": null,
+                  "name": "withAccessManager",
+                  "referencedDeclaration": 3245,
+                  "type": "contract withAccessManager"
+                },
+                "id": 984,
+                "name": "UserDefinedTypeName",
+                "src": "155:17:3"
+              }
+            ],
+            "id": 985,
+            "name": "InheritanceSpecifier",
+            "src": "155:17:3"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "name": "clientId",
+              "scope": 1042,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "bytes32",
+              "value": null,
+              "visibility": "internal"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "bytes32",
+                  "type": "bytes32"
+                },
+                "id": 986,
+                "name": "ElementaryTypeName",
+                "src": "180:7:3"
+              }
+            ],
+            "id": 987,
+            "name": "VariableDeclaration",
+            "src": "180:16:3"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "name": "manager",
+              "scope": 1042,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "address",
+              "value": null,
+              "visibility": "internal"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "address",
+                  "type": "address"
+                },
+                "id": 988,
+                "name": "ElementaryTypeName",
+                "src": "215:7:3"
+              }
+            ],
+            "id": 989,
+            "name": "VariableDeclaration",
+            "src": "215:15:3"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "implemented": true,
+              "isConstructor": true,
+              "name": "DepositContract",
+              "payable": false,
+              "scope": 1042,
+              "stateMutability": "nonpayable",
+              "superFunction": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_clientId",
+                      "scope": 1004,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "bytes32",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "bytes32",
+                          "type": "bytes32"
+                        },
+                        "id": 990,
+                        "name": "ElementaryTypeName",
+                        "src": "667:7:3"
+                      }
+                    ],
+                    "id": 991,
+                    "name": "VariableDeclaration",
+                    "src": "667:17:3"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "accessManager",
+                      "scope": 1004,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "type": "address"
+                        },
+                        "id": 992,
+                        "name": "ElementaryTypeName",
+                        "src": "686:7:3"
+                      }
+                    ],
+                    "id": 993,
+                    "name": "VariableDeclaration",
+                    "src": "686:21:3"
+                  }
+                ],
+                "id": 994,
+                "name": "ParameterList",
+                "src": "666:42:3"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 998,
+                "name": "ParameterList",
+                "src": "749:0:3"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "argumentTypes": null,
+                      "overloadedDeclarations": [
+                        null
+                      ],
+                      "referencedDeclaration": 3245,
+                      "type": "type(contract withAccessManager)",
+                      "value": "withAccessManager"
+                    },
+                    "id": 995,
+                    "name": "Identifier",
+                    "src": "716:17:3"
+                  },
+                  {
+                    "attributes": {
+                      "argumentTypes": null,
+                      "overloadedDeclarations": [
+                        null
+                      ],
+                      "referencedDeclaration": 993,
+                      "type": "address",
+                      "value": "accessManager"
+                    },
+                    "id": 996,
+                    "name": "Identifier",
+                    "src": "734:13:3"
+                  }
+                ],
+                "id": 997,
+                "name": "ModifierInvocation",
+                "src": "716:32:3"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "bytes32"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 987,
+                              "type": "bytes32",
+                              "value": "clientId"
+                            },
+                            "id": 999,
+                            "name": "Identifier",
+                            "src": "759:8:3"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 991,
+                              "type": "bytes32",
+                              "value": "_clientId"
+                            },
+                            "id": 1000,
+                            "name": "Identifier",
+                            "src": "770:9:3"
+                          }
+                        ],
+                        "id": 1001,
+                        "name": "Assignment",
+                        "src": "759:20:3"
+                      }
+                    ],
+                    "id": 1002,
+                    "name": "ExpressionStatement",
+                    "src": "759:20:3"
+                  }
+                ],
+                "id": 1003,
+                "name": "Block",
+                "src": "749:37:3"
+              }
+            ],
+            "id": 1004,
+            "name": "FunctionDefinition",
+            "src": "642:144:3"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "implemented": true,
+              "isConstructor": false,
+              "name": "transfer",
+              "payable": false,
+              "scope": 1042,
+              "stateMutability": "nonpayable",
+              "superFunction": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "populousTokenContract",
+                      "scope": 1026,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "type": "address"
+                        },
+                        "id": 1005,
+                        "name": "ElementaryTypeName",
+                        "src": "1240:7:3"
+                      }
+                    ],
+                    "id": 1006,
+                    "name": "VariableDeclaration",
+                    "src": "1240:29:3"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_to",
+                      "scope": 1026,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "type": "address"
+                        },
+                        "id": 1007,
+                        "name": "ElementaryTypeName",
+                        "src": "1271:7:3"
+                      }
+                    ],
+                    "id": 1008,
+                    "name": "VariableDeclaration",
+                    "src": "1271:11:3"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_value",
+                      "scope": 1026,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "uint256",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "uint256",
+                          "type": "uint256"
+                        },
+                        "id": 1009,
+                        "name": "ElementaryTypeName",
+                        "src": "1284:7:3"
+                      }
+                    ],
+                    "id": 1010,
+                    "name": "VariableDeclaration",
+                    "src": "1284:14:3"
+                  }
+                ],
+                "id": 1011,
+                "name": "ParameterList",
+                "src": "1239:60:3"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "success",
+                      "scope": 1026,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "bool",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "bool",
+                          "type": "bool"
+                        },
+                        "id": 1014,
+                        "name": "ElementaryTypeName",
+                        "src": "1349:4:3"
+                      }
+                    ],
+                    "id": 1015,
+                    "name": "VariableDeclaration",
+                    "src": "1349:12:3"
+                  }
+                ],
+                "id": 1016,
+                "name": "ParameterList",
+                "src": "1348:14:3"
+              },
+              {
+                "attributes": {
+                  "arguments": [
+                    null
+                  ]
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "argumentTypes": null,
+                      "overloadedDeclarations": [
+                        null
+                      ],
+                      "referencedDeclaration": 3204,
+                      "type": "modifier ()",
+                      "value": "onlyServerOrOnlyPopulous"
+                    },
+                    "id": 1012,
+                    "name": "Identifier",
+                    "src": "1315:24:3"
+                  }
+                ],
+                "id": 1013,
+                "name": "ModifierInvocation",
+                "src": "1315:24:3"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "functionReturnParameters": 1016
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "type": "bool",
+                          "type_conversion": false
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_address",
+                                  "typeString": "address"
+                                },
+                                {
+                                  "typeIdentifier": "t_uint256",
+                                  "typeString": "uint256"
+                                }
+                              ],
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": false,
+                              "lValueRequested": false,
+                              "member_name": "transfer",
+                              "referencedDeclaration": 3053,
+                              "type": "function (address,uint256) external returns (bool)"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "isConstant": false,
+                                  "isLValue": false,
+                                  "isPure": false,
+                                  "isStructConstructorCall": false,
+                                  "lValueRequested": false,
+                                  "names": [
+                                    null
+                                  ],
+                                  "type": "contract iERC20Token",
+                                  "type_conversion": true
+                                },
+                                "children": [
+                                  {
+                                    "attributes": {
+                                      "argumentTypes": [
+                                        {
+                                          "typeIdentifier": "t_address",
+                                          "typeString": "address"
+                                        }
+                                      ],
+                                      "overloadedDeclarations": [
+                                        null
+                                      ],
+                                      "referencedDeclaration": 3106,
+                                      "type": "type(contract iERC20Token)",
+                                      "value": "iERC20Token"
+                                    },
+                                    "id": 1017,
+                                    "name": "Identifier",
+                                    "src": "1385:11:3"
+                                  },
+                                  {
+                                    "attributes": {
+                                      "argumentTypes": null,
+                                      "overloadedDeclarations": [
+                                        null
+                                      ],
+                                      "referencedDeclaration": 1006,
+                                      "type": "address",
+                                      "value": "populousTokenContract"
+                                    },
+                                    "id": 1018,
+                                    "name": "Identifier",
+                                    "src": "1397:21:3"
+                                  }
+                                ],
+                                "id": 1019,
+                                "name": "FunctionCall",
+                                "src": "1385:34:3"
+                              }
+                            ],
+                            "id": 1020,
+                            "name": "MemberAccess",
+                            "src": "1385:43:3"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 1008,
+                              "type": "address",
+                              "value": "_to"
+                            },
+                            "id": 1021,
+                            "name": "Identifier",
+                            "src": "1429:3:3"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 1010,
+                              "type": "uint256",
+                              "value": "_value"
+                            },
+                            "id": 1022,
+                            "name": "Identifier",
+                            "src": "1434:6:3"
+                          }
+                        ],
+                        "id": 1023,
+                        "name": "FunctionCall",
+                        "src": "1385:56:3"
+                      }
+                    ],
+                    "id": 1024,
+                    "name": "Return",
+                    "src": "1378:63:3"
+                  }
+                ],
+                "id": 1025,
+                "name": "Block",
+                "src": "1368:80:3"
+              }
+            ],
+            "id": 1026,
+            "name": "FunctionDefinition",
+            "src": "1222:226:3"
+          },
+          {
+            "attributes": {
+              "constant": true,
+              "implemented": true,
+              "isConstructor": false,
+              "modifiers": [
+                null
+              ],
+              "name": "balanceOf",
+              "payable": false,
+              "scope": 1042,
+              "stateMutability": "view",
+              "superFunction": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "populousTokenContract",
+                      "scope": 1041,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "type": "address"
+                        },
+                        "id": 1027,
+                        "name": "ElementaryTypeName",
+                        "src": "1787:7:3"
+                      }
+                    ],
+                    "id": 1028,
+                    "name": "VariableDeclaration",
+                    "src": "1787:29:3"
+                  }
+                ],
+                "id": 1029,
+                "name": "ParameterList",
+                "src": "1786:31:3"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "",
+                      "scope": 1041,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "uint256",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "uint",
+                          "type": "uint256"
+                        },
+                        "id": 1030,
+                        "name": "ElementaryTypeName",
+                        "src": "1839:4:3"
+                      }
+                    ],
+                    "id": 1031,
+                    "name": "VariableDeclaration",
+                    "src": "1839:4:3"
+                  }
+                ],
+                "id": 1032,
+                "name": "ParameterList",
+                "src": "1838:6:3"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "functionReturnParameters": 1032
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "type": "uint256",
+                          "type_conversion": false
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_contract$_DepositContract_$1042",
+                                  "typeString": "contract DepositContract"
+                                }
+                              ],
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": false,
+                              "lValueRequested": false,
+                              "member_name": "balanceOf",
+                              "referencedDeclaration": 3080,
+                              "type": "function (address) view external returns (uint256)"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "isConstant": false,
+                                  "isLValue": false,
+                                  "isPure": false,
+                                  "isStructConstructorCall": false,
+                                  "lValueRequested": false,
+                                  "names": [
+                                    null
+                                  ],
+                                  "type": "contract iERC20Token",
+                                  "type_conversion": true
+                                },
+                                "children": [
+                                  {
+                                    "attributes": {
+                                      "argumentTypes": [
+                                        {
+                                          "typeIdentifier": "t_address",
+                                          "typeString": "address"
+                                        }
+                                      ],
+                                      "overloadedDeclarations": [
+                                        null
+                                      ],
+                                      "referencedDeclaration": 3106,
+                                      "type": "type(contract iERC20Token)",
+                                      "value": "iERC20Token"
+                                    },
+                                    "id": 1033,
+                                    "name": "Identifier",
+                                    "src": "1862:11:3"
+                                  },
+                                  {
+                                    "attributes": {
+                                      "argumentTypes": null,
+                                      "overloadedDeclarations": [
+                                        null
+                                      ],
+                                      "referencedDeclaration": 1028,
+                                      "type": "address",
+                                      "value": "populousTokenContract"
+                                    },
+                                    "id": 1034,
+                                    "name": "Identifier",
+                                    "src": "1874:21:3"
+                                  }
+                                ],
+                                "id": 1035,
+                                "name": "FunctionCall",
+                                "src": "1862:34:3"
+                              }
+                            ],
+                            "id": 1036,
+                            "name": "MemberAccess",
+                            "src": "1862:44:3"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 3282,
+                              "type": "contract DepositContract",
+                              "value": "this"
+                            },
+                            "id": 1037,
+                            "name": "Identifier",
+                            "src": "1907:4:3"
+                          }
+                        ],
+                        "id": 1038,
+                        "name": "FunctionCall",
+                        "src": "1862:50:3"
+                      }
+                    ],
+                    "id": 1039,
+                    "name": "Return",
+                    "src": "1855:57:3"
+                  }
+                ],
+                "id": 1040,
+                "name": "Block",
+                "src": "1845:74:3"
+              }
+            ],
+            "id": 1041,
+            "name": "FunctionDefinition",
+            "src": "1768:151:3"
+          }
+        ],
+        "id": 1042,
+        "name": "ContractDefinition",
+        "src": "127:1796:3"
+      }
+    ],
+    "id": 1043,
+    "name": "SourceUnit",
+    "src": "0:1923:3"
+  },
+  "networks": {},
+  "schemaVersion": "1.0.0",
+  "updatedAt": "2018-06-13T10:37:28.094Z"
+}

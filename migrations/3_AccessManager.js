@@ -12,6 +12,14 @@ module.exports = function(deployer) {
     console.log('main account', acc_guardian);
     */
     //deployer.deploy(AccessManager, acc_server, acc_guardian);
-    deployer.deploy(AccessManager, acc_server);
-    console.log('Finished deploying AM');
+    
+    // not redeployed after initial deployment
+    //deployer.deploy(AccessManager, acc_server);
+    //console.log('Finished deploying AM');
+    deployer.then(function() {
+        return AccessManager.deployed().then(function(instance) {
+            AM = instance;
+            console.log('Finished deploying Populous Token ', AM.address);
+        });
+    });
 };
