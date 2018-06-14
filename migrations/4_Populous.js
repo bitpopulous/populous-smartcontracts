@@ -11,8 +11,8 @@ module.exports = function(deployer) {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;
             //deploy DataManager.sol
-            return deployer.deploy(DataManager, AM.address);
-        }).then(function(){
+            //return deployer.deploy(DataManager, AM.address);
+            //}).then(function(){
             //get deployed DataManager instance
             return DataManager.deployed();
         }).then(function(DM){
