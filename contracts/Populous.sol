@@ -165,6 +165,7 @@ contract Populous is withAccessManager {
         bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
         bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
         public
+        onlyServer
     {
         require(dm.getActionStatus(_blockchainActionId) == false);
         bytes2 countryCode; 

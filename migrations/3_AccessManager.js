@@ -19,7 +19,7 @@ module.exports = function(deployer) {
     deployer.then(function() {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;
-            console.log('Finished deploying Populous Token ', AM.address);
+            console.log('Finished deploying Access Manager ', AM.address);
         });
     });
 };
