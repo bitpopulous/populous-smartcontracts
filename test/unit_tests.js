@@ -83,7 +83,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
         });
 
 
-        it("should init currency token American Dollar USD", function (done) {
+        it("should get created American Dollar USD currency token", function (done) {
 
             DataManager.deployed().then(function (instance) {
                 var dm = instance;
