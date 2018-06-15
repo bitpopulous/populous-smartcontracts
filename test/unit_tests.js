@@ -81,6 +81,22 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 done();
             });
         });
+
+
+        it("should init currency token American Dollar USD", function (done) {
+
+            DataManager.deployed().then(function (instance) {
+                var dm = instance;
+                console.log('Populous', P.address);
+                // creating a new currency USD for which to mint and use tokens
+                return dm.getCurrencyDetails(global.currencies.USD);
+            }).then(function (currencyDetails) {
+                assert.equal(web3.toUtf8(currencyDetails[0]), "USD", "failed getting currency symbol");
+                assert.equal(web3.toUtf8(currencyDetails[1]), "USD Pokens", "failed getting currency name");
+                assert.equal(currencyDetails[2].toNumber(), 8, "failed getting currency name");
+                done();
+            });
+        });
         
         it("should get blockchain action id information", function (done){
             var _blockchainActionId = "createCurrency1";
@@ -164,6 +180,28 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             }).then(function (result) {
                 // PPT balance of newly created deposit contract address should be 0
                 assert.equal(result.toNumber(), 0, "failed creating deposit contract");
+                done();
+            });
+        });
+
+
+        it("should update deposit contract for client twice", function (done) {
+            assert(global.PPT, "PPT required.");
+
+            var _blockchainActionId = "createAddress3";
+            P._setDepositAddress(_blockchainActionId, "newInvestor A", "0x86916440ffba88b233372c46bb0c3867cb06eb98").then(function (instance) {
+                assert(instance);
+                return DM.getDepositAddress("newInvestor A");
+            }).then(function (deposit_contract_address) {
+                // display deposit smart contract address
+                assert.equal("0x86916440ffba88b233372c46bb0c3867cb06eb98", deposit_contract_address, "failed setting deposit address");
+                
+                return P._setDepositAddress("actionDA", "newInvestor A", "0x86916440ffba88b233372c46bb0c3867cb06eb45");
+            }).then(function () {
+                return DM.getDepositAddress("newInvestor A");
+            }).then(function(deposit_contract_address_1){
+                // display deposit smart contract address
+                assert.equal("0x86916440ffba88b233372c46bb0c3867cb06eb45", deposit_contract_address_1, "failed setting deposit address");
                 done();
             });
         });
@@ -405,6 +443,26 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 });
         });
 
+
+        it("should update an invoice provider with a different company number and country code", function (done) {
+            // PROVIDER
+            var _providerBlockchainActionId = "provider3";
+            var _providerUserId = "providerA";
+            var _companyNumber = "112233446";
+            var _companyName = "populous test provider";
+            var _countryCode = "49";
+
+            P._setProvider(_providerBlockchainActionId, _providerUserId, web3.fromAscii(_companyNumber), _companyName, web3.fromAscii(_countryCode)).then(function(){
+                // get provider by user id from data manager
+                return DM.getProviderByUserId(_providerUserId);
+            }).then(function(providerInfo){
+                assert.equal(web3.toAscii(providerInfo[0]), _countryCode, "failed getting provider country code");
+                assert.equal(web3.toUtf8(providerInfo[1]), _companyName, "failed getting provider country code");
+                assert.equal(web3.toUtf8(providerInfo[2]), _companyNumber, "failed getting provider country code");
+                done();
+            });
+        });
+
         /* it("should disable provider and get the enabled status of an invoice provider", function (done) {
 
             var _blockchainActionId = "disableProvider1";
@@ -479,7 +537,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
 
         });   */          
             
-        it("should add invoice for enabled provider", function (done){
+        it("should add invoice for existing provider", function (done){
 
             var _providerUserId = "providerA";
             var _invoiceBlockchainActionId = "createInvoice2";
