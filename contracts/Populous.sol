@@ -89,6 +89,18 @@ contract Populous is withAccessManager {
         EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
     }
 
+    /** @dev Updates a deposit address for a client id
+      * @param _blockchainActionId the blockchain action id
+      * @param _clientId the client id
+      * @param _depositContract The address of the deposit smartt contract
+      */
+    function _setDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
+      onlyServer
+    {
+        require(dm._setDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
+        EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
+    }
+
     /** @dev Creates a new token/currency.
       * @param _tokenName  The name of the currency.
       * @param _decimalUnits The number of decimals the currency has.
@@ -136,6 +148,25 @@ contract Populous is withAccessManager {
         EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
     }
 
+
+    /** @dev Updates a currency and symbol
+      * @param _blockchainActionId the blockchain action id
+      * @param _currencyAddress the currency smart contract address
+      * @param _tokenSymbol The token symbol of the currency
+      */
+    function _setCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
+    {   
+        // check if blockchain action id is already used
+        require(dm.getActionStatus(_blockchainActionId) == false);
+        // Check if currency exists as erc20
+        require(CurrencyToken(_currencyAddress).symbol() != 0x0 && CurrencyToken(_currencyAddress).name() != 0x0 && CurrencyToken(_currencyAddress).symbol() == _tokenSymbol);
+        require(dm._setCurrency(_currencyAddress, _tokenSymbol) == true);
+        
+        require(dm.setActionStatus(_blockchainActionId) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, _currencyAddress, 0) == true);
+        EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
+    }
+
     /** @dev Add a new invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
       * @param _userId the user id of the provider
@@ -150,6 +181,23 @@ contract Populous is withAccessManager {
         onlyServer
     {   
         require(dm.setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
+        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
+    }
+
+    /** @dev Update a new invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _userId the user id of the provider
+      * @param _companyNumber the providers company number
+      * @param _companyName the providers company name
+      * @param _countryCode the providers country code
+      */
+    function _setProvider(
+        bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
+        bytes32 _companyName, bytes2 _countryCode) 
+        public 
+        onlyServer
+    {   
+        require(dm._setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
         EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
     }
 
