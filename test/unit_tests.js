@@ -188,14 +188,14 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             assert(global.PPT, "PPT required.");
 
             var _blockchainActionId = "createAddress3";
-            P._setDepositAddress(DM.address, _blockchainActionId, "newInvestor A", "0x86916440ffba88b233372c46bb0c3867cb06eb98").then(function (instance) {
+            DM._setDepositAddress(_blockchainActionId, "newInvestor A", "0x86916440ffba88b233372c46bb0c3867cb06eb98").then(function (instance) {
                 assert(instance);
                 return DM.getDepositAddress("newInvestor A");
             }).then(function (deposit_contract_address) {
                 // display deposit smart contract address
                 assert.equal("0x86916440ffba88b233372c46bb0c3867cb06eb98", deposit_contract_address, "failed setting deposit address");
                 
-                return P._setDepositAddress(DM.address, "actionDA", "newInvestor A", "0x86916440ffba88b233372c46bb0c3867cb06eb45");
+                return DM._setDepositAddress("actionDA", "newInvestor A", "0x86916440ffba88b233372c46bb0c3867cb06eb45");
             }).then(function () {
                 return DM.getDepositAddress("newInvestor A");
             }).then(function(deposit_contract_address_1){
@@ -382,6 +382,14 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             }).then(function(admin_ppt_balance){
                 // check balance of admin wallet to see if pptFee has been transferred
                 assert.equal(admin_ppt_balance.toNumber(), pptFee * 3, "failed withdrawing PPT");
+
+                return DM.getBlockchainActionIdData(_blockchainActionId);
+            }).then(function (actionData) {
+                assert.equal(web3.toUtf8(actionData[0]), 'PPT', "Failed getting correct currency");
+                assert.equal(actionData[1], toWithdraw, "Failed getting correct amount");
+                assert.equal(web3.toUtf8(actionData[2]), config.INVESTOR1_ACC, "Failed getting correct action id");
+                assert.equal(actionData[3], config.INVESTOR1_WALLET, "Failed getting correct address to/from");
+                //console.log("set action", web3.toUtf8(actionData[0]));
                 done();
                 // ppt balance of deposit contract = deposit amount - (pptfee * 3) - toWithdraw
             });
@@ -451,7 +459,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             var _companyName = "populous test provider";
             var _countryCode = "49";
 
-            P._setProvider(DM.address, _providerBlockchainActionId, _providerUserId, web3.fromAscii(_companyNumber), _companyName, web3.fromAscii(_countryCode)).then(function(){
+            DM._setProvider(_providerBlockchainActionId, _providerUserId, web3.fromAscii(_companyNumber), _companyName, web3.fromAscii(_countryCode)).then(function(){
                 // get provider by user id from data manager
                 return DM.getProviderByUserId(_providerUserId);
             }).then(function(providerInfo){

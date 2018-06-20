@@ -105,7 +105,7 @@ contract DataManager is iDataManager, withAccessManager {
       * @param _currencySymbol the currency symbol
       * @return success true/false denoting successful function call
       */
-    function _setCurrency(address _currencyAddress, bytes32 _currencySymbol) public onlyPopulous returns (bool success) {
+    function _setCurrency(address _currencyAddress, bytes32 _currencySymbol) public onlyServerOrOnlyPopulous returns (bool success) {
         currencySymbols[_currencyAddress] = _currencySymbol;
         currencyAddresses[_currencySymbol] = _currencyAddress;
         assert(currencyAddresses[_currencySymbol] != 0x0 && currencySymbols[_currencyAddress] != 0x0);
@@ -170,7 +170,7 @@ contract DataManager is iDataManager, withAccessManager {
       * @return success true/false denoting successful function call
       */
     function _setDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
-      onlyPopulous
+      onlyServerOrOnlyPopulous
       returns (bool success)
     {
         require(actionStatus[_blockchainActionId] == false);
@@ -268,7 +268,7 @@ contract DataManager is iDataManager, withAccessManager {
         bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
         bytes32 _companyName, bytes2 _countryCode) 
         public 
-        onlyPopulous
+        onlyServerOrOnlyPopulous
         returns (bool success)
     {   
         require(actionStatus[_blockchainActionId] == false);
