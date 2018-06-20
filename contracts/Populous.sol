@@ -12,7 +12,7 @@ import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
 import "./SafeMath.sol";
-import "./DataManager.sol";
+import "./iDataManager.sol";
 //import "./Utils.sol";
 
 /// @title Populous contract
@@ -36,21 +36,11 @@ contract Populous is withAccessManager {
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
     // FIELDS
-    DataManager dm;
 
-    //in constructor
-    // dm = DataManager(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
-    //deploy DM before populous or set DM address when deploying populous
-
-
-    //uint256 public version = 1;
- 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
-    function Populous(address _accessManager, address _dataManager) public withAccessManager(_accessManager) { 
-        dm = DataManager(_dataManager);
-    }
+    function Populous(address _accessManager) public withAccessManager(_accessManager) {}
     /**
     BANK MODULE
     */
@@ -62,9 +52,11 @@ contract Populous is withAccessManager {
       * @param clientId The bytes32 client ID
       * @return address The address of the deployed deposit contract instance.
       */
-    function createAddress(bytes32 _blockchainActionId, bytes32 clientId) public
+    function createAddress(address _dataManager, bytes32 _blockchainActionId, bytes32 clientId) public
         onlyServer
-    {
+    {   
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false);
         require(dm.setDepositAddress(new DepositContract(clientId, AM), clientId) == true);
         assert(dm.getDepositAddress(clientId) != 0x0);
@@ -82,22 +74,12 @@ contract Populous is withAccessManager {
       * @param _clientId the client id
       * @param _depositContract The address of the deposit smartt contract
       */
-    function upgradeDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
+    function upgradeDepositAddress(address _dataManager, bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
       onlyServer
     {
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.upgradeDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
-        EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
-    }
-
-    /** @dev Updates a deposit address for a client id
-      * @param _blockchainActionId the blockchain action id
-      * @param _clientId the client id
-      * @param _depositContract The address of the deposit smartt contract
-      */
-    function _setDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
-      onlyServer
-    {
-        require(dm._setDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
         EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
     }
 
@@ -107,11 +89,13 @@ contract Populous is withAccessManager {
       * @param _tokenSymbol The currency symbol, e.g., GBP
       */
     function createCurrency(
-        bytes32 _blockchainActionId, bytes32 _tokenName, uint8 _decimalUnits, 
-        bytes32 _tokenSymbol)
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
         public
         onlyServer
     {   
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false);
         // Check if currency already exists
         //require(currencies[_tokenSymbol] == 0x0);
@@ -131,8 +115,10 @@ contract Populous is withAccessManager {
       * @param _currencyAddress the currency smart contract address
       * @param _tokenSymbol The token symbol of the currency
       */
-    function upgradeCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
+    function upgradeCurrency(address _dataManager, bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
     {   
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         // check if blockchain action id is already used
         require(dm.getActionStatus(_blockchainActionId) == false);
         // Check if currency exists as erc20
@@ -148,25 +134,6 @@ contract Populous is withAccessManager {
         EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
     }
 
-
-    /** @dev Updates a currency and symbol
-      * @param _blockchainActionId the blockchain action id
-      * @param _currencyAddress the currency smart contract address
-      * @param _tokenSymbol The token symbol of the currency
-      */
-    function _setCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
-    {   
-        // check if blockchain action id is already used
-        require(dm.getActionStatus(_blockchainActionId) == false);
-        // Check if currency exists as erc20
-        require(CurrencyToken(_currencyAddress).symbol() != 0x0 && CurrencyToken(_currencyAddress).name() != 0x0 && CurrencyToken(_currencyAddress).symbol() == _tokenSymbol);
-        require(dm._setCurrency(_currencyAddress, _tokenSymbol) == true);
-        
-        require(dm.setActionStatus(_blockchainActionId) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, _currencyAddress, 0) == true);
-        EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
-    }
-
     /** @dev Add a new invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
       * @param _userId the user id of the provider
@@ -175,29 +142,15 @@ contract Populous is withAccessManager {
       * @param _countryCode the providers country code
       */
     function addProvider(
-        bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 _userId, bytes32 _companyNumber, 
         bytes32 _companyName, bytes2 _countryCode) 
         public 
         onlyServer
     {   
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
-        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
-    }
-
-    /** @dev Update a new invoice provider to the platform  
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the provider
-      * @param _companyNumber the providers company number
-      * @param _companyName the providers company name
-      * @param _countryCode the providers country code
-      */
-    function _setProvider(
-        bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
-        bytes32 _companyName, bytes2 _countryCode) 
-        public 
-        onlyServer
-    {   
-        require(dm._setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
         EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
     }
 
@@ -210,11 +163,14 @@ contract Populous is withAccessManager {
       * @param _invoiceNumber the invoice identification number
       */
     function addInvoice(
-        bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
         bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
         public
         onlyServer
     {
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false);
         bytes2 countryCode; 
         bytes32 companyName; 
@@ -235,26 +191,30 @@ contract Populous is withAccessManager {
       * @param currency the poken currency
       */
     function withdrawPoken(
-        bytes32 _blockchainActionId, bytes32 currency, uint amount,
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 currency, uint amount,
         address from, address to, bytes32 accountId, uint inCollateral,
         address pptAddress, uint pptFee, address adminExternalWallet, bool toBank) 
         public 
         onlyServer 
     {
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0 && dm.getCurrency(currency) != 0x0);
         DepositContract o = DepositContract(dm.getDepositAddress(accountId));
         // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
         require((SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee) && (o.transfer(pptAddress, adminExternalWallet, pptFee) == true));
-        CurrencyToken cT = CurrencyToken(dm.getCurrency(currency));
+        //stach deep with too many local variables, using cT directly
+        //CurrencyToken cT = CurrencyToken(dm.getCurrency(currency));
         if (toBank == true) {
             //WITHDRAW BANK
-            if (amount > cT.balanceOf(from)) {
+            if (amount > CurrencyToken(dm.getCurrency(currency)).balanceOf(from)) {
                 // destroying total balance
-                require(cT.destroyTokensFrom(cT.balanceOf(from), from) == true);
+                require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(CurrencyToken(dm.getCurrency(currency)).balanceOf(from), from) == true);
             } else {
                 // destroy amount from balance
-                require((cT.balanceOf(from) >= amount) && (cT.destroyTokensFrom(amount, from) == true));
+                require((CurrencyToken(dm.getCurrency(currency)).balanceOf(from) >= amount) && (CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(amount, from) == true));
             }
             require(dm.setActionStatus(_blockchainActionId) == true);
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
@@ -264,9 +224,9 @@ contract Populous is withAccessManager {
             // WITHDRAW POKEN        
 
             //credit ledger
-            cT.mintTokens(amount);
+            CurrencyToken(dm.getCurrency(currency)).mintTokens(amount);
             //credit account
-            cT.transfer(to, amount);
+            CurrencyToken(dm.getCurrency(currency)).transfer(to, amount);
 
             require(dm.setActionStatus(_blockchainActionId) == true);           
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
@@ -285,11 +245,14 @@ contract Populous is withAccessManager {
       * @param inCollateral the amount of pokens withheld by the platform
       */    
     function withdrawERC20(
-        bytes32 _blockchainActionId, address pptAddress, bytes32 accountId, 
+        address _dataManager, bytes32 _blockchainActionId, 
+        address pptAddress, bytes32 accountId, 
         address to, uint amount, uint inCollateral, uint pptFee, address adminExternalWallet) 
         public 
         onlyServer 
-    {
+    {   
+        require(_dataManager != 0x0);
+        iDataManager dm = iDataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
         DepositContract o = DepositContract(dm.getDepositAddress(accountId));
@@ -298,17 +261,12 @@ contract Populous is withAccessManager {
         require(dm.setActionStatus(_blockchainActionId) == true); 
         
         iERC20Token token = iERC20Token(pptAddress);
-        require(dm.setBlockchainActionData(_blockchainActionId, token.symbol(), amount, accountId, to, pptFee));
+        require(dm.setBlockchainActionData(_blockchainActionId, token.symbol(), amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount);
     }
 
     // CONSTANT METHODS
 
-    /** @dev Gets the address of the data manager smart contract
-      * @return _dm The address of the data manager smart contract
-      */
-    function getDataManager() public view returns (DataManager _dm) {
-        return dm;
-    }
+    
     
 }

@@ -3,7 +3,7 @@ module.exports = {
         var _blockchainActionId = "createCurrency1"
 
         var currencyPromise =
-            P.createCurrency(_blockchainActionId, name, decimals, symbol).then(function(result) {
+            P.createCurrency(DM.address, _blockchainActionId, name, decimals, symbol).then(function(result) {
                 //console.log("new currency", result.logs[0]);
                 return DM.getCurrency.call(symbol);
             }).then(function(currencyAddress) {
