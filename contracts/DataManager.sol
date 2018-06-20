@@ -4,11 +4,12 @@ pragma solidity ^0.4.17;
 import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./withAccessManager.sol";
+import "./iDataManager.sol";
 
 /// @title DataManager contract
-contract DataManager is withAccessManager {
+contract DataManager is iDataManager, withAccessManager {
     // FIELDS
-    uint256 public version = 2;
+    //uint256 public version = 2;
     // currency symbol => currency erc20 contract address
     mapping(bytes32 => address) public currencyAddresses;
     // currency address => currency symbol
@@ -64,7 +65,9 @@ contract DataManager is withAccessManager {
     /** @dev Constructor that sets the server when contract is deployed.
       * @param _accessManager The address to set as the access manager.
       */
-    function DataManager(address _accessManager) public withAccessManager(_accessManager) { }
+    function DataManager(address _accessManager, uint256 _version) public withAccessManager(_accessManager) {
+        version = _version;
+    }
 
     /** @dev Adds a new deposit smart contract address linked to a client id
       * @param _depositAddress the deposit smart contract address
