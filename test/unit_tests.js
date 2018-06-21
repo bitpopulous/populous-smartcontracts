@@ -25,10 +25,10 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
         it("should get data manager version through public variable and getter function", function (done){
             
             DM.version.call().then(function (datamanager_version) {
-                assert.equal(datamanager_version.toNumber(), 2, "Failed getting correct verison");
+                assert.equal(datamanager_version.toNumber(), 1, "Failed getting correct verison");
                 return DM.getVersion();
             }).then(function(datamanager_version_getter){
-                assert.equal(datamanager_version_getter.toNumber(), 2, "Failed getting correct verison");
+                assert.equal(datamanager_version_getter.toNumber(), 1, "Failed getting correct verison");
                 done();
             });
         });
@@ -264,7 +264,8 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
             P.withdrawPoken(DM.address, _blockchainActionId, 'USD', withdrawalAmount, addressFrom, 
                 externalAddress, config.INVESTOR1_ACC, inCollateral, global.PPT.address, pptFee, 
                 config.ADMIN_WALLET, toBank)
-            .then(function() {
+            .then(function(withdraw_result) {
+                console.log("withdraw poken log", withdraw_result.logs[0]);
                 //console.log('withdraw pokens gas cost', withdraw_result.receipt.gasUsed);
                 // check balance of clients external address
                 return CT.balanceOf(externalAddress);
@@ -362,7 +363,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 //withdraw 50 PPT from deposit contract to wallet
                 return P.withdrawERC20(DM.address, _blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET);
             }).then(function (withdrawPPT) {
-                //console.log("Deposit address log", withdrawPPT.logs[0]);
+                console.log("withdraw ppt log", withdrawPPT.logs[0]);
                 // to do - update solidity compiler to see events
                 //assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
