@@ -4,12 +4,11 @@ pragma solidity ^0.4.17;
 import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./withAccessManager.sol";
-import "./iDataManager.sol";
 
 /// @title DataManager contract
-contract DataManager is iDataManager, withAccessManager {
+contract DataManager is withAccessManager {
     // FIELDS
-    //uint256 public version = 2;
+    uint256 public version;
     // currency symbol => currency erc20 contract address
     mapping(bytes32 => address) public currencyAddresses;
     // currency address => currency symbol
@@ -74,14 +73,13 @@ contract DataManager is iDataManager, withAccessManager {
       * @param _clientId the client id
       * @return success true/false denoting successful function call
       */
-    function setDepositAddress(address _depositAddress, bytes32 _clientId) public onlyServerOrOnlyPopulous returns (bool success) {
-        if (depositAddresses[_clientId] != 0x0 && depositClientIds[_depositAddress] != 0x0){
-            return false;
-        } else {
-            depositAddresses[_clientId] = _depositAddress;
-            depositClientIds[_depositAddress] = _clientId;
-            return true;
-        }
+    function setDepositAddress(bytes32 _blockchainActionId, address _depositAddress, bytes32 _clientId) public onlyServerOrOnlyPopulous returns (bool success) {
+        require(actionStatus[_blockchainActionId] == false);
+        require(depositAddresses[_clientId] == 0x0 && depositClientIds[_depositAddress] == 0x0);
+        depositAddresses[_clientId] = _depositAddress;
+        depositClientIds[_depositAddress] = _clientId;
+        assert(depositAddresses[_clientId] != 0x0 && depositClientIds[_depositAddress] != 0x0);
+        return true;
     }
 
     /** @dev Adds a new currency sumbol and smart contract address  
@@ -89,15 +87,13 @@ contract DataManager is iDataManager, withAccessManager {
       * @param _currencySymbol the currency symbol
       * @return success true/false denoting successful function call
       */
-    function setCurrency(address _currencyAddress, bytes32 _currencySymbol) public onlyServerOrOnlyPopulous returns (bool success) {
-        if (currencySymbols[_currencyAddress] != 0x0 && currencyAddresses[_currencySymbol] != 0x0){
-            return false;
-        } else {
-            currencySymbols[_currencyAddress] = _currencySymbol;
-            currencyAddresses[_currencySymbol] = _currencyAddress;
-            assert(currencyAddresses[_currencySymbol] != 0x0 && currencySymbols[_currencyAddress] != 0x0);
-            return true;
-        }
+    function setCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _currencySymbol) public onlyServerOrOnlyPopulous returns (bool success) {
+        require(actionStatus[_blockchainActionId] == false);
+        require(currencySymbols[_currencyAddress] == 0x0 && currencyAddresses[_currencySymbol] == 0x0);
+        currencySymbols[_currencyAddress] = _currencySymbol;
+        currencyAddresses[_currencySymbol] = _currencyAddress;
+        assert(currencyAddresses[_currencySymbol] != 0x0 && currencySymbols[_currencyAddress] != 0x0);
+        return true;
     }
 
     /** @dev Updates a currency sumbol and smart contract address  
@@ -105,10 +101,12 @@ contract DataManager is iDataManager, withAccessManager {
       * @param _currencySymbol the currency symbol
       * @return success true/false denoting successful function call
       */
-    function _setCurrency(address _currencyAddress, bytes32 _currencySymbol) public onlyServerOrOnlyPopulous returns (bool success) {
+    function _setCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _currencySymbol) public onlyServerOrOnlyPopulous returns (bool success) {
+        require(actionStatus[_blockchainActionId] == false);
         currencySymbols[_currencyAddress] = _currencySymbol;
         currencyAddresses[_currencySymbol] = _currencyAddress;
         assert(currencyAddresses[_currencySymbol] != 0x0 && currencySymbols[_currencyAddress] != 0x0);
+        setBlockchainActionData(_blockchainActionId, _currencySymbol, 0, 0x0, _currencyAddress, 0);
         return true;
     }
 
@@ -127,12 +125,13 @@ contract DataManager is iDataManager, withAccessManager {
         onlyServerOrOnlyPopulous 
         returns (bool success)
     {
-        require(actionStatus[_blockchainActionId] == true);
+        require(actionStatus[_blockchainActionId] == false);
         blockchainActionIdData[_blockchainActionId].currency = currency;
         blockchainActionIdData[_blockchainActionId].amount = amount;
         blockchainActionIdData[_blockchainActionId].accountId = accountId;
         blockchainActionIdData[_blockchainActionId].to = to;
         blockchainActionIdData[_blockchainActionId].pptFee = pptFee;
+        actionStatus[_blockchainActionId] = true;
         return true;
     }
 
@@ -148,17 +147,16 @@ contract DataManager is iDataManager, withAccessManager {
     {
         require(actionStatus[_blockchainActionId] == false);
         // check that client does not already have a stored deposit address
-        require(depositAddresses[_clientId] == 0x0 && depositAddresses[_clientId] != _depositContract);
+        require(depositAddresses[_clientId] == 0x0);
         // DepositContract(_clientId).clientId() == _clientId
         // store the deposit address for the client Id
         //DepositContract(_clientId, address(AM));
         depositAddresses[_clientId] = _depositContract;
+        depositClientIds[_depositContract] = _clientId;
         // check that deposit address has been stored for client Id
-        assert(depositAddresses[_clientId] != 0x0);
+        assert(depositAddresses[_clientId] == _depositContract && depositClientIds[_depositContract] == _clientId);
         // set blockchain action data
-        actionStatus[_blockchainActionId] = true;
-        blockchainActionIdData[_blockchainActionId].accountId = _clientId;
-        blockchainActionIdData[_blockchainActionId].to = depositAddresses[_clientId];
+        setBlockchainActionData(_blockchainActionId, 0x0, 0, _clientId, depositAddresses[_clientId], 0);
         return true;
     }
   
@@ -175,22 +173,11 @@ contract DataManager is iDataManager, withAccessManager {
     {
         require(actionStatus[_blockchainActionId] == false);
         depositAddresses[_clientId] = _depositContract;
+        depositClientIds[_depositContract] = _clientId;
         // check that deposit address has been stored for client Id
-        assert(depositAddresses[_clientId] != 0x0);
+        assert(depositAddresses[_clientId] == _depositContract && depositClientIds[_depositContract] == _clientId);
         // set blockchain action data
-        actionStatus[_blockchainActionId] = true;
-        blockchainActionIdData[_blockchainActionId].accountId = _clientId;
-        blockchainActionIdData[_blockchainActionId].to = depositAddresses[_clientId];
-        return true;
-    }
-
-    /** @dev Set action status for blockchain action  
-      * @param _blockchainActionId the action id
-      * @return success true or false if function call is successful
-      */
-    function setActionStatus(bytes32 _blockchainActionId) public onlyServerOrOnlyPopulous returns (bool success) {
-        require(actionStatus[_blockchainActionId] == false);
-        actionStatus[_blockchainActionId] = true;
+        setBlockchainActionData(_blockchainActionId, 0x0, 0, _clientId, depositAddresses[_clientId], 0);
         return true;
     }
 
@@ -203,16 +190,17 @@ contract DataManager is iDataManager, withAccessManager {
       * @return success true or false if function call is successful
       */
     function setInvoice(
-        bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
+        bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
         bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber) 
         public 
         onlyServerOrOnlyPopulous 
         returns (bool success) 
     {   
+        require(actionStatus[_blockchainActionId] == false);
         bytes32 providerUserId; 
         bytes32 companyName;
         (providerUserId, companyName) = getInvoice(_invoiceCountryCode, _invoiceCompanyNumber, _invoiceNumber);
-        require(providerUserId == 0x0);
+        require(providerUserId == 0x0 && companyName == 0x0);
         // country code => company number => invoice number => invoice data
         invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].providerUserId = _providerUserId;
         invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].invoiceCompanyName = _invoiceCompanyName;
@@ -244,14 +232,12 @@ contract DataManager is iDataManager, withAccessManager {
             providerCompanyData[_userId].companyNumber == 0x0 && 
             providerCompanyData[_userId].countryCode == 0x0 &&
             providerCompanyData[_userId].companyName == 0x0);
+        
         providerCompanyData[_userId].countryCode = _countryCode;
         providerCompanyData[_userId].companyName = _companyName;
         providerCompanyData[_userId].companyNumber = _companyNumber;
 
         providerData[_countryCode][_companyNumber] = _userId;
-        
-        actionStatus[_blockchainActionId] = true;
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
         return true;
     }
 
@@ -278,7 +264,6 @@ contract DataManager is iDataManager, withAccessManager {
 
         providerData[_countryCode][_companyNumber] = _userId;
         
-        actionStatus[_blockchainActionId] = true;
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
         return true;
     }
@@ -392,12 +377,6 @@ contract DataManager is iDataManager, withAccessManager {
         providerCompanyData[_providerUserId].companyName,
         providerCompanyData[_providerUserId].companyNumber);
     }
-    
-    
-    /**
-    function getProviderStatus(bytes32 _userId) public view returns (bool isEnabled) {
-        return providerCompanyData[_userId].isEnabled;
-    } */
 
     /** @dev Gets the version number for the current contract instance
       * @return _version The version number

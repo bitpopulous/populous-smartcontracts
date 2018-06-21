@@ -3,7 +3,7 @@ var  AccessManager = artifacts.require("AccessManager"),
 
 module.exports = function(deployer) {
     var DM;
-    var version = 2;
+    var version = 1;
     deployer.then(function() {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;

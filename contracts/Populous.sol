@@ -12,8 +12,7 @@ import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
 import "./SafeMath.sol";
-import "./iDataManager.sol";
-//import "./Utils.sol";
+import "./DataManager.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
@@ -56,12 +55,9 @@ contract Populous is withAccessManager {
         onlyServer
     {   
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
-        require(dm.getActionStatus(_blockchainActionId) == false);
-        require(dm.setDepositAddress(new DepositContract(clientId, AM), clientId) == true);
+        DataManager dm = DataManager(_dataManager);
+        require(dm.setDepositAddress(_blockchainActionId, new DepositContract(clientId, AM), clientId) == true);
         assert(dm.getDepositAddress(clientId) != 0x0);
-        require(dm.setActionStatus(_blockchainActionId) == true);
-
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, dm.getDepositAddress(clientId), 0) == true);
 
         //dm.blockchainActionIdData[_blockchainActionId].accountId = clientId;
@@ -78,7 +74,7 @@ contract Populous is withAccessManager {
       onlyServer
     {
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
+        DataManager dm = DataManager(_dataManager);
         require(dm.upgradeDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
         EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
     }
@@ -95,13 +91,10 @@ contract Populous is withAccessManager {
         onlyServer
     {   
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
-        require(dm.getActionStatus(_blockchainActionId) == false);
+        DataManager dm = DataManager(_dataManager);
         // Check if currency already exists
         //require(currencies[_tokenSymbol] == 0x0);
-        require(dm.setCurrency(new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
-        require(dm.setActionStatus(_blockchainActionId) == true);
-
+        require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
 
         //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
@@ -118,14 +111,11 @@ contract Populous is withAccessManager {
     function upgradeCurrency(address _dataManager, bytes32 _blockchainActionId, address _currencyAddress, bytes32 _tokenSymbol) public onlyServer
     {   
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
+        DataManager dm = DataManager(_dataManager);
         // check if blockchain action id is already used
-        require(dm.getActionStatus(_blockchainActionId) == false);
         // Check if currency exists as erc20
         require(CurrencyToken(_currencyAddress).symbol() != 0x0 && CurrencyToken(_currencyAddress).name() != 0x0 && CurrencyToken(_currencyAddress).symbol() == _tokenSymbol);
-        require(dm.setCurrency(_currencyAddress, _tokenSymbol) == true);
-        
-        require(dm.setActionStatus(_blockchainActionId) == true);
+        require(dm.setCurrency(_blockchainActionId, _currencyAddress, _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, _currencyAddress, 0) == true);
 
         //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
@@ -149,8 +139,9 @@ contract Populous is withAccessManager {
         onlyServer
     {   
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
+        DataManager dm = DataManager(_dataManager);
         require(dm.setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
         EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
     }
 
@@ -170,16 +161,14 @@ contract Populous is withAccessManager {
         onlyServer
     {
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
-        require(dm.getActionStatus(_blockchainActionId) == false);
+        DataManager dm = DataManager(_dataManager);
         bytes2 countryCode; 
         bytes32 companyName; 
         bytes32 companyNumber;
         (countryCode, companyName, companyNumber) = dm.getProviderByUserId(_providerUserId);
         //require(dm.getProviderStatus(_providerUserId) == true);
         require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
-        require(dm.setInvoice(_providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
-        require(dm.setActionStatus(_blockchainActionId) == true);
+        require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
         EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
     }
@@ -199,12 +188,14 @@ contract Populous is withAccessManager {
         onlyServer 
     {
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
+        DataManager dm = DataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
-        require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0 && dm.getCurrency(currency) != 0x0);
+        require(adminExternalWallet != 0x0 && pptFee > 0);
+        require(amount > 0 && dm.getCurrency(currency) != 0x0);
         DepositContract o = DepositContract(dm.getDepositAddress(accountId));
         // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
-        require((SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee) && (o.transfer(pptAddress, adminExternalWallet, pptFee) == true));
+        require(SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee);
+        require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true);
         //stach deep with too many local variables, using cT directly
         //CurrencyToken cT = CurrencyToken(dm.getCurrency(currency));
         if (toBank == true) {
@@ -214,9 +205,9 @@ contract Populous is withAccessManager {
                 require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(CurrencyToken(dm.getCurrency(currency)).balanceOf(from), from) == true);
             } else {
                 // destroy amount from balance
-                require((CurrencyToken(dm.getCurrency(currency)).balanceOf(from) >= amount) && (CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(amount, from) == true));
+                require(CurrencyToken(dm.getCurrency(currency)).balanceOf(from) >= amount);
+                require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(amount, from) == true);
             }
-            require(dm.setActionStatus(_blockchainActionId) == true);
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
             //emit event: Imported currency to system
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
@@ -227,8 +218,6 @@ contract Populous is withAccessManager {
             CurrencyToken(dm.getCurrency(currency)).mintTokens(amount);
             //credit account
             CurrencyToken(dm.getCurrency(currency)).transfer(to, amount);
-
-            require(dm.setActionStatus(_blockchainActionId) == true);           
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
             //emit event: Exported currency to wallet
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
@@ -252,17 +241,18 @@ contract Populous is withAccessManager {
         onlyServer 
     {   
         require(_dataManager != 0x0);
-        iDataManager dm = iDataManager(_dataManager);
+        DataManager dm = DataManager(_dataManager);
         require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
-        DepositContract o = DepositContract(dm.getDepositAddress(accountId));
+        address depositContract = dm.getDepositAddress(accountId);
+        DepositContract o = DepositContract(depositContract);
         uint pptBalance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
-        require(pptBalance >= (SafeMath.safeAdd(amount, pptFee)) && (o.transfer(pptAddress, to, amount) == true) && (o.transfer(pptAddress, adminExternalWallet, pptFee) == true));        
-        require(dm.setActionStatus(_blockchainActionId) == true); 
-        
-        iERC20Token token = iERC20Token(pptAddress);
-        require(dm.setBlockchainActionData(_blockchainActionId, token.symbol(), amount, accountId, to, pptFee) == true);
-        EventWithdrawPPT(_blockchainActionId, accountId, o, to, amount);
+        require(pptBalance >= SafeMath.safeAdd(amount, pptFee));
+        require(o.transfer(pptAddress, to, amount) == true);
+        require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true); 
+        bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();       
+        require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
+        EventWithdrawPPT(_blockchainActionId, accountId, dm.getDepositAddress(accountId), to, amount);
     }
 
     // CONSTANT METHODS
