@@ -364,6 +364,7 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 return P.withdrawERC20(DM.address, _blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET);
             }).then(function (withdrawPPT) {
                 console.log("withdraw ppt log", withdrawPPT.logs[0]);
+                console.log('withdraw ppt gas cost', withdrawPPT.receipt.gasUsed);
                 // to do - update solidity compiler to see events
                 //assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
