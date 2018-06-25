@@ -212,7 +212,6 @@ contract DataManager is iDataManager, withAccessManager {
         providerCompanyData[_userId].countryCode = _countryCode;
         providerCompanyData[_userId].companyName = _companyName;
         providerCompanyData[_userId].companyNumber = _companyNumber;
-
         providerData[_countryCode][_companyNumber] = _userId;
         
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
@@ -269,7 +268,6 @@ contract DataManager is iDataManager, withAccessManager {
     returns (bytes32 _currency, uint _amount, bytes32 _accountId, address _to) 
     {
         require(actionStatus[_blockchainActionId] == true);
-
         return (blockchainActionIdData[_blockchainActionId].currency, 
         blockchainActionIdData[_blockchainActionId].amount,
         blockchainActionIdData[_blockchainActionId].accountId,
@@ -298,7 +296,6 @@ contract DataManager is iDataManager, withAccessManager {
     {   
         bytes32 _providerUserId = invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].providerUserId;
         bytes32 _invoiceCompanyName = invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].invoiceCompanyName;
-        //require(_providerUserId != 0x0 && _invoiceCompanyName != 0x0);
         return (_providerUserId, _invoiceCompanyName);
     }
 
@@ -315,10 +312,8 @@ contract DataManager is iDataManager, withAccessManager {
         returns (bytes32 providerId, bytes32 companyName) 
     {
         bytes32 providerUserId = providerData[_providerCountryCode][_providerCompanyNumber];
-
         return (providerUserId, 
         providerCompanyData[providerUserId].companyName);
-        //providerCompanyData[providerUserId].isEnabled);
     }
 
     /** @dev Gets the details of an invoice provider with the providers user Id.

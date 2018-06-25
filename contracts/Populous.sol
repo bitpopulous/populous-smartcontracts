@@ -17,7 +17,7 @@ import "./DataManager.sol";
 /// @title Populous contract
 contract Populous is withAccessManager {
 
-    
+    event EventTransferredPPT(address _deposit, address _ppt, address to, uint amount);
     // EVENTS
     // Bank events
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
@@ -251,8 +251,8 @@ contract Populous is withAccessManager {
         require(o.transfer(pptAddress, to, amount) == true);
         require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true); 
         bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();       
-        require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
-        EventWithdrawPPT(_blockchainActionId, accountId, dm.getDepositAddress(accountId), to, amount);
+        require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true); 
+        EventWithdrawPPT(_blockchainActionId, accountId, depositContract, to, amount);
     }
 
     // CONSTANT METHODS
