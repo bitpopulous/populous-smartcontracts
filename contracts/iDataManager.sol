@@ -4,7 +4,61 @@ pragma solidity ^0.4.17;
 /// @title DataManager contract
 contract iDataManager {
     // FIELDS
+    // FIELDS
     uint256 public version;
+    // currency symbol => currency erc20 contract address
+    mapping(bytes32 => address) public currencyAddresses;
+    // currency address => currency symbol
+    mapping(address => bytes32) public currencySymbols;
+    // clientId => depositAddress
+    mapping(bytes32 => address) public depositAddresses;
+    // depositAddress => clientId
+    mapping(address => bytes32) public depositClientIds;
+    // blockchainActionId => boolean 
+    mapping(bytes32 => bool) public actionStatus;
+    // blockchainActionData
+    struct actionData {
+        bytes32 currency;
+        uint amount;
+        bytes32 accountId;
+        address to;
+        uint pptFee;
+    }
+    // blockchainActionId => actionData
+    mapping(bytes32 => actionData) public blockchainActionIdData;
+    
+    //actionId => invoiceId
+    mapping(bytes32 => bytes32) public actionIdToInvoiceId;
+    // invoice provider company data
+    struct providerCompany {
+        //bool isEnabled;
+        bytes32 companyNumber;
+        bytes32 companyName;
+        bytes2 countryCode;
+    }
+    // companyCode => companyNumber => providerId
+    mapping(bytes2 => mapping(bytes32 => bytes32)) public providerData;
+    // providedId => providerCompany
+    mapping(bytes32 => providerCompany) public providerCompanyData;
+    // crowdsale invoiceDetails
+    struct _invoiceDetails {
+        bytes2 invoiceCountryCode;
+        bytes32 invoiceCompanyNumber;
+        bytes32 invoiceCompanyName;
+        bytes32 invoiceNumber;
+    }
+    // crowdsale invoiceData
+    struct invoiceData {
+        bytes32 providerUserId;
+        bytes32 invoiceCompanyName;
+    }
+
+    // country code => company number => invoice number => invoice data
+    mapping(bytes2 => mapping(bytes32 => mapping(bytes32 => invoiceData))) public invoices;
+    
+    
+    
+    
     // NON-CONSTANT METHODS
 
     /** @dev Adds a new deposit smart contract address linked to a client id
@@ -12,21 +66,22 @@ contract iDataManager {
       * @param _clientId the client id
       * @return success true/false denoting successful function call
       */
-    function setDepositAddress(address _depositAddress, bytes32 _clientId) public returns (bool success);
+    function setDepositAddress(bytes32 _blockchainActionId, address _depositAddress, bytes32 _clientId) public returns (bool success);
 
     /** @dev Adds a new currency sumbol and smart contract address  
       * @param _currencyAddress the currency smart contract address
       * @param _currencySymbol the currency symbol
       * @return success true/false denoting successful function call
       */
-    function setCurrency(address _currencyAddress, bytes32 _currencySymbol) public returns (bool success);
+    function setCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _currencySymbol) public returns (bool success);
 
     /** @dev Updates a currency sumbol and smart contract address  
       * @param _currencyAddress the currency smart contract address
       * @param _currencySymbol the currency symbol
       * @return success true/false denoting successful function call
       */
-    function _setCurrency(address _currencyAddress, bytes32 _currencySymbol) public returns (bool success);
+    function _setCurrency(bytes32 _blockchainActionId, address _currencyAddress, bytes32 _currencySymbol) public returns (bool success);
+
 
     /** @dev set blockchain action data in struct 
       * @param _blockchainActionId the blockchain action id
@@ -59,12 +114,6 @@ contract iDataManager {
       */
     function _setDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public returns (bool success);
 
-    /** @dev Set action status for blockchain action  
-      * @param _blockchainActionId the action id
-      * @return success true or false if function call is successful
-      */
-    function setActionStatus(bytes32 _blockchainActionId) public returns (bool success);
-
     /** @dev Add a new invoice to the platform  
       * @param _providerUserId the providers user id
       * @param _invoiceCountryCode the country code of the provider
@@ -74,10 +123,10 @@ contract iDataManager {
       * @return success true or false if function call is successful
       */
     function setInvoice(
-        bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
+        bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
         bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber) 
-        public  
-        returns (bool success);
+        public returns (bool success);
+
     
     /** @dev Add a new invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
@@ -90,9 +139,7 @@ contract iDataManager {
     function setProvider(
         bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
         bytes32 _companyName, bytes2 _countryCode) 
-        public 
-        returns (bool success);
-
+        public returns (bool success);
 
     /** @dev Update an added invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
@@ -105,9 +152,8 @@ contract iDataManager {
     function _setProvider(
         bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyNumber, 
         bytes32 _companyName, bytes2 _countryCode) 
-        public 
-        returns (bool success);
-
+        public returns (bool success);
+    
     // CONSTANT METHODS
 
     /** @dev Gets a deposit address with the client id 
@@ -115,22 +161,29 @@ contract iDataManager {
       */
     function getDepositAddress(bytes32 _clientId) public view returns (address clientDepositAddress);
 
+
     /** @dev Gets a client id linked to a deposit address 
       * @return depositClientId The client id
       */
     function getClientIdWithDepositAddress(address _depositContract) public view returns (bytes32 depositClientId);
 
+
     /** @dev Gets a currency smart contract address 
       * @return currencyAddress The currency address
       */
     function getCurrency(bytes32 _currencySymbol) public view returns (address currencyAddress);
-    
+
    
     /** @dev Gets a currency symbol given it's smart contract address 
       * @return currencySymbol The currency symbol
       */
     function getCurrencySymbol(address _currencyAddress) public view returns (bytes32 currencySymbol);
 
+    /** @dev Gets details of a currency given it's smart contract address 
+      * @return _symbol The currency symbol
+      * @return _name The currency name
+      * @return _decimals The currency decimal places/precision
+      */
     function getCurrencyDetails(address _currencyAddress) public view returns (bytes32 _symbol, bytes32 _name, uint8 _decimals);
 
     /** @dev Get the blockchain action Id Data for a blockchain Action id
@@ -142,11 +195,13 @@ contract iDataManager {
       */
     function getBlockchainActionIdData(bytes32 _blockchainActionId) public view returns (bytes32 _currency, uint _amount, bytes32 _accountId, address _to);
 
+
     /** @dev Get the bool status of a blockchain Action id
       * @param _blockchainActionId the blockchain action id
       * @return bool actionStatus
       */
     function getActionStatus(bytes32 _blockchainActionId) public view returns (bool _blockchainActionStatus);
+
 
     /** @dev Gets the details of an invoice with the country code, company number and invocie number.
       * @param _invoiceCountryCode The country code.
@@ -160,6 +215,7 @@ contract iDataManager {
         view 
         returns (bytes32 providerUserId, bytes32 invoiceCompanyName);
 
+
     /** @dev Gets the details of an invoice provider with the country code and company number.
       * @param _providerCountryCode The country code.
       * @param _providerCompanyNumber The company number.
@@ -172,6 +228,7 @@ contract iDataManager {
         view 
         returns (bytes32 providerId, bytes32 companyName);
 
+
     /** @dev Gets the details of an invoice provider with the providers user Id.
       * @param _providerUserId The provider user Id.
       * @return countryCode The invoice provider country code
@@ -179,7 +236,8 @@ contract iDataManager {
       */
     function getProviderByUserId(bytes32 _providerUserId) public view 
         returns (bytes2 countryCode, bytes32 companyName, bytes32 companyNumber);
-    
+
+
     /** @dev Gets the version number for the current contract instance
       * @return _version The version number
       */
