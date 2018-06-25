@@ -4,7 +4,7 @@ var  AccessManager = artifacts.require("AccessManager"),
 module.exports = function(deployer) {
     var DM;
     var version = 1;
-    deployer.then(function() {
+    /* deployer.then(function() {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;
             //deploy DataManager.sol
@@ -13,6 +13,13 @@ module.exports = function(deployer) {
             //get deployed DataManager instance
             //return DataManager.deployed();
             console.log('Finished deploying DataManager');
+        });
+    }); */
+
+    deployer.then(function() {
+        return DataManager.deployed().then(function(instance) {
+            DM = instance;
+            console.log('Finished deploying Data Manager ', DM.address);
         });
     });
 };
