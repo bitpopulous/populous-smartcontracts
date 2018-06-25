@@ -4,60 +4,11 @@ pragma solidity ^0.4.17;
 import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./withAccessManager.sol";
+import "./iDataManager.sol";
 
 /// @title DataManager contract
-contract DataManager is withAccessManager {
-    // FIELDS
-    uint256 public version;
-    // currency symbol => currency erc20 contract address
-    mapping(bytes32 => address) public currencyAddresses;
-    // currency address => currency symbol
-    mapping(address => bytes32) public currencySymbols;
-    // clientId => depositAddress
-    mapping(bytes32 => address) public depositAddresses;
-    // depositAddress => clientId
-    mapping(address => bytes32) public depositClientIds;
-    // blockchainActionId => boolean 
-    mapping(bytes32 => bool) public actionStatus;
-    // blockchainActionData
-    struct actionData {
-        bytes32 currency;
-        uint amount;
-        bytes32 accountId;
-        address to;
-        uint pptFee;
-    }
-    // blockchainActionId => actionData
-    mapping(bytes32 => actionData) public blockchainActionIdData;
+contract DataManager is iDataManager, withAccessManager {
     
-    //actionId => invoiceId
-    mapping(bytes32 => bytes32) public actionIdToInvoiceId;
-    // invoice provider company data
-    struct providerCompany {
-        //bool isEnabled;
-        bytes32 companyNumber;
-        bytes32 companyName;
-        bytes2 countryCode;
-    }
-    // companyCode => companyNumber => providerId
-    mapping(bytes2 => mapping(bytes32 => bytes32)) public providerData;
-    // providedId => providerCompany
-    mapping(bytes32 => providerCompany) public providerCompanyData;
-    // crowdsale invoiceDetails
-    struct _invoiceDetails {
-        bytes2 invoiceCountryCode;
-        bytes32 invoiceCompanyNumber;
-        bytes32 invoiceCompanyName;
-        bytes32 invoiceNumber;
-    }
-    // crowdsale invoiceData
-    struct invoiceData {
-        bytes32 providerUserId;
-        bytes32 invoiceCompanyName;
-    }
-
-    // country code => company number => invoice number => invoice data
-    mapping(bytes2 => mapping(bytes32 => mapping(bytes32 => invoiceData))) public invoices;
 
     // NON-CONSTANT METHODS
 
@@ -261,7 +212,6 @@ contract DataManager is withAccessManager {
         providerCompanyData[_userId].countryCode = _countryCode;
         providerCompanyData[_userId].companyName = _companyName;
         providerCompanyData[_userId].companyNumber = _companyNumber;
-
         providerData[_countryCode][_companyNumber] = _userId;
         
         setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0);
@@ -298,6 +248,11 @@ contract DataManager is withAccessManager {
         return currencySymbols[_currencyAddress];
     }
 
+    /** @dev Gets details of a currency given it's smart contract address 
+      * @return _symbol The currency symbol
+      * @return _name The currency name
+      * @return _decimals The currency decimal places/precision
+      */
     function getCurrencyDetails(address _currencyAddress) public view returns (bytes32 _symbol, bytes32 _name, uint8 _decimals) {
         return (CurrencyToken(_currencyAddress).symbol(), CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals());
     } 
@@ -313,7 +268,6 @@ contract DataManager is withAccessManager {
     returns (bytes32 _currency, uint _amount, bytes32 _accountId, address _to) 
     {
         require(actionStatus[_blockchainActionId] == true);
-
         return (blockchainActionIdData[_blockchainActionId].currency, 
         blockchainActionIdData[_blockchainActionId].amount,
         blockchainActionIdData[_blockchainActionId].accountId,
@@ -342,7 +296,6 @@ contract DataManager is withAccessManager {
     {   
         bytes32 _providerUserId = invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].providerUserId;
         bytes32 _invoiceCompanyName = invoices[_invoiceCountryCode][_invoiceCompanyNumber][_invoiceNumber].invoiceCompanyName;
-        //require(_providerUserId != 0x0 && _invoiceCompanyName != 0x0);
         return (_providerUserId, _invoiceCompanyName);
     }
 
@@ -359,10 +312,8 @@ contract DataManager is withAccessManager {
         returns (bytes32 providerId, bytes32 companyName) 
     {
         bytes32 providerUserId = providerData[_providerCountryCode][_providerCompanyNumber];
-
         return (providerUserId, 
         providerCompanyData[providerUserId].companyName);
-        //providerCompanyData[providerUserId].isEnabled);
     }
 
     /** @dev Gets the details of an invoice provider with the providers user Id.
@@ -384,6 +335,5 @@ contract DataManager is withAccessManager {
     function getVersion() public view returns (uint256 _version) {
         return version;
     }
-
 
 }

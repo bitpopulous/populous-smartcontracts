@@ -38,7 +38,10 @@ module.exports = {
         },
         "live": {
             network_id: 1,
-            host: "35.176.131.242",
+            //geth
+            //host: "35.176.131.242",
+            //parity
+            host: "18.130.87.214",
             port: 8545,
             from: "0x3688bb90126e666d6fd97353f0a568147a007017",
             gas: 4700036,
