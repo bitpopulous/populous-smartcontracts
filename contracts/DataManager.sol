@@ -85,33 +85,7 @@ contract DataManager is iDataManager, withAccessManager {
         actionStatus[_blockchainActionId] = true;
         return true;
     }
-
-    /** @dev upgrade deposit address 
-      * @param _blockchainActionId the blockchain action id
-      * @param _clientId the client id
-      * @param _depositContract the deposit contract address for the client
-      * @return success true/false denoting successful function call
-      */
-    function upgradeDepositAddress(bytes32 _blockchainActionId, bytes32 _clientId, address _depositContract) public
-      onlyServerOrOnlyPopulous
-      returns (bool success)
-    {
-        require(actionStatus[_blockchainActionId] == false);
-        // check that client does not already have a stored deposit address
-        require(depositAddresses[_clientId] == 0x0);
-        // DepositContract(_clientId).clientId() == _clientId
-        // store the deposit address for the client Id
-        //DepositContract(_clientId, address(AM));
-        depositAddresses[_clientId] = _depositContract;
-        depositClientIds[_depositContract] = _clientId;
-        // check that deposit address has been stored for client Id
-        assert(depositAddresses[_clientId] == _depositContract && depositClientIds[_depositContract] == _clientId);
-        // set blockchain action data
-        setBlockchainActionData(_blockchainActionId, 0x0, 0, _clientId, depositAddresses[_clientId], 0);
-        return true;
-    }
-  
-
+    
     /** @dev Updates a deposit address for client id
       * @param _blockchainActionId the blockchain action id
       * @param _clientId the client id

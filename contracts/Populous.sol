@@ -17,21 +17,22 @@ import "./DataManager.sol";
 /// @title Populous contract
 contract Populous is withAccessManager {
 
+    
     // EVENTS
     // Bank events
-    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount, uint256 version);
-    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank, uint256 version);
+    event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
+    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
     
-    event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr, uint256 version);
+    event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventUpgradeCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr, uint256 version);
     
-    event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
+    event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress);
     event EventUpgradeDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
     
-    event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode, uint256 version);
-    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber, uint256 version);
-    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber, uint256 version);
-    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber, uint256 version);
+    event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
+    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
+    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
     // FIELDS
 
@@ -61,7 +62,7 @@ contract Populous is withAccessManager {
 
         //dm.blockchainActionIdData[_blockchainActionId].accountId = clientId;
         //dm.blockchainActionIdData[_blockchainActionId].to = depositAddress[clientId];
-        EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId), dm.version());
+        EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId));
     }
 
     /** @dev Adds a deposit address for a client id from older version of populous
@@ -74,7 +75,8 @@ contract Populous is withAccessManager {
     {
         require(_dataManager != 0x0);
         DataManager dm = DataManager(_dataManager);
-        require(dm.upgradeDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
+        require(dm.setDepositAddress(_blockchainActionId, _depositContract, _clientId) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _clientId, _depositContract, 0) == true);
         EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
     }
 
@@ -95,11 +97,7 @@ contract Populous is withAccessManager {
         //require(currencies[_tokenSymbol] == 0x0);
         require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
-
-        //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
-        //blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
-
-        EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
+        EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
     }
 
     /** @dev Adds a currency from older version of populous
@@ -116,10 +114,6 @@ contract Populous is withAccessManager {
         require(CurrencyToken(_currencyAddress).symbol() != 0x0 && CurrencyToken(_currencyAddress).name() != 0x0 && CurrencyToken(_currencyAddress).symbol() == _tokenSymbol);
         require(dm.setCurrency(_blockchainActionId, _currencyAddress, _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, _currencyAddress, 0) == true);
-
-        //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
-        //blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
-
         EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
     }
 
@@ -141,7 +135,7 @@ contract Populous is withAccessManager {
         DataManager dm = DataManager(_dataManager);
         require(dm.setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
-        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode, dm.version());
+        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
     }
 
     /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
@@ -169,7 +163,7 @@ contract Populous is withAccessManager {
         require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
         require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
-        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber, dm.version());
+        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
     }
 
     /** @dev Import an amount of pokens of a particular currency from an ethereum wallet/address to bank
@@ -209,7 +203,7 @@ contract Populous is withAccessManager {
             }
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
             //emit event: Imported currency to system
-            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank, dm.version());
+            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         } else {
             // WITHDRAW POKEN        
 
@@ -219,7 +213,7 @@ contract Populous is withAccessManager {
             CurrencyToken(dm.getCurrency(currency)).transfer(to, amount);
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
             //emit event: Exported currency to wallet
-            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank, dm.version());
+            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         }   
     }
 
@@ -250,8 +244,8 @@ contract Populous is withAccessManager {
         require(o.transfer(pptAddress, to, amount) == true);
         require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true); 
         bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();       
-        require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true); 
-        EventWithdrawPPT(_blockchainActionId, accountId, depositContract, to, amount, dm.version());
+        require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
+        EventWithdrawPPT(_blockchainActionId, accountId, dm.getDepositAddress(accountId), to, amount);
     }
 
     // CONSTANT METHODS

@@ -43,7 +43,9 @@ module.exports = {
             //parity
             host: "18.130.87.214",
             port: 8545,
-            from: "0x3688bb90126e666d6fd97353f0a568147a007017",
+            //from: "0x3688bb90126e666d6fd97353f0a568147a007017",
+            // new account on parity created in truffle
+            from: "0x093f653f337924ebc311599476b235dd937be5cc",
             gas: 4700036,
         },
         "testrpc": {
