@@ -6,11 +6,11 @@ var
     Populous = artifacts.require("Populous");
 
 module.exports = function(deployer) {
-    deployer.deploy(SafeMath);
+    /* deployer.deploy(SafeMath);
     deployer.link(SafeMath, Populous);
     //deployer.link(SafeMath, CrowdsaleManager);
 
-    deployer.deploy(Utils);
+    deployer.deploy(Utils); */
     // to do - link the utils library and the populous smart contract
     //deployer.link(Utils, Populous);
     //deployer.link(Utils, Crowdsale);

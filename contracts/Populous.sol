@@ -75,7 +75,8 @@ contract Populous is withAccessManager {
     {
         require(_dataManager != 0x0);
         DataManager dm = DataManager(_dataManager);
-        require(dm.upgradeDepositAddress(_blockchainActionId, _clientId, _depositContract) == true);
+        require(dm.setDepositAddress(_blockchainActionId, _depositContract, _clientId) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _clientId, _depositContract, 0) == true);
         EventUpgradeDepositContract(_blockchainActionId, _clientId, dm.getDepositAddress(_clientId), dm.version());
     }
 
@@ -96,10 +97,6 @@ contract Populous is withAccessManager {
         //require(currencies[_tokenSymbol] == 0x0);
         require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
-
-        //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
-        //blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
-
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
     }
 
@@ -117,10 +114,6 @@ contract Populous is withAccessManager {
         require(CurrencyToken(_currencyAddress).symbol() != 0x0 && CurrencyToken(_currencyAddress).name() != 0x0 && CurrencyToken(_currencyAddress).symbol() == _tokenSymbol);
         require(dm.setCurrency(_blockchainActionId, _currencyAddress, _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, _currencyAddress, 0) == true);
-
-        //blockchainActionIdData[_blockchainActionId].currency = _tokenSymbol;
-        //blockchainActionIdData[_blockchainActionId].to = currencies[_tokenSymbol];
-
         EventUpgradeCurrency(_blockchainActionId, CurrencyToken(_currencyAddress).name(), CurrencyToken(_currencyAddress).decimals(), _tokenSymbol, dm.getCurrency(_tokenSymbol), dm.version());
     }
 
