@@ -361,9 +361,10 @@ contract('Populous/Currency Token/ Deposit > ', function (accounts) {
                 // checking the balance of depositAddress is amount deposited minue earlier collected pptFee for withdrawing pokens
                 assert.equal(result.toNumber(), depositAmount - (pptFee * 2), "failed depositing PPT");
                 //withdraw 50 PPT from deposit contract to wallet
-                return P.withdrawERC20(DM.address, _blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET);
+                return P.withdrawERC20(DM.address, _blockchainActionId, global.PPT.address, config.INVESTOR1_ACC, config.INVESTOR1_WALLET, toWithdraw, inCollateral, pptFee, config.ADMIN_WALLET, {from: web3.eth.accounts[0], gas:353000});
             }).then(function (withdrawPPT) {
                 console.log("withdraw ppt log", withdrawPPT.logs[0]);
+                console.log('withdraw ppt gas cost', withdrawPPT.receipt.gasUsed);
                 // to do - update solidity compiler to see events
                 //assert(withdrawPPT.logs.length, "Failed withdrawing PPT");
                 // get PPT token balance of deposit contract address
