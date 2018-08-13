@@ -172,6 +172,7 @@ contract Populous is withAccessManager {
       * @param from the blockchain address to import pokens from
       * @param currency the poken currency
       */
+
     function withdrawPoken(
         address _dataManager, bytes32 _blockchainActionId, 
         bytes32 currency, uint amount,
@@ -191,28 +192,28 @@ contract Populous is withAccessManager {
         require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true);
         //stach deep with too many local variables, using cT directly
         //CurrencyToken cT = CurrencyToken(dm.getCurrency(currency));
-        if (toBank == true) {
-            //WITHDRAW BANK
-            if (amount > CurrencyToken(dm.getCurrency(currency)).balanceOf(from)) {
+       
+        // WITHDRAW PART / DEBIT
+        if(amount > CurrencyToken(dm.getCurrency(currency)).balanceOf(from)) {
                 // destroying total balance
-                require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(CurrencyToken(dm.getCurrency(currency)).balanceOf(from), from) == true);
-            } else {
+            require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(CurrencyToken(dm.getCurrency(currency)).balanceOf(from), from) == true);
+            //remaining ledger balance. deposit address is 0
+        } else {
                 // destroy amount from balance
-                require(CurrencyToken(dm.getCurrency(currency)).balanceOf(from) >= amount);
-                require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(amount, from) == true);
-            }
+            require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(amount, from) == true);
+            //left over deposit address balance.
+        }
+
+        // TRANSFER PART / CREDIT
+        if(toBank == true) {
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
             //emit event: Imported currency to system
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         } else {
-            // WITHDRAW POKEN        
-
-            //credit ledger
             CurrencyToken(dm.getCurrency(currency)).mintTokens(amount);
             //credit account
             CurrencyToken(dm.getCurrency(currency)).transfer(to, amount);
             require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
-            //emit event: Exported currency to wallet
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         }   
     }
