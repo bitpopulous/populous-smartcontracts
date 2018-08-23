@@ -17,8 +17,8 @@ Platform Admin/Server Address - `0xf8b3d742b245ec366288160488a12e7a2f1d720d`
 
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`      
-SafeMath.sol - `0x871e2b6a0d93467e240b4a6026371c3afb2118ab`          
-Populous.sol - `0x374d6ad575dae1dde3d292a0dfc51da38788d7e7`    
+SafeMath.sol - `0x140088cafe35f269d739de277dbe40ba28b8edf1`          
+Populous.sol - `0xea1c26d59df6ef838e1d7b8161de4bf8f95f50d1`    
 DataManager.sol - `0xcd565ca18f06e2e4d251b55dc49a4fe456c72052`       
 Utils.sol - `0xcab23f0118f87d01a6d2fd3d93aeeaca789c8fb7`
 

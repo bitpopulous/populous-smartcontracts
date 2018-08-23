@@ -46,7 +46,8 @@ module.exports = {
             //from: "0x3688bb90126e666d6fd97353f0a568147a007017",
             // new account on parity created in truffle
             from: "0x093f653f337924ebc311599476b235dd937be5cc",
-            gas: 2100036,
+            //gas: 4700036
+            gas: 4712388
         },
         "testrpc": {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"

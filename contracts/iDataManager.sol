@@ -4,7 +4,6 @@ pragma solidity ^0.4.17;
 /// @title DataManager contract
 contract iDataManager {
     // FIELDS
-    // FIELDS
     uint256 public version;
     // currency symbol => currency erc20 contract address
     mapping(bytes32 => address) public currencyAddresses;
