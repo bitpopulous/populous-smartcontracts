@@ -8,12 +8,7 @@ var
 module.exports = function(deployer) {
     deployer.deploy(SafeMath);
     deployer.link(SafeMath, Populous);
-    //deployer.link(SafeMath, CrowdsaleManager);
 
-    deployer.deploy(Utils);
-    // to do - link the utils library and the populous smart contract
-    //deployer.link(Utils, Populous);
-    //deployer.link(Utils, Crowdsale);
-    //deployer.link(Utils, CrowdsaleManager);
+    //deployer.deploy(Utils);
     console.log('Finished deploying libs');
 };
