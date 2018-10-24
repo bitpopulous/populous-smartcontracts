@@ -10,9 +10,9 @@ module.exports = function(deployer) {
             return deployer.deploy(Populous, AM.address);
         }).then(function() {
             return Populous.deployed();
-        /* }).then(function(P) {
+        }).then(function(P) {
             return AM.changePopulous(P.address);
-        }).then(function() { */
+        }).then(function() {
             console.log('Finished deploying Populous');
         });
     });

@@ -2,21 +2,17 @@ pragma solidity ^0.4.17;
 
 import "./iERC20Token.sol";
 import "./withAccessManager.sol";
-
+import "./ERC1155.sol";
 
 
 /// @title DepositContract contract
 contract DepositContract is withAccessManager {
 
-    bytes32 clientId;// client ID.
-    address manager; // address of contract manager.
+    bytes32 public clientId; // client ID.
+    uint256 public version = 2;
 
-    // MODIFIERS
-
-    /* modifier onlyManager() {
-        require(msg.sender == manager);
-        _;
-    } */
+    // EVENTS
+    event EtherTransfer(address to, uint256 value);
 
     // NON-CONSTANT METHODS 
 
@@ -28,7 +24,6 @@ contract DepositContract is withAccessManager {
         clientId = _clientId;
     }
      
-
     /** @dev Transfers an amount '_value' of tokens from msg.sender to '_to' address/wallet.
       * @param populousTokenContract The address of the ERC20 token contract which implements the transfer method.
       * @param _value the amount of tokens to transfer.
@@ -41,6 +36,28 @@ contract DepositContract is withAccessManager {
         return iERC20Token(populousTokenContract).transfer(_to, _value);
     }
 
+    /** @dev This function will transfer iERC1155 tokens
+     */
+    function transfer1155(address _erc1155Token, address _to, uint256 _id, uint256 _value) 
+        public onlyServerOrOnlyPopulous returns (bool success) {
+        ERC1155(_erc1155Token).transfer(_to, _id, _value);
+        return true;
+    }
+
+    /** @dev Transfers ether from this contract to a specified wallet/address
+      * @param _to An address implementing to send ether to.
+      * @param _value The amount of ether to send in wei. 
+      * @return bool Successful or unsuccessful transfer
+      */
+    function transferEther(address _to, uint256 _value) public 
+        onlyServerOrOnlyPopulous returns (bool success) 
+    {
+        require(this.balance >= _value);
+        require(_to.send(_value) == true);
+        EtherTransfer(_to, _value);
+        return true;
+    }
+
     // CONSTANT METHODS
     
     /** @dev Returns the token balance of the current contract instance using the ERC20 balanceOf method.
@@ -48,8 +65,28 @@ contract DepositContract is withAccessManager {
       * @return uint An unsigned integer representing the returned token balance.
       */
     function balanceOf(address populousTokenContract) public view returns (uint) {
-        return iERC20Token(populousTokenContract).balanceOf(this);
+        // ether
+        if (populousTokenContract == address(0)) {
+            return address(this).balance;
+        } else {
+            // erc20
+            return iERC20Token(populousTokenContract).balanceOf(this);
+        }
     }
 
+    /** @dev Gets the version of this deposit contract
+      * @return uint256 version
+      */
+    function getVersion() public view returns (uint256) {
+        return version;
+    }
 
+    // CONSTANT FUNCTIONS
+
+    /** @dev This function gets the client ID or deposit contract owner
+     * returns _clientId
+     */
+    function getClientId() public view returns (bytes32 _clientId) {
+        return clientId;
+    }
 }

@@ -16,10 +16,4 @@ module.exports = function(deployer) {
         });
     }); */
 
-    deployer.then(function() {
-        return DataManager.deployed().then(function(instance) {
-            DM = instance;
-            console.log('Finished deploying Data Manager ', DM.address);
-        });
-    });
 };
