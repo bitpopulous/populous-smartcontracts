@@ -20,6 +20,9 @@ contract Populous is withAccessManager {
     
     // EVENTS
     // Bank events
+    event exchangeXAUpEvent (bytes32 _blockchainActionId, address _xaup, uint eth_amount, uint xaup_amount, uint _tokenId, bytes32 _clientId, address _from);
+
+
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
     
@@ -34,7 +37,23 @@ contract Populous is withAccessManager {
     event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
-    // FIELDS
+    event DepositAddressUpgrade(address _depositAddress, bytes32 clientId, uint256 version);
+
+    // FIELDS   
+
+    struct tokenExchangeDetails {
+        address _xaup;
+        uint xaup_amount;
+        uint eth_amount;
+        bytes32 _clientId;
+        uint expires;
+        uint tokenId;
+        bool completed;
+    } 
+    mapping (address => tokenExchangeDetails) public tokenExchange;
+
+    address public PXT = 0xc14830e53aa344e8c14603a91229a0b925b0b262;
+    address public PPT = 0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a;
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
@@ -64,6 +83,58 @@ contract Populous is withAccessManager {
         //dm.blockchainActionIdData[_blockchainActionId].to = depositAddress[clientId];
         EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId));
     }
+
+
+    /* function () public payable {
+        require(tokenExchange[msg.sender].expires < now || tokenExchange[msg.sender].completed == false, "xaup to ether order has not expired");
+        uint _tokenId = tokenExchange[msg.sender].tokenId;
+        ERC1155 xa = ERC1155(tokenExchange[msg.sender].xaupAddress);
+        require(xa.balanceOf(_tokenId, this) >= tokenExchange[msg.sender].xaup, "populous smart contract xaup allowance is less than xaup_amount");
+        // check msg value >= eth_amount
+        if (msg.value >= tokenExchange[msg.sender].eth_amount) {
+            // take and send eth to server/admin wallet
+            // and send xaup 1155 to msg.sender
+            AM.server().transfer(msg.value);
+            xa.transfer(tokenExchange[msg.sender].xaupAddress, _tokenId, tokenExchange[msg.sender].xaup);
+            // return remaining eth to msg.sender 
+            if (msg.value > tokenExchange[msg.sender].eth_amount) {
+                msg.sender.transfer(SafeMath.safeSub(msg.value, tokenExchange[msg.sender].eth));
+            }
+            // mark order as completed
+            tokenExchange[msg.sender].completed = true;
+        } else { // else revert
+            revert("token exchange has been completed of eth amount is more than msg.value sent by msg.sender");
+        }
+    } */
+
+    
+    /* // ierc1155.approve(populous_smartcontract)
+    function exchangeXAUP(address _dataManager, bytes32 _blockchainActionId, address _xaup, uint eth_amount, uint xaup_amount, uint _tokenId, bytes32 _clientId, address _from) 
+        public returns(bool success) {
+
+        require(tokenExchange[_from].expires < now || tokenExchange[_from].completed == true, "xaup to ether order has not expired");
+        require(_dataManager != 0x0 && _from != 0x0 && _xaup != 0x0);
+        DataManager dm = DataManager(_dataManager);
+        require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(_clientId) != 0x0);
+        
+        
+        ERC1155 xa = ERC1155(_xaup);
+        require(xa.balanceOf(tokenId, this) >= xaup_amount, "populous smart contract xaup allowance is less than xaup_amount");
+        
+        tokenExchange[_from].xaupAddress = _xaup;
+        tokenExchange[_from].xaup = xaup_amount;
+        tokenExchange[_from].eth = eth_amount;
+        tokenExchange[_from].clientId = _clientId;
+        tokenExchange[_from].expires = now + 1 days;
+        tokenExchange[_from].tokenId = _tokenId;
+        tokenExchange[_from].completed = false;
+        // set blockchain action data
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, eth_amount, _clientId, _from, 0) == true);
+
+        // emit event 
+        emit exchangeXAUpEvent (_blockchainActionId, _xaup, eth_amount, xaup_amount, _tokenId, _clientId, _from);
+    } */
+
 
     /** @dev Adds a deposit address for a client id from older version of populous
       * @param _blockchainActionId the blockchain action id
@@ -239,18 +310,40 @@ contract Populous is withAccessManager {
         require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
         address depositContract = dm.getDepositAddress(accountId);
-        DepositContract o = DepositContract(depositContract);
-        uint pptBalance = SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral);
+        DepositContract dep = DepositContract(depositContract);
+        uint pptBalance = SafeMath.safeSub(dep.balanceOf(pptAddress), inCollateral);
         require(pptBalance >= SafeMath.safeAdd(amount, pptFee));
-        require(o.transfer(pptAddress, to, amount) == true);
-        require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true); 
-        bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();       
+        require(dep.transfer(pptAddress, to, amount) == true);
+        require(dep.transfer(pptAddress, adminExternalWallet, pptFee) == true); 
+        
+        bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();    
+        
+        
+        // deposit address upgrade if version != 2
+        if (getVersion(dep) == 2) {
+            // create new deposit contract
+            // transfer pxt and ppt to new contract
+            // store new contract in data manager
+            require(dm.setDepositAddress(_blockchainActionId, new DepositContract(accountId, AM), accountId) == true);
+            address newDepositAddress = dm.getDepositAddress(accountId);
+            require(newDepositAddress != 0x0);
+            require(dep.transfer(PXT, newDepositAddress, dep.balanceOf(PXT)) == true);
+            require(dep.transfer(PPT, newDepositAddress, dep.balanceOf(PPT)) == true);
+            // event DepositAddressUpgrade with deposit address, user id, version number
+            emit DepositAddressUpgrade(newDepositAddress, accountId, getVersion(newDepositAddress));
+        }
         require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, dm.getDepositAddress(accountId), to, amount);
     }
 
     // CONSTANT METHODS
 
-    
+    /** @dev Gets the version of this deposit contract
+      * @param depositContract The deposit contract address
+      * @return uint256 version
+      */
+    function getVersion(address _depositContract) public view returns (uint256) {
+        return DepositContract(_depositContract).getVersion();
+    }
     
 }

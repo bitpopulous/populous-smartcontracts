@@ -8,15 +8,14 @@ import "./withAccessManager.sol";
 /// @title DepositContract contract
 contract DepositContract is withAccessManager {
 
-    bytes32 clientId;// client ID.
-    address manager; // address of contract manager.
+    bytes32 public clientId; // client ID.
 
+    uint256 public version = 2;
     // MODIFIERS
 
-    /* modifier onlyManager() {
-        require(msg.sender == manager);
-        _;
-    } */
+
+    // EVENTS
+    event EtherTransfer(address to, uint256 value);
 
     // NON-CONSTANT METHODS 
 
@@ -49,6 +48,49 @@ contract DepositContract is withAccessManager {
       */
     function balanceOf(address populousTokenContract) public view returns (uint) {
         return iERC20Token(populousTokenContract).balanceOf(this);
+    }
+
+
+    /** @dev Transfers ether from this contract to a specified wallet/address
+      * @param _to An address implementing to send ether to.
+      * @param _value The amount of ether to send in wei. 
+      * @return bool Successful or unsuccessful transfer
+      */
+    function transferEther(address _to, uint256 _value) public 
+        onlyServerOrOnlyPopulous returns (bool success) 
+    {
+        require(address(this).balance >= _value, "balance is less than _value to send in wei");
+        _to.transfer(_value);
+        emit EtherTransfer(_to, _value);
+        return true;
+    }
+
+
+    /** @dev Gets ether balance from this contract
+      * @return uint256 ether balance
+      */
+    function getEtherBalance() public 
+        returns (uint256 _balance) 
+    {
+        return address(this).balance;
+    }
+
+    /** @dev Gets the version of this deposit contract
+      * @return uint256 version
+      */
+    function getVersion() public view returns (uint256) {
+        return version;
+    }
+
+
+
+    // CONSTANT FUNCTIONS
+
+    /** @dev This function gets the client ID or deposit contract owner
+     * returns _clientId
+     */
+    function getClientId() public view returns (bytes32 _clientId) {
+        return clientId;
     }
 
 
