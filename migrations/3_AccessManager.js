@@ -14,12 +14,12 @@ module.exports = function(deployer) {
     //deployer.deploy(AccessManager, acc_server, acc_guardian);
     
     // not redeployed after initial deployment
-    //deployer.deploy(AccessManager, acc_server);
+    deployer.deploy(AccessManager, acc_server);
     //console.log('Finished deploying AM');
-    deployer.then(function() {
+    /* deployer.then(function() {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;
             console.log('Finished deploying Access Manager ', AM.address);
         });
-    });
+    }); */
 };

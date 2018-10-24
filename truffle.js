@@ -53,10 +53,8 @@ module.exports = {
             // testrpc -m "hat wet present young sphere observe enact shock retire island admit boil"
             network_id: "*",
             host: "localhost",
-            port: 8545,
-            before_timeout: 200000, //  <=== NEW
-            test_timeout: 300000, //  <=== NEW
-            gas: 4712388
+            port: 8545
+            //gas: 7712388
 
         },
         "private": {
