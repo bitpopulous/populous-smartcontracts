@@ -52,8 +52,10 @@ contract Populous is withAccessManager {
     } 
     mapping (address => tokenExchangeDetails) public tokenExchange;
 
-    address public PXT = 0xc14830e53aa344e8c14603a91229a0b925b0b262;
-    address public PPT = 0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a;
+    //address public PXT = 0xc14830e53aa344e8c14603a91229a0b925b0b262;
+    //address public PPT = 0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a;
+    address public PXT = 0xd8a7c588f8dc19f49dafd8ecf08eec58e64d4cc9;
+    address public PPT = 0x0ff72e24af7c09a647865820d4477f98fcb72a2c;
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
@@ -201,11 +203,11 @@ contract Populous is withAccessManager {
         onlyServer 
     {
         require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
+        //DataManager dm = DataManager(_dataManager);
+        require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0);
-        require(amount > 0 && dm.getCurrency(currency) != 0x0);
-        DepositContract o = DepositContract(dm.getDepositAddress(accountId));
+        require(amount > 0 && DataManager(_dataManager).getCurrency(currency) != 0x0);
+        DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
         // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
         require(SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee);
         require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true);
@@ -213,26 +215,26 @@ contract Populous is withAccessManager {
         //CurrencyToken cT = CurrencyToken(dm.getCurrency(currency));
        
         // WITHDRAW PART / DEBIT
-        if(amount > CurrencyToken(dm.getCurrency(currency)).balanceOf(from)) {
+        if(amount > CurrencyToken(DataManager(_dataManager).getCurrency(currency)).balanceOf(from)) {
                 // destroying total balance
-            require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(CurrencyToken(dm.getCurrency(currency)).balanceOf(from), from) == true);
+            require(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).destroyTokensFrom(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).balanceOf(from), from) == true);
             //remaining ledger balance. deposit address is 0
         } else {
                 // destroy amount from balance
-            require(CurrencyToken(dm.getCurrency(currency)).destroyTokensFrom(amount, from) == true);
+            require(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).destroyTokensFrom(amount, from) == true);
             //left over deposit address balance.
         }
 
         // TRANSFER PART / CREDIT
         if(toBank == true) {
-            require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
+            require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
             //emit event: Imported currency to system
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         } else {
-            CurrencyToken(dm.getCurrency(currency)).mintTokens(amount);
+            CurrencyToken(DataManager(_dataManager).getCurrency(currency)).mintTokens(amount);
             //credit account
-            CurrencyToken(dm.getCurrency(currency)).transfer(to, amount);
-            require(dm.setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
+            CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transfer(to, amount);
+            require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         }   
     }
@@ -254,44 +256,44 @@ contract Populous is withAccessManager {
         onlyServer 
     {   
         require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(accountId) != 0x0);
+        //DataManager dm = DataManager(_dataManager);
+        require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
-        address depositContract = dm.getDepositAddress(accountId);
-        DepositContract dep = DepositContract(depositContract);
-        uint pptBalance = SafeMath.safeSub(dep.balanceOf(pptAddress), inCollateral);
+        address depositContract = DataManager(_dataManager).getDepositAddress(accountId);
+        //DepositContract dep = DepositContract(depositContract);
+        uint pptBalance = SafeMath.safeSub(DepositContract(depositContract).balanceOf(pptAddress), inCollateral);
         require(pptBalance >= SafeMath.safeAdd(amount, pptFee));
-        require(dep.transfer(pptAddress, to, amount) == true);
-        require(dep.transfer(pptAddress, adminExternalWallet, pptFee) == true); 
+        require(DepositContract(depositContract).transfer(pptAddress, to, amount) == true);
+        require(DepositContract(depositContract).transfer(pptAddress, adminExternalWallet, pptFee) == true); 
         
         bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();    
         
         
         // deposit address upgrade if version != 2
-        if (getVersion(dep) == 2) {
+        if (getVersion(DepositContract(depositContract)) == 2) {
             // create new deposit contract
             // transfer pxt and ppt to new contract
             // store new contract in data manager
-            require(dm.setDepositAddress(_blockchainActionId, new DepositContract(accountId, AM), accountId) == true);
-            address newDepositAddress = dm.getDepositAddress(accountId);
+            require(DataManager(_dataManager).setDepositAddress(_blockchainActionId, new DepositContract(accountId, AM), accountId) == true);
+            address newDepositAddress = DataManager(_dataManager).getDepositAddress(accountId);
             require(newDepositAddress != 0x0);
-            if(dep.balanceOf(PXT) > 0){
-                require(dep.transfer(PXT, newDepositAddress, dep.balanceOf(PXT)) == true);
+            if(DepositContract(depositContract).balanceOf(PXT) > 0){
+                require(DepositContract(depositContract).transfer(PXT, newDepositAddress, DepositContract(depositContract).balanceOf(PXT)) == true);
             }
-            if(dep.balanceOf(PPT) > 0) {
-                require(dep.transfer(PPT, newDepositAddress, dep.balanceOf(PPT)) == true);
+            if(DepositContract(depositContract).balanceOf(PPT) > 0) {
+                require(DepositContract(depositContract).transfer(PPT, newDepositAddress, DepositContract(depositContract).balanceOf(PPT)) == true);
             }
             // event DepositAddressUpgrade with deposit address, user id, version number
-            emit DepositAddressUpgrade(newDepositAddress, accountId, getVersion(newDepositAddress));
+            DepositAddressUpgrade(newDepositAddress, accountId, getVersion(newDepositAddress));
         }
-        require(dm.setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
-        EventWithdrawPPT(_blockchainActionId, accountId, dm.getDepositAddress(accountId), to, amount);
+        require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
+        EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
 
     // CONSTANT METHODS
 
     /** @dev Gets the version of this deposit contract
-      * @param depositContract The deposit contract address
+      * @param _depositContract The deposit contract address
       * @return uint256 version
       */
     function getVersion(address _depositContract) public view returns (uint256) {

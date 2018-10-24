@@ -59,9 +59,9 @@ contract DepositContract is withAccessManager {
     function transferEther(address _to, uint256 _value) public 
         onlyServerOrOnlyPopulous returns (bool success) 
     {
-        require(address(this).balance >= _value, "balance is less than _value to send in wei");
+        require(this.balance >= _value);
         _to.transfer(_value);
-        emit EtherTransfer(_to, _value);
+        EtherTransfer(_to, _value);
         return true;
     }
 
@@ -72,7 +72,7 @@ contract DepositContract is withAccessManager {
     function getEtherBalance() public 
         returns (uint256 _balance) 
     {
-        return address(this).balance;
+        return this.balance;
     }
 
     /** @dev Gets the version of this deposit contract
