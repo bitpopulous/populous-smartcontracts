@@ -84,58 +84,6 @@ contract Populous is withAccessManager {
         EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId));
     }
 
-
-    /* function () public payable {
-        require(tokenExchange[msg.sender].expires < now || tokenExchange[msg.sender].completed == false, "xaup to ether order has not expired");
-        uint _tokenId = tokenExchange[msg.sender].tokenId;
-        ERC1155 xa = ERC1155(tokenExchange[msg.sender].xaupAddress);
-        require(xa.balanceOf(_tokenId, this) >= tokenExchange[msg.sender].xaup, "populous smart contract xaup allowance is less than xaup_amount");
-        // check msg value >= eth_amount
-        if (msg.value >= tokenExchange[msg.sender].eth_amount) {
-            // take and send eth to server/admin wallet
-            // and send xaup 1155 to msg.sender
-            AM.server().transfer(msg.value);
-            xa.transfer(tokenExchange[msg.sender].xaupAddress, _tokenId, tokenExchange[msg.sender].xaup);
-            // return remaining eth to msg.sender 
-            if (msg.value > tokenExchange[msg.sender].eth_amount) {
-                msg.sender.transfer(SafeMath.safeSub(msg.value, tokenExchange[msg.sender].eth));
-            }
-            // mark order as completed
-            tokenExchange[msg.sender].completed = true;
-        } else { // else revert
-            revert("token exchange has been completed of eth amount is more than msg.value sent by msg.sender");
-        }
-    } */
-
-    
-    /* // ierc1155.approve(populous_smartcontract)
-    function exchangeXAUP(address _dataManager, bytes32 _blockchainActionId, address _xaup, uint eth_amount, uint xaup_amount, uint _tokenId, bytes32 _clientId, address _from) 
-        public returns(bool success) {
-
-        require(tokenExchange[_from].expires < now || tokenExchange[_from].completed == true, "xaup to ether order has not expired");
-        require(_dataManager != 0x0 && _from != 0x0 && _xaup != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(_clientId) != 0x0);
-        
-        
-        ERC1155 xa = ERC1155(_xaup);
-        require(xa.balanceOf(tokenId, this) >= xaup_amount, "populous smart contract xaup allowance is less than xaup_amount");
-        
-        tokenExchange[_from].xaupAddress = _xaup;
-        tokenExchange[_from].xaup = xaup_amount;
-        tokenExchange[_from].eth = eth_amount;
-        tokenExchange[_from].clientId = _clientId;
-        tokenExchange[_from].expires = now + 1 days;
-        tokenExchange[_from].tokenId = _tokenId;
-        tokenExchange[_from].completed = false;
-        // set blockchain action data
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, eth_amount, _clientId, _from, 0) == true);
-
-        // emit event 
-        emit exchangeXAUpEvent (_blockchainActionId, _xaup, eth_amount, xaup_amount, _tokenId, _clientId, _from);
-    } */
-
-
     /** @dev Adds a deposit address for a client id from older version of populous
       * @param _blockchainActionId the blockchain action id
       * @param _clientId the client id
@@ -327,8 +275,12 @@ contract Populous is withAccessManager {
             require(dm.setDepositAddress(_blockchainActionId, new DepositContract(accountId, AM), accountId) == true);
             address newDepositAddress = dm.getDepositAddress(accountId);
             require(newDepositAddress != 0x0);
-            require(dep.transfer(PXT, newDepositAddress, dep.balanceOf(PXT)) == true);
-            require(dep.transfer(PPT, newDepositAddress, dep.balanceOf(PPT)) == true);
+            if(dep.balanceOf(PXT) > 0){
+                require(dep.transfer(PXT, newDepositAddress, dep.balanceOf(PXT)) == true);
+            }
+            if(dep.balanceOf(PPT) > 0) {
+                require(dep.transfer(PPT, newDepositAddress, dep.balanceOf(PPT)) == true);
+            }
             // event DepositAddressUpgrade with deposit address, user id, version number
             emit DepositAddressUpgrade(newDepositAddress, accountId, getVersion(newDepositAddress));
         }
