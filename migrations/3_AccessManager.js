@@ -3,7 +3,8 @@ var AccessManager = artifacts.require("AccessManager");
 module.exports = function(deployer) {
     //var acc_server = acc_guardian = web3.eth.accounts[0];
     // to do - server for test net is default accounts[0]
-    var acc_server = web3.eth.accounts[0];
+    // var acc_server = web3.eth.accounts[0];
+    var acc_server = '0xf8b3d742b245ec366288160488a12e7a2f1d720d';
     // to do - server for live net is accounts[1]
     //var acc_server = web3.eth.accounts[1];
     //var acc_server = "0x494e6a97403ed08c186ebd37bcdf410a48993238";

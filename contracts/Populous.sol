@@ -13,6 +13,7 @@ import "./CurrencyToken.sol";
 import "./DepositContract.sol";
 import "./SafeMath.sol";
 import "./DataManager.sol";
+import "./ERC1155.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
@@ -20,6 +21,7 @@ contract Populous is withAccessManager {
     
     // EVENTS
     // Bank events
+    event exchangeXAUpEvent (bytes32 _blockchainActionId, address _xaup, uint256 eth_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
     event DepositAddressUpgrade(address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
 
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
@@ -55,7 +57,68 @@ contract Populous is withAccessManager {
 
 
     // NON-CONSTANT METHODS
-    
+     
+    /// Ether to XAUP exchange between deposit contract and Populous.sol
+    function exchangeXAUP(
+        address _dataManager, bytes32 _blockchainActionId, 
+        address _xaup, uint eth_amount, uint xaup_amount, 
+        uint _tokenId, bytes32 _clientId, address adminExternalWallet) 
+        public 
+        onlyServer
+    {    
+        DataManager dm = DataManager(_dataManager);
+        // client deposit smart contract address
+        address _from = dm.getDepositAddress(_clientId);
+        require(_dataManager != 0x0 && _from != 0x0 && _xaup != 0x0);
+        // check action id, deposit address is valid and deposit contract address version is >= version 2
+        require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(_clientId) != 0x0);
+        require(DepositContract(dm.getDepositAddress(_clientId)).getVersion() >= 2);
+        // check populous erc1155 balance
+        ERC1155 xa = ERC1155(_xaup);
+        require(xa.balanceOf(_tokenId, this) >= xaup_amount);
+        // transfer ether balance from clients deposit contract to server
+        require(DepositContract(_from).transferEther(adminExternalWallet, eth_amount) == true);
+        // transfer xaup tokens to clients deposit address
+        xa.safeTransferFrom(this, _from, _tokenId, xaup_amount, "");
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, eth_amount, _clientId, _from, 0) == true);
+         // emit event 
+        exchangeXAUpEvent (_blockchainActionId, _xaup, eth_amount, xaup_amount, _tokenId, _clientId, _from);
+    }
+
+    /// @notice Handle the receipt of an ERC1155 type
+    /// @dev The smart contract calls this function on the recipient
+    ///  after a `safeTransfer`. This function MAY throw to revert and reject the
+    ///  transfer. Return of other than the magic value MUST result in the
+    ///  transaction being reverted.
+    ///  Note: the contract address is always the message sender.
+    /// @param _operator The address which called `safeTransferFrom` function
+    /// @param _from The address which previously owned the token
+    /// @param _id The identifier of the item being transferred
+    /// @param _value The amount of the item being transferred
+    /// @param _data Additional data with no specified format
+    /// @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+    ///  unless throwing
+    function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) public returns(bytes4) {
+        return 0xf23a6e61;
+    }
+
+    /**
+    * @notice Handle the receipt of an NFT
+    * @dev The ERC721 smart contract calls this function on the recipient
+    * after a `safetransfer` if the recipient is a smart contract. This function MAY throw to revert and reject the
+    * transfer. Return of other than the magic value (0x150b7a02) MUST result in the
+    * transaction being reverted.
+    * Note: the contract address is always the message sender.
+    * @param _operator The address which called `safeTransferFrom` function
+    * @param _from The address which previously owned the token
+    * @param _tokenId The NFT identifier which is being transferred
+    * @param _data Additional data with no specified format
+    * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
+    */
+    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) public returns(bytes4) {
+        return 0x150b7a02; 
+    }
+
     /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
       * @param clientId The bytes32 client ID
       * @return address The address of the deployed deposit contract instance.
