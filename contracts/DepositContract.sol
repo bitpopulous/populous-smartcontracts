@@ -41,10 +41,10 @@ contract DepositContract is withAccessManager {
      */
     function transfer1155(address _erc1155Token, address _to, uint256 _id, uint256 _value) 
         public onlyServerOrOnlyPopulous returns (bool success) {
-        ERC1155(_erc1155Token).transfer(_to, _id, _value);
+        ERC1155(_erc1155Token).safeTransferFrom(this, _to, _id, _value, "");
+        //ERC1155(_erc1155Token).transfer(_to, _id, _value);
         return true;
     }
-
 
     /**
     * @notice Handle the receipt of an NFT
@@ -61,6 +61,23 @@ contract DepositContract is withAccessManager {
     */
     function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) public returns(bytes4) {
         return 0x150b7a02; 
+    }
+
+    /// @notice Handle the receipt of an ERC1155 type
+    /// @dev The smart contract calls this function on the recipient
+    ///  after a `safeTransfer`. This function MAY throw to revert and reject the
+    ///  transfer. Return of other than the magic value MUST result in the
+    ///  transaction being reverted.
+    ///  Note: the contract address is always the message sender.
+    /// @param _operator The address which called `safeTransferFrom` function
+    /// @param _from The address which previously owned the token
+    /// @param _id The identifier of the item being transferred
+    /// @param _value The amount of the item being transferred
+    /// @param _data Additional data with no specified format
+    /// @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+    ///  unless throwing
+    function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) public returns(bytes4) {
+        return 0xf23a6e61;
     }
 
     /**
@@ -107,7 +124,7 @@ contract DepositContract is withAccessManager {
       * @param populousTokenContract An address implementing the ERC20 token standard. 
       * @return uint An unsigned integer representing the returned token balance.
       */
-    function balanceOf(address populousTokenContract) public view returns (uint) {
+    function balanceOf(address populousTokenContract) public view returns (uint256) {
         // ether
         if (populousTokenContract == address(0)) {
             return address(this).balance;
