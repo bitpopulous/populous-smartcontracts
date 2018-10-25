@@ -12,7 +12,6 @@ module.exports = function(deployer) {
             }).then(function(){
             //get deployed DataManager instance
             //return DataManager.deployed();
-            console.log('Finished deploying DataManager');
         });
     }); */
 

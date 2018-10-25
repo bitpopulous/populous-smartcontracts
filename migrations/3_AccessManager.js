@@ -14,7 +14,5 @@ module.exports = function(deployer) {
     //deployer.deploy(AccessManager, acc_server, acc_guardian);
     
     // not redeployed after initial deployment
-    deployer.deploy(AccessManager, acc_server);
-    //console.log('Finished deploying AM');
-    
+    //deployer.deploy(AccessManager, acc_server);    
 };
