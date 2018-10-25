@@ -12,14 +12,7 @@ module.exports = function(deployer) {
             }).then(function(){
             //get deployed DataManager instance
             //return DataManager.deployed();
-            console.log('Finished deploying DataManager');
         });
     }); */
 
-    deployer.then(function() {
-        return DataManager.deployed().then(function(instance) {
-            DM = instance;
-            console.log('Finished deploying Data Manager ', DM.address);
-        });
-    });
 };

@@ -6,14 +6,13 @@ module.exports = function(deployer) {
     deployer.then(function() {
         return AccessManager.deployed().then(function(instance) {
             AM = instance;
-            //link deployed AccessManager instances to Populous
+            //add deployed AccessManager instance to Populous
             return deployer.deploy(Populous, AM.address);
         }).then(function() {
             return Populous.deployed();
         /* }).then(function(P) {
-            return AM.changePopulous(P.address);
-        }).then(function() { */
-            console.log('Finished deploying Populous');
+            return AM.changePopulous(P.address); // comment when re-deploying to livenet
+        }); */
         });
     });
 };
