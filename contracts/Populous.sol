@@ -37,6 +37,8 @@ contract Populous is withAccessManager {
     event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
     
     // FIELDS
+
+    // livenet
     //address public PXT = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
     //address public PPT = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;
     // ropsten

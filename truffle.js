@@ -57,7 +57,6 @@ module.exports = {
             before_timeout: 200000, //  <=== NEW
             test_timeout: 300000, //  <=== NEW
             gas: 4712388
-
         },
         "private": {
             // geth --dev --networkid 666 --rpc --rpcapi eth,web3,db,net,debug --rpccorsdomain * console
