@@ -7,7 +7,7 @@ Smart contracts for platform
 AccessManager.sol - `0x0ebbaf0c3794ed23a0871e411a34be3a1679753a`   
 PopulousToken.sol - `0x0ff72e24af7c09a647865820d4477f98fcb72a2c`      
 SafeMath.sol - `0x67678f19a00922488046e5f7819fff0ecbc580f4`          
-Populous.sol - `0x9aafee3104fb269ac4b27cb05897a1e22b5fc5ad`    
+Populous.sol - `0x802e039f6aefe4d89ba5307987421d8d1e2507d4`    
 DataManager.sol -  `0x0f8abf5f708f971bd9a994ec3af40988aa0f4873`     
 Utils.sol - `0xc8d2eff467f8e9bd9d89a416b24b598afbfe8961`
 
