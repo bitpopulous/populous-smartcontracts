@@ -14,6 +14,7 @@ import "./DepositContract.sol";
 import "./SafeMath.sol";
 import "./DataManager.sol";
 import "./ERC1155.sol";
+import "./ERC721Basic.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
@@ -21,8 +22,8 @@ contract Populous is withAccessManager {
     
     // EVENTS
     // Bank events
-    event exchangeXAUpEvent (bytes32 _blockchainActionId, address _xaup, uint256 eth_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
-    event DepositAddressUpgrade(address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
+    event EventExchangeXAUp (bytes32 _blockchainActionId, address _xaup, uint256 eth_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
+    event EventDepositAddressUpgrade(address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
 
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
@@ -82,7 +83,7 @@ contract Populous is withAccessManager {
         xa.safeTransferFrom(this, _from, _tokenId, xaup_amount, "");
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, eth_amount, _clientId, _from, 0) == true);
          // emit event 
-        exchangeXAUpEvent (_blockchainActionId, _xaup, eth_amount, xaup_amount, _tokenId, _clientId, _from);
+        EventExchangeXAUp(_blockchainActionId, _xaup, eth_amount, xaup_amount, _tokenId, _clientId, _from);
     }
 
     /// @notice Handle the receipt of an ERC1155 type
@@ -128,26 +129,28 @@ contract Populous is withAccessManager {
     {   
         require(_dataManager != 0x0);
         DataManager dm = DataManager(_dataManager);
-        DepositContract dc = DepositContract(dm.getDepositAddress(clientId));
         DepositContract newDepositContract = new DepositContract(clientId, AM);
 
-        if (dc.getVersion() != 2) {
-            if(DepositContract(dc).balanceOf(PXT) > 0){
-                require(DepositContract(dc).transfer(PXT, newDepositContract, DepositContract(dc).balanceOf(PXT)) == true);
+        DepositContract dc;
+        if (dm.getDepositAddress(clientId) != 0x0) {
+            dc = DepositContract(dm.getDepositAddress(clientId));
+            require(!dc.call(bytes4(keccak256("getVersion()"))));
+            if(dc.balanceOf(PXT) > 0){
+                require(dc.transfer(PXT, newDepositContract, dc.balanceOf(PXT)) == true);
             }
-            if(DepositContract(newDepositContract).balanceOf(PPT) > 0) {
-                require(DepositContract(dc).transfer(PPT, newDepositContract, DepositContract(dc).balanceOf(PPT)) == true);
+            if(dc.balanceOf(PPT) > 0) {
+                require(dc.transfer(PPT, newDepositContract, dc.balanceOf(PPT)) == true);
             }
-            require(dm.setDepositAddress(_blockchainActionId, newDepositContract, clientId) == true);
+            require(dm._setDepositAddress(_blockchainActionId, clientId, newDepositContract) == true);
             assert(dm.getDepositAddress(clientId) != 0x0);
-            require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, dm.getDepositAddress(clientId), 0) == true);
+            //require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, dm.getDepositAddress(clientId), 0) == true);
             // old deposit contract, new deposit contract, client id, deposit contract/wallet version
-            DepositAddressUpgrade(dc, newDepositContract, clientId, dc.getVersion());
-        } else {
+            EventDepositAddressUpgrade(dc, newDepositContract, clientId, newDepositContract.getVersion());
+        } else { 
             require(dm.setDepositAddress(_blockchainActionId, newDepositContract, clientId) == true);
             assert(dm.getDepositAddress(clientId) != 0x0);
             require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, dm.getDepositAddress(clientId), 0) == true);
-            EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId), dc.getVersion());
+            EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId), newDepositContract.getVersion());
         }
     }
 
@@ -302,7 +305,4 @@ contract Populous is withAccessManager {
     }
 
     // CONSTANT METHODS
-
-    
-    
 }
