@@ -1,5 +1,4 @@
 pragma solidity ^0.4.17;
-
 /**
 This is the core module of the system. Currently it holds the code of
 the Bank and crowdsale modules to avoid external calls and higher gas costs.
@@ -7,7 +6,6 @@ It might be a good idea in the future to split the code, separate Bank
 and crowdsale modules into external files and have the core interact with them
 with addresses and interfaces. 
 */
-
 import "./iERC20Token.sol";
 import "./CurrencyToken.sol";
 import "./DepositContract.sol";
@@ -18,27 +16,16 @@ import "./ERC721Basic.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
-
-    
     // EVENTS
     // Bank events
     event EventExchangeXAUp (bytes32 _blockchainActionId, address _xaup, uint256 eth_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
-    event EventDepositAddressUpgrade(address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
-
+    event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
-    
+    // event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
     event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
-    event EventUpgradeCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr, uint256 version);
-    
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
-    event EventUpgradeDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
-    
+    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);    
     event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
-    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
-    event EventProviderEnabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
-    event EventProviderDisabled(bytes32 _blockchainActionId, bytes32 _userId, bytes2 _countryCode, bytes32 _companyNumber);
-    
     // FIELDS
 
     // livenet
@@ -55,8 +42,6 @@ contract Populous is withAccessManager {
     /**
     BANK MODULE
     */
-
-
     // NON-CONSTANT METHODS
      
     /// Ether to XAUP exchange between deposit contract and Populous.sol
@@ -87,54 +72,29 @@ contract Populous is withAccessManager {
     }
 
     /// @notice Handle the receipt of an ERC1155 type
-    /// @dev The smart contract calls this function on the recipient
-    ///  after a `safeTransfer`. This function MAY throw to revert and reject the
-    ///  transfer. Return of other than the magic value MUST result in the
-    ///  transaction being reverted.
-    ///  Note: the contract address is always the message sender.
-    /// @param _operator The address which called `safeTransferFrom` function
-    /// @param _from The address which previously owned the token
-    /// @param _id The identifier of the item being transferred
-    /// @param _value The amount of the item being transferred
-    /// @param _data Additional data with no specified format
-    /// @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
-    ///  unless throwing
     function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) public returns(bytes4) {
         return 0xf23a6e61;
     }
 
-    /**
-    * @notice Handle the receipt of an NFT
-    * @dev The ERC721 smart contract calls this function on the recipient
-    * after a `safetransfer` if the recipient is a smart contract. This function MAY throw to revert and reject the
-    * transfer. Return of other than the magic value (0x150b7a02) MUST result in the
-    * transaction being reverted.
-    * Note: the contract address is always the message sender.
-    * @param _operator The address which called `safeTransferFrom` function
-    * @param _from The address which previously owned the token
-    * @param _tokenId The NFT identifier which is being transferred
-    * @param _data Additional data with no specified format
-    * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
-    */
+    /// @notice Handle the receipt of an ERC721 type
     function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) public returns(bytes4) {
         return 0x150b7a02; 
     }
 
-    /** @dev Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
-      * @param clientId The bytes32 client ID
-      * @return address The address of the deployed deposit contract instance.
-      */
-    function createAddress(address _dataManager, bytes32 _blockchainActionId, bytes32 clientId) public
+    // Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
+    function createAddress(address _dataManager, bytes32 _blockchainActionId, bytes32 clientId) 
+        public
         onlyServer
     {   
         require(_dataManager != 0x0);
         DataManager dm = DataManager(_dataManager);
-        DepositContract newDepositContract = new DepositContract(clientId, AM);
-
+        DepositContract newDepositContract;
         DepositContract dc;
         if (dm.getDepositAddress(clientId) != 0x0) {
             dc = DepositContract(dm.getDepositAddress(clientId));
+            newDepositContract = new DepositContract(clientId, AM);
             require(!dc.call(bytes4(keccak256("getVersion()"))));
+            //require(dc.getVersion() < 2);
             if(dc.balanceOf(PXT) > 0){
                 require(dc.transfer(PXT, newDepositContract, dc.balanceOf(PXT)) == true);
             }
@@ -142,13 +102,10 @@ contract Populous is withAccessManager {
                 require(dc.transfer(PPT, newDepositContract, dc.balanceOf(PPT)) == true);
             }
             require(dm._setDepositAddress(_blockchainActionId, clientId, newDepositContract) == true);
-            assert(dm.getDepositAddress(clientId) != 0x0);
-            //require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, dm.getDepositAddress(clientId), 0) == true);
-            // old deposit contract, new deposit contract, client id, deposit contract/wallet version
-            EventDepositAddressUpgrade(dc, newDepositContract, clientId, newDepositContract.getVersion());
+            EventDepositAddressUpgrade(_blockchainActionId, address(dc), dm.getDepositAddress(clientId), clientId, newDepositContract.getVersion());
         } else { 
+            newDepositContract = new DepositContract(clientId, AM);
             require(dm.setDepositAddress(_blockchainActionId, newDepositContract, clientId) == true);
-            assert(dm.getDepositAddress(clientId) != 0x0);
             require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, clientId, dm.getDepositAddress(clientId), 0) == true);
             EventNewDepositContract(_blockchainActionId, clientId, dm.getDepositAddress(clientId), newDepositContract.getVersion());
         }
@@ -167,21 +124,18 @@ contract Populous is withAccessManager {
     {   
         require(_dataManager != 0x0);
         DataManager dm = DataManager(_dataManager);
-        // Check if currency already exists
-        //require(currencies[_tokenSymbol] == 0x0);
         require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
     }
 
-
-    /** @dev Add a new invoice provider to the platform  
-      * @param _blockchainActionId the blockchain action id
-      * @param _userId the user id of the provider
-      * @param _companyNumber the providers company number
-      * @param _companyName the providers company name
-      * @param _countryCode the providers country code
-      */
+    /** dev Add a new invoice provider to the platform  
+      * param _blockchainActionId the blockchain action id
+      * param _userId the user id of the provider
+      * param _companyNumber the providers company number
+      * param _companyName the providers company name
+      * param _countryCode the providers country code
+      /
     function addProvider(
         address _dataManager, bytes32 _blockchainActionId, 
         bytes32 _userId, bytes32 _companyNumber, 
@@ -195,6 +149,7 @@ contract Populous is withAccessManager {
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
         EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
     }
+    */
 
     /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
@@ -213,24 +168,22 @@ contract Populous is withAccessManager {
     {
         require(_dataManager != 0x0);
         DataManager dm = DataManager(_dataManager);
-        bytes2 countryCode; 
-        bytes32 companyName; 
+        bytes2 countryCode;
+        bytes32 companyName;
         bytes32 companyNumber;
         (countryCode, companyName, companyNumber) = dm.getProviderByUserId(_providerUserId);
-        //require(dm.getProviderStatus(_providerUserId) == true);
         require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
         require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
         EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
     }
 
-    /** @dev Import an amount of pokens of a particular currency from an ethereum wallet/address to bank
-      * @param _blockchainActionId the blockchain action id
-      * @param accountId the account id of the client
-      * @param from the blockchain address to import pokens from
-      * @param currency the poken currency
-      */
-
+    /** dev Import an amount of pokens of a particular currency from an ethereum wallet/address to bank
+      * param _blockchainActionId the blockchain action id
+      * param accountId the account id of the client
+      * param from the blockchain address to import pokens from
+      * param currency the poken currency
+      //
     function withdrawPoken(
         address _dataManager, bytes32 _blockchainActionId, 
         bytes32 currency, uint256 amount,
@@ -242,13 +195,12 @@ contract Populous is withAccessManager {
         require(_dataManager != 0x0);
         //DataManager dm = DataManager(_dataManager);
         require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
-        require(adminExternalWallet != 0x0 && pptFee > 0);
-        require(amount > 0 && DataManager(_dataManager).getCurrency(currency) != 0x0);
+        require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
+        require(DataManager(_dataManager).getCurrency(currency) != 0x0);
         DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
         // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
         require(SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee);
         require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true);
-       
         // WITHDRAW PART / DEBIT
         if(amount > CurrencyToken(DataManager(_dataManager).getCurrency(currency)).balanceOf(from)) {
                 // destroying total balance
@@ -259,7 +211,6 @@ contract Populous is withAccessManager {
             require(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).destroyTokensFrom(amount, from) == true);
             //left over deposit address balance.
         }
-
         // TRANSFER PART / CREDIT
         if(toBank == true) {
             require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
@@ -273,6 +224,7 @@ contract Populous is withAccessManager {
             EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
         }    
     }
+    */
 
     /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
       * @param _blockchainActionId the blockchain action id
@@ -303,6 +255,5 @@ contract Populous is withAccessManager {
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
-
     // CONSTANT METHODS
 }
