@@ -1,4 +1,5 @@
 module.exports = {
+    
     networks: {
         "kovan": {
             // https://github.com/paritytech/parity/wiki/Configuring-Parity#config-file
@@ -14,14 +15,14 @@ module.exports = {
             network_id: 3,
             //host: "35.177.79.70",
             // geth
-            host: "18.130.20.123",
+            //host: "18.130.20.123",
             // parity
-            //host: "217.138.132.58",
-            port: 8545,
-            //port: 8541,
-            before_timeout: 900000, //  <=== NEW
-            test_timeout: 900000, //  <=== NEW
-            gas: 6500036,
+            host: "217.138.132.58",
+            //port: 8545,
+            port: 8541,
+            //before_timeout: 900000, //  <=== NEW
+            //test_timeout: 900000, //  <=== NEW
+            gas: 4712388,
             gasPrice: 100000000000
             //from: '0x1326e1caba0680fce27a4beb6514713c9be4db6a'
         },
@@ -30,7 +31,7 @@ module.exports = {
             //geth
             //host: "35.176.131.242",
             //parity
-            host: "18.130.87.214",
+            host: "3.8.120.99",
             port: 8545,
             //from: "0x3688bb90126e666d6fd97353f0a568147a007017",
             // new account on parity created in truffle
@@ -44,8 +45,8 @@ module.exports = {
             host: "localhost",
             port: 8545,
             before_timeout: 200000, //  <=== NEW
-            test_timeout: 300000//  <=== NEW
-            //gas: 4712388
+            test_timeout: 300000, //  <=== NEW
+            gas: 4712388
         },
         "private": {
             // geth --dev --networkid 666 --rpc --rpcapi eth,web3,db,net,debug --rpccorsdomain * console
