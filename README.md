@@ -21,7 +21,7 @@ Platform Admin/Server Address - `0xf8b3d742b245ec366288160488a12e7a2f1d720d`
 
 ## Live Network Smart Contract Addresses
 
-GBPp.sol - `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`
+GBPp token- `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`      
 SafeMath.sol - `0x140088cafe35f269d739de277dbe40ba28b8edf1`          
