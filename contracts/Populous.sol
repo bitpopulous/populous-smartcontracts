@@ -18,10 +18,10 @@ import "./ERC721Basic.sol";
 contract Populous is withAccessManager {
     // EVENTS
     // Bank events
-    event EventExchangeXAUp (bytes32 _blockchainActionId, address _xaup, uint256 eth_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
+    event EventExchangeXAUp (bytes32 _blockchainActionId, address erc20_tokenAddress, uint256 erc20_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
-    // event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bool toBank);
+    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
     event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);    
@@ -32,13 +32,38 @@ contract Populous is withAccessManager {
     //address public PXT = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
     //address public PPT = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;
     // ropsten
-    address public PXT = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
-    address public PPT = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;
+    //address public PXT = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
+    //address public PPT = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;
+
+    struct tokens {   
+        address _token;
+        uint256 _precision;
+    }
+
+    mapping(bytes8 => tokens) public tokenDetails;
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
-    function Populous(address _accessManager) public withAccessManager(_accessManager) {}
+    function Populous(address _accessManager) public withAccessManager(_accessManager) 
+    {   
+        //pxt
+        tokenDetails[0x505854]._token = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
+        tokenDetails[0x505854]._precision = 8;
+        //usdc
+        tokenDetails[0x55534443]._token = 0xF930f2C7Bc02F89D05468112520553FFc6D24801;
+        tokenDetails[0x55534443]._precision = 6;
+        //tusd
+        tokenDetails[0x54555344]._token = 0x9d48Bb499856806c15d099a41112Ef7D182cac31;
+        tokenDetails[0x54555344]._precision = 18;
+        //ppt
+        tokenDetails[0x505054]._token = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;        
+        tokenDetails[0x505054]._precision = 8;
+        //xau
+        tokenDetails[0x584155]._token = 0xC686bB0EBfcf234e7AEe1767e9C14D42AA849468;
+        tokenDetails[0x584155]._precision = 0;
+    }
+
     /**
     BANK MODULE
     */
@@ -47,28 +72,41 @@ contract Populous is withAccessManager {
     /// Ether to XAUP exchange between deposit contract and Populous.sol
     function exchangeXAUP(
         address _dataManager, bytes32 _blockchainActionId, 
-        address _xaup, uint eth_amount, uint xaup_amount, 
+        address erc20_tokenAddress, uint erc20_amount, uint xaup_amount, 
         uint _tokenId, bytes32 _clientId, address adminExternalWallet) 
         public 
         onlyServer
     {    
         DataManager dm = DataManager(_dataManager);
+        ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
         // client deposit smart contract address
         address _from = dm.getDepositAddress(_clientId);
-        require(_dataManager != 0x0 && _from != 0x0 && _xaup != 0x0);
-        // check action id, deposit address is valid and deposit contract address version is >= version 2
-        require(dm.getActionStatus(_blockchainActionId) == false && dm.getDepositAddress(_clientId) != 0x0);
-        require(DepositContract(dm.getDepositAddress(_clientId)).getVersion() >= 2);
-        // check populous erc1155 balance
-        ERC1155 xa = ERC1155(_xaup);
-        require(xa.balanceOf(_tokenId, this) >= xaup_amount);
-        // transfer ether balance from clients deposit contract to server
-        require(DepositContract(_from).transferEther(adminExternalWallet, eth_amount) == true);
+        require(
+            // check dataManager contract is valid
+            _dataManager != 0x0 &&
+            // check deposit address of client
+            _from != 0x0 && 
+            // check xaup token address
+            // tokenDetails[0x584155]._token != 0x0 && 
+            erc20_tokenAddress != 0x0 &&
+            // check action id is unused
+            dm.getActionStatus(_blockchainActionId) == false &&
+            // deposit contract version >= 2
+            DepositContract(_from).getVersion() >= 2 &&
+            // populous xaup balance
+            xa.balanceOf(_tokenId, this) >= xaup_amount
+        );
+        // transfer erc20 token balance from clients deposit contract to server/admin
+        require(
+            DepositContract(_from).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true ||
+            DepositContract(_from).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true
+        );
         // transfer xaup tokens to clients deposit address
         xa.safeTransferFrom(this, _from, _tokenId, xaup_amount, "");
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, eth_amount, _clientId, _from, 0) == true);
-         // emit event 
-        EventExchangeXAUp(_blockchainActionId, _xaup, eth_amount, xaup_amount, _tokenId, _clientId, _from);
+        // set action status in dataManager
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, erc20_amount, _clientId, _from, 0) == true);
+        // emit event 
+        EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _from);
     }
 
     /// @notice Handle the receipt of an ERC1155 type
@@ -95,6 +133,8 @@ contract Populous is withAccessManager {
             newDepositContract = new DepositContract(clientId, AM);
             require(!dc.call(bytes4(keccak256("getVersion()"))));
             //require(dc.getVersion() < 2);
+            address PXT = tokenDetails[0x505854]._token;
+            address PPT = tokenDetails[0x505054]._token;
             if(dc.balanceOf(PXT) > 0){
                 require(dc.transfer(PXT, newDepositContract, dc.balanceOf(PXT)) == true);
             }
@@ -111,12 +151,12 @@ contract Populous is withAccessManager {
         }
     }
 
-    /** @dev Creates a new token/currency.
-      * @param _tokenName  The name of the currency.
-      * @param _decimalUnits The number of decimals the currency has.
-      * @param _tokenSymbol The currency symbol, e.g., GBP
+    /** dev Creates a new token/currency.
+      * param _tokenName  The name of the currency.
+      * param _decimalUnits The number of decimals the currency has.
+      * param _tokenSymbol The currency symbol, e.g., GBP
       */
-    function createCurrency(
+    /* function createCurrency(
         address _dataManager, bytes32 _blockchainActionId, 
         bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
         public
@@ -127,7 +167,7 @@ contract Populous is withAccessManager {
         require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
         EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
-    }
+    } */
 
     /** dev Add a new invoice provider to the platform  
       * param _blockchainActionId the blockchain action id
@@ -183,12 +223,13 @@ contract Populous is withAccessManager {
       * param accountId the account id of the client
       * param from the blockchain address to import pokens from
       * param currency the poken currency
-      //
+      */
     function withdrawPoken(
         address _dataManager, bytes32 _blockchainActionId, 
         bytes32 currency, uint256 amount,
-        address from, address to, bytes32 accountId, uint256 inCollateral,
-        address pptAddress, uint256 pptFee, address adminExternalWallet, bool toBank) 
+        address from, address to, bytes32 accountId, 
+        uint256 inCollateral,
+        uint256 pptFee, address adminExternalWallet) 
         public 
         onlyServer 
     {
@@ -199,8 +240,8 @@ contract Populous is withAccessManager {
         require(DataManager(_dataManager).getCurrency(currency) != 0x0);
         DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
         // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
-        require(SafeMath.safeSub(o.balanceOf(pptAddress), inCollateral) >= pptFee);
-        require(o.transfer(pptAddress, adminExternalWallet, pptFee) == true);
+        require(SafeMath.safeSub(o.balanceOf(tokenDetails[0x505054]._token), inCollateral) >= pptFee);
+        require(o.transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
         // WITHDRAW PART / DEBIT
         if(amount > CurrencyToken(DataManager(_dataManager).getCurrency(currency)).balanceOf(from)) {
                 // destroying total balance
@@ -212,19 +253,10 @@ contract Populous is withAccessManager {
             //left over deposit address balance.
         }
         // TRANSFER PART / CREDIT
-        if(toBank == true) {
-            require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, from, pptFee) == true); 
-            //emit event: Imported currency to system
-            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
-        } else {
-            CurrencyToken(DataManager(_dataManager).getCurrency(currency)).mintTokens(amount);
-            //credit account
-            CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transfer(to, amount);
-            require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
-            EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, toBank);
-        }    
+        CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
+        require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
+        EventWithdrawPoken(_blockchainActionId, accountId, currency, amount);
     }
-    */
 
     /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
       * @param _blockchainActionId the blockchain action id
@@ -255,5 +287,10 @@ contract Populous is withAccessManager {
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
+    
     // CONSTANT METHODS
+
+    function getTokenDetails(bytes8 tokenName) public view returns (address token, uint256 precision) {
+        return (tokenDetails[tokenName]._token, tokenDetails[tokenName]._precision);
+    }
 }
