@@ -80,33 +80,30 @@ contract Populous is withAccessManager {
         DataManager dm = DataManager(_dataManager);
         ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
         // client deposit smart contract address
-        address _from = dm.getDepositAddress(_clientId);
+        address _depositAddress = dm.getDepositAddress(_clientId);
         require(
             // check dataManager contract is valid
             _dataManager != 0x0 &&
             // check deposit address of client
-            _from != 0x0 && 
+            _depositAddress != 0x0 && 
             // check xaup token address
             // tokenDetails[0x584155]._token != 0x0 && 
             erc20_tokenAddress != 0x0 &&
             // check action id is unused
             dm.getActionStatus(_blockchainActionId) == false &&
             // deposit contract version >= 2
-            DepositContract(_from).getVersion() >= 2 &&
-            // populous xaup balance
-            xa.balanceOf(_tokenId, this) >= xaup_amount
+            DepositContract(_depositAddress).getVersion() >= 2 &&
+            // populous server xaup balance
+            xa.balanceOf(_tokenId, msg.sender) >= xaup_amount
         );
         // transfer erc20 token balance from clients deposit contract to server/admin
-        require(
-            DepositContract(_from).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true ||
-            DepositContract(_from).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true
-        );
-        // transfer xaup tokens to clients deposit address
-        xa.safeTransferFrom(this, _from, _tokenId, xaup_amount, "");
+        require(DepositContract(_depositAddress).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true);
+        // transfer xaup tokens to clients deposit address from populous server allowance
+        xa.safeTransferFrom(msg.sender, _depositAddress, _tokenId, xaup_amount, "");
         // set action status in dataManager
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, erc20_amount, _clientId, _from, 0) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, erc20_amount, _clientId, _depositAddress, 0) == true);
         // emit event 
-        EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _from);
+        EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _depositAddress);
     }
 
     /// @notice Handle the receipt of an ERC1155 type
