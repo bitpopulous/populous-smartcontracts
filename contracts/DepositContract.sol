@@ -41,8 +41,7 @@ contract DepositContract is withAccessManager {
      */
     function transfer1155(address _erc1155Token, address _to, uint256 _id, uint256 _value) 
         public onlyServerOrOnlyPopulous returns (bool success) {
-        ERC1155(_erc1155Token).safeTransferFrom(this, _to, _id, _value, "");
-        //ERC1155(_erc1155Token).transfer(_to, _id, _value);
+        ERC1155(_erc1155Token).safeTransfer(_to, _id, _value, "");
         return true;
     }
 

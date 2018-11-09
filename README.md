@@ -6,7 +6,7 @@ Smart contracts for platform
 
 PXT token - `0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9`, precision - 8
 USDC token - `0xF930f2C7Bc02F89D05468112520553FFc6D24801`, precision - 6
-TUSD token - `0x9d48Bb499856806c15d099a41112Ef7D182cac31`, precision - 18
+TUSD token - `0x5f93188f3c617eeb60c9d9a55bdeea36ba2bd7b6`, precision - 18
 XAU (ERC1155Mintable.sol) token - `0xC686bB0EBfcf234e7AEe1767e9C14D42AA849468`, precision - 0
 GBPp token - `0xe92d265dbe35613468a9ec14a321624faf7653dd`, precision - 6
 AccessManager.sol - `0x0ebbaf0c3794ed23a0871e411a34be3a1679753a`   
