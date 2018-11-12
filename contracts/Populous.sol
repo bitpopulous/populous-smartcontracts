@@ -54,13 +54,13 @@ contract Populous is withAccessManager {
         tokenDetails[0x55534443]._token = 0xF930f2C7Bc02F89D05468112520553FFc6D24801;
         tokenDetails[0x55534443]._precision = 6;
         //tusd
-        tokenDetails[0x54555344]._token = 0x9d48Bb499856806c15d099a41112Ef7D182cac31;
+        tokenDetails[0x54555344]._token = 0x78e7BEE398D66660bDF820DbDB415A33d011cD48;
         tokenDetails[0x54555344]._precision = 18;
         //ppt
         tokenDetails[0x505054]._token = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;        
         tokenDetails[0x505054]._precision = 8;
         //xau
-        tokenDetails[0x584155]._token = 0xC686bB0EBfcf234e7AEe1767e9C14D42AA849468;
+        tokenDetails[0x584155]._token = 0x4974d66E391Bf05270384364D14C306246D075FD;
         tokenDetails[0x584155]._precision = 0;
     }
 
@@ -250,6 +250,8 @@ contract Populous is withAccessManager {
             //left over deposit address balance.
         }
         // TRANSFER PART / CREDIT
+
+        // approve currency amount for populous for the next require to pass
         CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
         EventWithdrawPoken(_blockchainActionId, accountId, currency, amount);
@@ -287,7 +289,11 @@ contract Populous is withAccessManager {
     
     // CONSTANT METHODS
 
-    function getTokenDetails(bytes8 tokenName) public view returns (address token, uint256 precision) {
-        return (tokenDetails[tokenName]._token, tokenDetails[tokenName]._precision);
+    function getTokenAddress(bytes8 tokenName) public view returns (address token) {
+        return tokenDetails[tokenName]._token;
+    }
+
+    function getTokenPrecision(bytes8 tokenName) public view returns (uint256 precision) {
+        return tokenDetails[tokenName]._precision;
     }
 }

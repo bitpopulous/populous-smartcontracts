@@ -22,7 +22,7 @@ module.exports = {
             port: 8541,
             //before_timeout: 900000, //  <=== NEW
             //test_timeout: 900000, //  <=== NEW
-            gas: 4712388,
+            gas: 7712388,
             gasPrice: 100000000000
             //from: '0x1326e1caba0680fce27a4beb6514713c9be4db6a'
         },
