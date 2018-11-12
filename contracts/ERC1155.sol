@@ -27,7 +27,6 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
     // Events
     event Approval(address indexed _owner, address indexed _spender, uint256 indexed _id, uint256 _oldValue, uint256 _value);
     event Transfer(address _spender, address indexed _from, address indexed _to, uint256 indexed _id, uint256 _value);
-    event Burn(address owner, uint256 id, uint256 value);
 
     function transferFrom(address _from, address _to, uint256 _id, uint256 _value) external {
         if(_from != msg.sender) {
@@ -42,10 +41,19 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
     }
 
     function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes _data) external {
-        this.transferFrom(_from, _to, _id, _value);
+        //this.transferFrom(_from, _to, _id, _value);
 
         // solium-disable-next-line arg-overflow
         require(_checkAndCallSafeTransfer(_from, _to, _id, _value, _data));
+        if(_from != msg.sender) {
+            //require(allowances[_id][_from][msg.sender] >= _value);
+            allowances[_id][_from][msg.sender] = allowances[_id][_from][msg.sender].sub(_value);
+        }
+
+        items[_id].balances[_from] = items[_id].balances[_from].sub(_value);
+        items[_id].balances[_to] = _value.add(items[_id].balances[_to]);
+
+        Transfer(msg.sender, _from, _to, _id, _value);
     }
 
     function approve(address _spender, uint256 _id, uint256 _currentValue, uint256 _value) external {
@@ -53,7 +61,6 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
         require(_value == 0 || allowances[_id][msg.sender][_spender] == _currentValue);
         allowances[_id][msg.sender][_spender] = _value;
         Approval(msg.sender, _spender, _id, _currentValue, _value);
-        
     }
 
     function balanceOf(uint256 _id, address _owner) external view returns (uint256) {
@@ -66,8 +73,6 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
 
 /////////////////////////////////////// IERC1155Extended //////////////////////////////////////////
 
-    /** @dev This function will burn all tokens sent to address(0)
-     */
     function transfer(address _to, uint256 _id, uint256 _value) external {
         // Not needed. SafeMath will do the same check on .sub(_value)
         //require(_value <= items[_id].balances[msg.sender]);
@@ -77,10 +82,13 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
     }
 
     function safeTransfer(address _to, uint256 _id, uint256 _value, bytes _data) external {
-        this.transfer(_to, _id, _value);
-
+        //this.transfer(_to, _id, _value);
+                
         // solium-disable-next-line arg-overflow
         require(_checkAndCallSafeTransfer(msg.sender, _to, _id, _value, _data));
+        items[_id].balances[msg.sender] = items[_id].balances[msg.sender].sub(_value);
+        items[_id].balances[_to] = _value.add(items[_id].balances[_to]);
+        Transfer(msg.sender, msg.sender, _to, _id, _value);
     }
 
 //////////////////////////////////// IERC1155BatchTransfer ////////////////////////////////////////
@@ -99,7 +107,6 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
 
                 Transfer(msg.sender, _from, _to, _id, _value);
             }
-            
         }
         else {
             for (i = 0; i < _ids.length; ++i) {
@@ -113,16 +120,43 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
 
                 Transfer(msg.sender, _from, _to, _id, _value);
             }
-            
         }
     }
 
     function safeBatchTransferFrom(address _from, address _to, uint256[] _ids, uint256[] _values, bytes _data) external {
-        this.batchTransferFrom(_from, _to, _ids, _values);
+        //this.batchTransferFrom(_from, _to, _ids, _values);
 
         for (uint256 i = 0; i < _ids.length; ++i) {
             // solium-disable-next-line arg-overflow
             require(_checkAndCallSafeTransfer(_from, _to, _ids[i], _values[i], _data));
+        }
+
+        uint256 _id;
+        uint256 _value;
+
+        if(_from == msg.sender) {
+            for (i = 0; i < _ids.length; ++i) {
+                _id = _ids[i];
+                _value = _values[i];
+
+                items[_id].balances[_from] = items[_id].balances[_from].sub(_value);
+                items[_id].balances[_to] = _value.add(items[_id].balances[_to]);
+
+                Transfer(msg.sender, _from, _to, _id, _value);
+            }
+        }
+        else {
+            for (i = 0; i < _ids.length; ++i) {
+                _id = _ids[i];
+                _value = _values[i];
+
+                allowances[_id][_from][msg.sender] = allowances[_id][_from][msg.sender].sub(_value);
+
+                items[_id].balances[_from] = items[_id].balances[_from].sub(_value);
+                items[_id].balances[_to] = _value.add(items[_id].balances[_to]);
+
+                Transfer(msg.sender, _from, _to, _id, _value);
+            }
         }
     }
 
@@ -138,7 +172,6 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
             allowances[_id][msg.sender][_spender] = _value;
             Approval(msg.sender, _spender, _id, _currentValues[i], _value);
         }
-        
     }
 
 //////////////////////////////// IERC1155BatchTransferExtended ////////////////////////////////////
@@ -156,15 +189,27 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
 
             Transfer(msg.sender, msg.sender, _to, _id, _value);
         }
-        
     }
 
     function safeBatchTransfer(address _to, uint256[] _ids, uint256[] _values, bytes _data) external {
-        this.batchTransfer(_to, _ids, _values);
+        //this.batchTransfer(_to, _ids, _values);
 
         for (uint256 i = 0; i < _ids.length; ++i) {
             // solium-disable-next-line arg-overflow
             require(_checkAndCallSafeTransfer(msg.sender, _to, _ids[i], _values[i], _data));
+        }
+
+        uint256 _id;
+        uint256 _value;
+
+        for (i = 0; i < _ids.length; ++i) {
+            _id = _ids[i];
+            _value = _values[i];
+
+            items[_id].balances[msg.sender] = items[_id].balances[msg.sender].sub(_value);
+            items[_id].balances[_to] = _value.add(items[_id].balances[_to]);
+
+            Transfer(msg.sender, msg.sender, _to, _id, _value);
         }
     }
 
@@ -206,15 +251,25 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
 
             Transfer(msg.sender, msg.sender, _dst, _id, _value);
         }
-        
     }
 
     function safeMulticastTransfer(address[] _to, uint256[] _ids, uint256[] _values, bytes _data) external {
-        this.multicastTransfer(_to, _ids, _values);
+        //this.multicastTransfer(_to, _ids, _values);
 
         for (uint256 i = 0; i < _ids.length; ++i) {
             // solium-disable-next-line arg-overflow
             require(_checkAndCallSafeTransfer(msg.sender, _to[i], _ids[i], _values[i], _data));
+        }
+
+        for (i = 0; i < _to.length; ++i) {
+            uint256 _id = _ids[i];
+            uint256 _value = _values[i];
+            address _dst = _to[i];
+
+            items[_id].balances[msg.sender] = items[_id].balances[msg.sender].sub(_value);
+            items[_id].balances[_dst] = _value.add(items[_id].balances[_dst]);
+
+            Transfer(msg.sender, msg.sender, _dst, _id, _value);
         }
     }
 
@@ -229,9 +284,9 @@ contract ERC1155 is IERC1155, IERC1155Extended, IERC1155BatchTransfer, IERC1155B
     )
     internal
     returns (bool)
-   {
+    {
         if (!_to.isContract()) {
-            
+            return true;
         }
         bytes4 retval = IERC1155TokenReceiver(_to).onERC1155Received(
             msg.sender, _from, _id, _value, _data);
