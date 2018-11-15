@@ -8,10 +8,10 @@ module.exports = function(deployer) {
             AM = instance;
             //add deployed AccessManager instance to Populous
             return deployer.deploy(Populous, AM.address);
-        }).then(function() {
+        })/* .then(function() {
             return Populous.deployed();
         }).then(function(P) {
             return AM.changePopulous(P.address); // comment when re-deploying to livenet
-        });
+        }) */;
     });
 };

@@ -22,24 +22,15 @@ contract Populous is withAccessManager {
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
-    event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
+    //event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);    
-    event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
+    //event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
     // FIELDS
-
-    // livenet
-    //address public PXT = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
-    //address public PPT = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;
-    // ropsten
-    //address public PXT = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
-    //address public PPT = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;
-
     struct tokens {   
         address _token;
         uint256 _precision;
     }
-
     mapping(bytes8 => tokens) public tokenDetails;
 
     // NON-CONSTANT METHODS
@@ -48,19 +39,19 @@ contract Populous is withAccessManager {
     function Populous(address _accessManager) public withAccessManager(_accessManager) 
     {   
         //pxt
-        tokenDetails[0x505854]._token = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
+        tokenDetails[0x505854]._token = 0xc14830e53aa344e8c14603a91229a0b925b0b262;
         tokenDetails[0x505854]._precision = 8;
         //usdc
-        tokenDetails[0x55534443]._token = 0xF930f2C7Bc02F89D05468112520553FFc6D24801;
+        tokenDetails[0x55534443]._token = 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48;
         tokenDetails[0x55534443]._precision = 6;
         //tusd
-        tokenDetails[0x54555344]._token = 0x78e7BEE398D66660bDF820DbDB415A33d011cD48;
+        tokenDetails[0x54555344]._token = 0x8dd5fbce2f6a956c3022ba3663759011dd51e73e;
         tokenDetails[0x54555344]._precision = 18;
         //ppt
-        tokenDetails[0x505054]._token = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;        
+        tokenDetails[0x505054]._token = 0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a;        
         tokenDetails[0x505054]._precision = 8;
         //xau
-        tokenDetails[0x584155]._token = 0x4974d66E391Bf05270384364D14C306246D075FD;
+        tokenDetails[0x584155]._token = 0x73a3b7DFFE9af119621f8467D8609771AB4BC33f;
         tokenDetails[0x584155]._precision = 0;
     }
 
@@ -289,11 +280,7 @@ contract Populous is withAccessManager {
     
     // CONSTANT METHODS
 
-    function getTokenAddress(bytes8 tokenName) public view returns (address token) {
-        return tokenDetails[tokenName]._token;
-    }
-
-    function getTokenPrecision(bytes8 tokenName) public view returns (uint256 precision) {
-        return tokenDetails[tokenName]._precision;
+    function getTokenDetails(bytes8 tokenName) public view returns (address token, uint256 precision) {
+        return (tokenDetails[tokenName]._token, tokenDetails[tokenName]._precision);
     }
 }
