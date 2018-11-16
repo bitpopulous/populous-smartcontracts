@@ -12,8 +12,6 @@ import "./DepositContract.sol";
 import "./SafeMath.sol";
 import "./DataManager.sol";
 import "./ERC1155.sol";
-import "./ERC721Basic.sol";
-
 /// @title Populous contract
 contract Populous is withAccessManager {
     // EVENTS
@@ -36,30 +34,11 @@ contract Populous is withAccessManager {
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
-    function Populous(address _accessManager) public withAccessManager(_accessManager) 
-    {   
-        //pxt
-        tokenDetails[0x505854]._token = 0xc14830e53aa344e8c14603a91229a0b925b0b262;
-        tokenDetails[0x505854]._precision = 8;
-        //usdc
-        tokenDetails[0x55534443]._token = 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48;
-        tokenDetails[0x55534443]._precision = 6;
-        //tusd
-        tokenDetails[0x54555344]._token = 0x8dd5fbce2f6a956c3022ba3663759011dd51e73e;
-        tokenDetails[0x54555344]._precision = 18;
-        //ppt
-        tokenDetails[0x505054]._token = 0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a;        
-        tokenDetails[0x505054]._precision = 8;
-        //xau
-        tokenDetails[0x584155]._token = 0x73a3b7DFFE9af119621f8467D8609771AB4BC33f;
-        tokenDetails[0x584155]._precision = 0;
-    }
-
+    function Populous(address _accessManager) public withAccessManager(_accessManager) {}
     /**
     BANK MODULE
     */
     // NON-CONSTANT METHODS
-     
     /// Ether to XAUP exchange between deposit contract and Populous.sol
     function exchangeXAUP(
         address _dataManager, bytes32 _blockchainActionId, 
@@ -139,46 +118,6 @@ contract Populous is withAccessManager {
         }
     }
 
-    /** dev Creates a new token/currency.
-      * param _tokenName  The name of the currency.
-      * param _decimalUnits The number of decimals the currency has.
-      * param _tokenSymbol The currency symbol, e.g., GBP
-      */
-    /* function createCurrency(
-        address _dataManager, bytes32 _blockchainActionId, 
-        bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
-        public
-        onlyServer
-    {   
-        require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
-        EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
-    } */
-
-    /** dev Add a new invoice provider to the platform  
-      * param _blockchainActionId the blockchain action id
-      * param _userId the user id of the provider
-      * param _companyNumber the providers company number
-      * param _companyName the providers company name
-      * param _countryCode the providers country code
-      /
-    function addProvider(
-        address _dataManager, bytes32 _blockchainActionId, 
-        bytes32 _userId, bytes32 _companyNumber, 
-        bytes32 _companyName, bytes2 _countryCode) 
-        public 
-        onlyServer
-    {   
-        require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
-        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
-    }
-    */
-
     /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
       * @param _providerUserId the user id of the provider
@@ -241,7 +180,6 @@ contract Populous is withAccessManager {
             //left over deposit address balance.
         }
         // TRANSFER PART / CREDIT
-
         // approve currency amount for populous for the next require to pass
         CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
@@ -278,8 +216,19 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
     
-    // CONSTANT METHODS
+    // Set/Update token address and precision
+    function setTokenDetails(bytes8 tokenName, address token, uint256 precision) 
+        public 
+        onlyServer 
+        returns(bool success) 
+    {
+        tokenDetails[tokenName]._token = token;
+        tokenDetails[tokenName]._precision = precision;
+        assert(tokenDetails[tokenName]._token != 0x0);
+        return true;
+    }
 
+    // CONSTANT METHODS
     function getTokenDetails(bytes8 tokenName) public view returns (address token, uint256 precision) {
         return (tokenDetails[tokenName]._token, tokenDetails[tokenName]._precision);
     }

@@ -39,8 +39,8 @@ module.exports = {
         //old port: 8545,
         // from: "0x093f653f337924ebc311599476b235dd937be5cc",
         //gas: 4700036
-        gas: 8000000,
-        gasPrice: 50000000000
+        gas: 8000029,
+        gasPrice: 100000000000
       }
     }
   };
