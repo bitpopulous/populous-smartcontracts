@@ -23,6 +23,8 @@ contract Populous is withAccessManager {
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
+    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+
     // FIELDS
     struct tokens {   
         address _token;
@@ -36,6 +38,34 @@ contract Populous is withAccessManager {
     function Populous(address _accessManager) public withAccessManager(_accessManager) {
 
     }
+
+        /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _providerUserId the user id of the provider
+      * @param _invoiceCompanyNumber the providers company number
+      * @param _invoiceCompanyName the providers company name
+      * @param _invoiceCountryCode the providers country code
+      * @param _invoiceNumber the invoice identification number
+      */
+    function addInvoice(
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
+        bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
+        public
+        onlyServer
+    {
+        require(_dataManager != 0x0);
+        DataManager dm = DataManager(_dataManager);
+        bytes2 countryCode;
+        bytes32 companyName;
+        bytes32 companyNumber;
+        (countryCode, companyName, companyNumber) = dm.getProviderByUserId(_providerUserId);
+        require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
+        require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
+        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
+    }
+
     /**
     BANK MODULE
     */
