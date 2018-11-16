@@ -48,3 +48,15 @@ DataManager.sol - `0xcd565ca18f06e2e4d251b55dc49a4fe456c72052`
 Utils.sol - `0xcab23f0118f87d01a6d2fd3d93aeeaca789c8fb7`
 
 Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
+
+
+
+
+## Deployment
+
+`truffle@v4.0.0-beta.2`
+
+`gas:` 8000000
+`gasPrice:` 100000000000
+
+unlock account - e.g., `web3.personal.unlockAccount(web3.eth.coinbase, 'password', '0x5460')`
