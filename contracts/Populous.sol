@@ -12,7 +12,7 @@ import "./DepositContract.sol";
 import "./SafeMath.sol";
 import "./DataManager.sol";
 import "./ERC1155.sol";
-import "./ERC721Basic.sol";
+import "./withAccessManager.sol";
 
 /// @title Populous contract
 contract Populous is withAccessManager {
@@ -22,53 +22,54 @@ contract Populous is withAccessManager {
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
-    event EventNewCurrency(bytes32 blockchainActionId, bytes32 tokenName, uint8 decimalUnits, bytes32 tokenSymbol, address addr);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
-    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);    
-    event EventNewProvider(bytes32 _blockchainActionId, bytes32 _userId, bytes32 _companyName, bytes32 _companyNumber, bytes2 countryCode);
+    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+
     // FIELDS
-
-    // livenet
-    //address public PXT = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
-    //address public PPT = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;
-    // ropsten
-    //address public PXT = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
-    //address public PPT = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;
-
     struct tokens {   
         address _token;
         uint256 _precision;
     }
-
     mapping(bytes8 => tokens) public tokenDetails;
 
     // NON-CONSTANT METHODS
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
-    function Populous(address _accessManager) public withAccessManager(_accessManager) 
-    {   
-        //pxt
-        tokenDetails[0x505854]._token = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
-        tokenDetails[0x505854]._precision = 8;
-        //usdc
-        tokenDetails[0x55534443]._token = 0xF930f2C7Bc02F89D05468112520553FFc6D24801;
-        tokenDetails[0x55534443]._precision = 6;
-        //tusd
-        tokenDetails[0x54555344]._token = 0x78e7BEE398D66660bDF820DbDB415A33d011cD48;
-        tokenDetails[0x54555344]._precision = 18;
-        //ppt
-        tokenDetails[0x505054]._token = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;        
-        tokenDetails[0x505054]._precision = 8;
-        //xau
-        tokenDetails[0x584155]._token = 0x4974d66E391Bf05270384364D14C306246D075FD;
-        tokenDetails[0x584155]._precision = 0;
+    function Populous(address _accessManager) public withAccessManager(_accessManager) {
+
+    }
+
+        /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
+      * @param _blockchainActionId the blockchain action id
+      * @param _providerUserId the user id of the provider
+      * @param _invoiceCompanyNumber the providers company number
+      * @param _invoiceCompanyName the providers company name
+      * @param _invoiceCountryCode the providers country code
+      * @param _invoiceNumber the invoice identification number
+      */
+    function addInvoice(
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
+        bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
+        public
+        onlyServer
+    {
+        require(_dataManager != 0x0);
+        DataManager dm = DataManager(_dataManager);
+        bytes2 countryCode;
+        bytes32 companyName;
+        bytes32 companyNumber;
+        (countryCode, companyName, companyNumber) = dm.getProviderByUserId(_providerUserId);
+        require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
+        require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
+        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
     }
 
     /**
     BANK MODULE
     */
     // NON-CONSTANT METHODS
-     
     /// Ether to XAUP exchange between deposit contract and Populous.sol
     function exchangeXAUP(
         address _dataManager, bytes32 _blockchainActionId, 
@@ -148,73 +149,6 @@ contract Populous is withAccessManager {
         }
     }
 
-    /** dev Creates a new token/currency.
-      * param _tokenName  The name of the currency.
-      * param _decimalUnits The number of decimals the currency has.
-      * param _tokenSymbol The currency symbol, e.g., GBP
-      */
-    /* function createCurrency(
-        address _dataManager, bytes32 _blockchainActionId, 
-        bytes32 _tokenName, uint8 _decimalUnits, bytes32 _tokenSymbol)
-        public
-        onlyServer
-    {   
-        require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.setCurrency(_blockchainActionId, new CurrencyToken(address(AM), _tokenName, _decimalUnits, _tokenSymbol), _tokenSymbol) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, _tokenSymbol, 0, 0x0, dm.getCurrency(_tokenSymbol), 0) == true);
-        EventNewCurrency(_blockchainActionId, _tokenName, _decimalUnits, _tokenSymbol, dm.getCurrency(_tokenSymbol));
-    } */
-
-    /** dev Add a new invoice provider to the platform  
-      * param _blockchainActionId the blockchain action id
-      * param _userId the user id of the provider
-      * param _companyNumber the providers company number
-      * param _companyName the providers company name
-      * param _countryCode the providers country code
-      /
-    function addProvider(
-        address _dataManager, bytes32 _blockchainActionId, 
-        bytes32 _userId, bytes32 _companyNumber, 
-        bytes32 _companyName, bytes2 _countryCode) 
-        public 
-        onlyServer
-    {   
-        require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        require(dm.setProvider(_blockchainActionId, _userId, _companyNumber, _companyName, _countryCode) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _userId, 0x0, 0) == true);
-        EventNewProvider(_blockchainActionId, _userId, _companyName, _companyNumber, _countryCode);
-    }
-    */
-
-    /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
-      * @param _blockchainActionId the blockchain action id
-      * @param _providerUserId the user id of the provider
-      * @param _invoiceCompanyNumber the providers company number
-      * @param _invoiceCompanyName the providers company name
-      * @param _invoiceCountryCode the providers country code
-      * @param _invoiceNumber the invoice identification number
-      */
-    function addInvoice(
-        address _dataManager, bytes32 _blockchainActionId, 
-        bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
-        bytes32 _invoiceCompanyNumber, bytes32 _invoiceCompanyName, bytes32 _invoiceNumber)
-        public
-        onlyServer
-    {
-        require(_dataManager != 0x0);
-        DataManager dm = DataManager(_dataManager);
-        bytes2 countryCode;
-        bytes32 companyName;
-        bytes32 companyNumber;
-        (countryCode, companyName, companyNumber) = dm.getProviderByUserId(_providerUserId);
-        require(countryCode != 0x0 && companyName != 0x0 && companyNumber != 0x0);
-        require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
-        EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
-    }
-
     /** dev Import an amount of pokens of a particular currency from an ethereum wallet/address to bank
       * param _blockchainActionId the blockchain action id
       * param accountId the account id of the client
@@ -250,7 +184,6 @@ contract Populous is withAccessManager {
             //left over deposit address balance.
         }
         // TRANSFER PART / CREDIT
-
         // approve currency amount for populous for the next require to pass
         CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
@@ -287,13 +220,20 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
     
-    // CONSTANT METHODS
-
-    function getTokenAddress(bytes8 tokenName) public view returns (address token) {
-        return tokenDetails[tokenName]._token;
+    // Set/Update token address and precision
+    function setTokenDetails(bytes8 tokenName, address token, uint256 precision) 
+        public 
+        onlyServer 
+        returns(bool success) 
+    {
+        tokenDetails[tokenName]._token = token;
+        tokenDetails[tokenName]._precision = precision;
+        assert(tokenDetails[tokenName]._token != 0x0);
+        return true;
     }
 
-    function getTokenPrecision(bytes8 tokenName) public view returns (uint256 precision) {
-        return tokenDetails[tokenName]._precision;
+    // CONSTANT METHODS
+    function getTokenDetails(bytes8 tokenName) public view returns (address token, uint256 precision) {
+        return (tokenDetails[tokenName]._token, tokenDetails[tokenName]._precision);
     }
 }

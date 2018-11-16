@@ -42,9 +42,9 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity ^0.4.17;\n\n/// @dev Note: the ERC-165 identifier for this interface is 0xf23a6e61.\ninterface IERC1155TokenReceiver {\n    /// @notice Handle the receipt of an ERC1155 type\n    /// @dev The smart contract calls this function on the recipient\n    ///  after a `safeTransfer`. This function MAY throw to revert and reject the\n    ///  transfer. Return of other than the magic value MUST result in the\n    ///  transaction being reverted.\n    ///  Note: the contract address is always the message sender.\n    /// @param _operator The address which called `safeTransferFrom` function\n    /// @param _from The address which previously owned the token\n    /// @param _id The identifier of the item being transferred\n    /// @param _value The amount of the item being transferred\n    /// @param _data Additional data with no specified format\n    /// @return `bytes4(keccak256(\"onERC1155Received(address,address,uint256,uint256,bytes)\"))`\n    ///  unless throwing\n    function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) external returns(bytes4);\n}\n\ninterface IERC1155 {\n    event Approval(address indexed _owner, address indexed _spender, uint256 indexed _id, uint256 _oldValue, uint256 _value);\n    event Transfer(address _spender, address indexed _from, address indexed _to, uint256 indexed _id, uint256 _value);\n\n    function transferFrom(address _from, address _to, uint256 _id, uint256 _value) external;\n    function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes _data) external;\n    function approve(address _spender, uint256 _id, uint256 _currentValue, uint256 _value) external;\n    function balanceOf(uint256 _id, address _owner) external view returns (uint256);\n    function allowance(uint256 _id, address _owner, address _spender) external view returns (uint256);\n}\n\ninterface IERC1155Extended {\n    function transfer(address _to, uint256 _id, uint256 _value) external;\n    function safeTransfer(address _to, uint256 _id, uint256 _value, bytes _data) external;\n}\n\ninterface IERC1155BatchTransfer {\n    function batchTransferFrom(address _from, address _to, uint256[] _ids, uint256[] _values) external;\n    function safeBatchTransferFrom(address _from, address _to, uint256[] _ids, uint256[] _values, bytes _data) external;\n    function batchApprove(address _spender, uint256[] _ids,  uint256[] _currentValues, uint256[] _values) external;\n}\n\ninterface IERC1155BatchTransferExtended {\n    function batchTransfer(address _to, uint256[] _ids, uint256[] _values) external;\n    function safeBatchTransfer(address _to, uint256[] _ids, uint256[] _values, bytes _data) external;\n}\n\ninterface IERC1155Operators {\n    event OperatorApproval(address indexed _owner, address indexed _operator, uint256 indexed _id, bool _approved);\n    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);\n\n    function setApproval(address _operator, uint256[] _ids, bool _approved) external;\n    function isApproved(address _owner, address _operator, uint256 _id)  external view returns (bool);\n    function setApprovalForAll(address _operator, bool _approved) external;\n    function isApprovedForAll(address _owner, address _operator) external view returns (bool isOperator);\n}\n\ninterface IERC1155Views {\n    function totalSupply(uint256 _id) external view returns (uint256);\n    function name(uint256 _id) external view returns (string);\n    function symbol(uint256 _id) external view returns (string);\n    function decimals(uint256 _id) external view returns (uint8);\n    function uri(uint256 _id) external view returns (string);\n}",
-  "sourcePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/IERC1155.sol",
+  "sourcePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/IERC1155.sol",
   "ast": {
-    "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/IERC1155.sol",
+    "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/IERC1155.sol",
     "exportedSymbols": {
       "IERC1155": [
         3531
@@ -3463,7 +3463,7 @@
     ],
     "src": "0:3642:9",
     "attributes": {
-      "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/IERC1155.sol",
+      "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/IERC1155.sol",
       "exportedSymbols": {
         "IERC1155": [
           3531
@@ -7121,5 +7121,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.0",
-  "updatedAt": "2018-11-12T17:44:13.497Z"
+  "updatedAt": "2018-11-16T16:09:49.635Z"
 }
