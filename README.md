@@ -11,7 +11,7 @@ USDC token - 0xF930f2C7Bc02F89D05468112520553FFc6D24801, precision - 6
 
 TUSD token - 0x78e7BEE398D66660bDF820DbDB415A33d011cD48, precision - 18
 
-XAU (ERC1155Mintable.sol) token - 0x4974d66e391bf05270384364d14c306246d075fd, precision - 0
+XAU (ERC1155Mintable.sol) token - 0x9b935e3779098bc5e1ffc073caf916f1e92a6145, precision - 0
 
 GBPp token - 0xe92d265dbe35613468a9ec14a321624faf7653dd, precision - 6
 
@@ -36,7 +36,7 @@ USDC token - `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48`, precision - 6
 
 TUSD token - `0x8dd5fbce2f6a956c3022ba3663759011dd51e73e`, precision - 18
 
-XAU (ERC1155Mintable.sol) token - `0x9b935e3779098bc5e1ffc073caf916f1e92a6145`, precision - 0
+XAU (ERC1155Mintable.sol) token - `0x73a3b7dffe9af119621f8467d8609771ab4bc33f`, precision - 0
 
 
 GBPp token- `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`, precision - 6
