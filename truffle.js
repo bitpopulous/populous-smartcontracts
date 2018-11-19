@@ -10,18 +10,14 @@ module.exports = {
       },
       ropsten: {
         network_id: 3,
-        //host: "35.177.79.70",
         // geth
-        //host: "18.130.20.123",
-        // parity
-        host: "217.138.132.58",
-        //port: 8545,
-        port: 8541,
+        host: "3.8.97.74",
+        port: 8545,
         //before_timeout: 900000, //  <=== NEW
         //test_timeout: 900000, //  <=== NEW
         gas: 7999900,
         //gasPrice: 100000000000
-        //from: '0x1326e1caba0680fce27a4beb6514713c9be4db6a'
+        //from: '0x665b877206132e9aa943b3394fcaa24a11d83df4'
       },
       live: {
         network_id: 1,

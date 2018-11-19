@@ -20,7 +20,7 @@ AccessManager.sol - 0x0ebbaf0c3794ed23a0871e411a34be3a1679753a
 PopulousToken.sol - 0x0ff72e24af7c09a647865820d4477f98fcb72a2c, precision - 8     
 
 SafeMath.sol - 0xd68e459435dec64f3f366921e8a6dc5f39ca2f33          
-Populous.sol - 0x2c5e7c1e8e201c72573806235311250a5bff9f52    
+Populous.sol - 0x4b11f4d15feba8ac6999b3cf13431f86d75915d1    
 DataManager.sol -  0x0f8abf5f708f971bd9a994ec3af40988aa0f4873     
 Utils.sol - 0xc8d2eff467f8e9bd9d89a416b24b598afbfe8961
 ```
@@ -36,10 +36,11 @@ USDC token - `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48`, precision - 6
 
 TUSD token - `0x8dd5fbce2f6a956c3022ba3663759011dd51e73e`, precision - 18
 
-XAU (ERC1155Mintable.sol) token - `0x73a3b7dffe9af119621f8467d8609771ab4bc33f`, precision - 0
+XAU (ERC1155Mintable.sol) token - `0x9b935e3779098bc5e1ffc073caf916f1e92a6145`, precision - 0
 
 
 GBPp token- `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`, precision - 6
+
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`      
 SafeMath.sol - `0x140088cafe35f269d739de277dbe40ba28b8edf1`          

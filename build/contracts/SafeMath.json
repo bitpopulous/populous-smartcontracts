@@ -1,12 +1,12 @@
 {
   "contractName": "SafeMath",
   "abi": [],
-  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a7230582079a0ad8d0cbd4f331143cf6d6a1d86c97008856a96a36b302587209055ea59f50029",
-  "deployedBytecode": "0x6060604052600080fd00a165627a7a7230582079a0ad8d0cbd4f331143cf6d6a1d86c97008856a96a36b302587209055ea59f50029",
+  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a723058201d89fb75df98b5a298413a5939e0a399aa7f364cf87cde326b241070a4a7f23e0029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a723058201d89fb75df98b5a298413a5939e0a399aa7f364cf87cde326b241070a4a7f23e0029",
   "sourceMap": "175:1484:11:-;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "175:1484:11:-;;;;;",
   "source": "pragma solidity ^0.4.17;\n\n/// @title Overflow aware uint math functions.\n/// @notice Inspired by https://github.com/MakerDAO/maker-otc/blob/master/contracts/simple_market.sol\nlibrary SafeMath {\n\n  /** @dev Safely multiplies two unsigned/non-negative integers.\n    * @dev Ensures that one of both numbers can be derived from dividing the product by the other.\n    * @param a The first number.\n    * @param b The second number.\n    * @return uint The expected result.\n    */\n    function safeMul(uint a, uint b) internal pure returns (uint) {\n        uint c = a * b;\n        assert(a == 0 || c / a == b);\n        return c;\n    }\n\n  /** @dev Safely subtracts one number from another\n    * @dev Ensures that the number to subtract is lower.\n    * @param a The first number.\n    * @param b The second number.\n    * @return uint The expected result.\n    */\n    function safeSub(uint a, uint b) internal pure returns (uint) {\n        assert(b <= a);\n        return a - b;\n    }\n\n  /** @dev Safely adds two unsigned/non-negative integers.\n    * @dev Ensures that the sum of both numbers is greater or equal to one of both.\n    * @param a The first number.\n    * @param b The second number.\n    * @return uint The expected result.\n    */\n    function safeAdd(uint a, uint b) internal pure returns (uint) {\n        uint c = a + b;\n        assert(c>=a && c>=b);\n        return c;\n    }\n\n    function div(uint256 a, uint256 b) internal pure returns (uint256) {\n        assert(b > 0); // Solidity automatically throws when dividing by 0\n        uint256 c = a / b;\n        assert(a == b * c + a % b); // There is no case in which this doesn't hold\n        return c;\n    }\n}",
-  "sourcePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/SafeMath.sol",
+  "sourcePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/SafeMath.sol",
   "ast": {
     "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/SafeMath.sol",
     "exportedSymbols": {
@@ -1555,7 +1555,7 @@
     ],
     "src": "0:1659:11",
     "attributes": {
-      "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/SafeMath.sol",
+      "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/SafeMath.sol",
       "exportedSymbols": {
         "SafeMath": [
           4833
@@ -3228,10 +3228,10 @@
     "3": {
       "events": {},
       "links": {},
-      "address": "0x5f396d291ba67609009114bbaaf8ba3fdb247706",
+      "address": "0xb00701bbf78bda4abfd11e08099f0d48230739c1",
       "transactionHash": "0x320dc0367961edd37639f5d14f6b344ad65cdf8edb6675575b9c1658bd3020fb"
     }
   },
   "schemaVersion": "1.0.0",
-  "updatedAt": "2018-11-16T16:12:53.609Z"
+  "updatedAt": "2018-11-19T20:06:19.265Z"
 }
