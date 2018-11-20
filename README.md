@@ -44,7 +44,7 @@ GBPp token- `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`, precision - 6
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`      
 SafeMath.sol - `0x140088cafe35f269d739de277dbe40ba28b8edf1`          
-Populous.sol - `0x5acd154c594c17d71d3b62558d1f507a05913a16`    
+Populous.sol - `0x2428e9af9bc3d66e4ee9604da681c6e5493f8454`    
 DataManager.sol - `0xcd565ca18f06e2e4d251b55dc49a4fe456c72052`       
 Utils.sol - `0xcab23f0118f87d01a6d2fd3d93aeeaca789c8fb7`
 
