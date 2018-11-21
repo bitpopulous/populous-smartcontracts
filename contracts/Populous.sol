@@ -36,7 +36,21 @@ contract Populous is withAccessManager {
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
     function Populous(address _accessManager) public withAccessManager(_accessManager) {
-
+        //pxt
+        tokenDetails[0x505854]._token = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
+        tokenDetails[0x505854]._precision = 8;
+        //usdc
+        tokenDetails[0x55534443]._token = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        tokenDetails[0x55534443]._precision = 6;
+        //tusd
+        tokenDetails[0x54555344]._token = 0x8dd5fbCe2F6a956C3022bA3663759011Dd51e73E;
+        tokenDetails[0x54555344]._precision = 18;
+        //ppt
+        tokenDetails[0x505054]._token = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;        
+        tokenDetails[0x505054]._precision = 8;
+        //xau
+        tokenDetails[0x584155]._token = 0x73a3b7DFFE9af119621f8467D8609771AB4BC33f;
+        tokenDetails[0x584155]._precision = 0;
     }
 
         /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
@@ -133,6 +147,7 @@ contract Populous is withAccessManager {
             //require(dc.getVersion() < 2);
             address PXT = tokenDetails[0x505854]._token;
             address PPT = tokenDetails[0x505054]._token;
+            
             if(dc.balanceOf(PXT) > 0){
                 require(dc.transfer(PXT, newDepositContract, dc.balanceOf(PXT)) == true);
             }
@@ -218,22 +233,5 @@ contract Populous is withAccessManager {
         bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();    
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
-    }
-    
-    // Set/Update token address and precision
-    function setTokenDetails(bytes8 tokenName, address token, uint256 precision) 
-        public 
-        onlyServer 
-        returns(bool success) 
-    {
-        tokenDetails[tokenName]._token = token;
-        tokenDetails[tokenName]._precision = precision;
-        assert(tokenDetails[tokenName]._token != 0x0);
-        return true;
-    }
-
-    // CONSTANT METHODS
-    function getTokenDetails(bytes8 tokenName) public view returns (address token, uint256 precision) {
-        return (tokenDetails[tokenName]._token, tokenDetails[tokenName]._precision);
     }
 }

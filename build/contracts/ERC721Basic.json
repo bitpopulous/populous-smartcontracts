@@ -351,7 +351,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity ^0.4.17;\n\nimport \"./ERC165.sol\";\n\n\n/**\n * @title ERC721 Non-Fungible Token Standard basic interface\n * @dev see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md\n */\ncontract ERC721Basic is ERC165 {\n\n    bytes4 internal constant InterfaceId_ERC721 = 0x80ac58cd;\n    /*\n    * 0x80ac58cd ===\n    *   bytes4(keccak256('balanceOf(address)')) ^\n    *   bytes4(keccak256('ownerOf(uint256)')) ^\n    *   bytes4(keccak256('approve(address,uint256)')) ^\n    *   bytes4(keccak256('getApproved(uint256)')) ^\n    *   bytes4(keccak256('setApprovalForAll(address,bool)')) ^\n    *   bytes4(keccak256('isApprovedForAll(address,address)')) ^\n    *   bytes4(keccak256('transferFrom(address,address,uint256)')) ^\n    *   bytes4(keccak256('safeTransferFrom(address,address,uint256)')) ^\n    *   bytes4(keccak256('safeTransferFrom(address,address,uint256,bytes)'))\n    */\n\n    bytes4 internal constant InterfaceId_ERC721Exists = 0x4f558e79;\n    /*\n    * 0x4f558e79 ===\n    *   bytes4(keccak256('exists(uint256)'))\n    */\n\n    bytes4 internal constant InterfaceId_ERC721Enumerable = 0x780e9d63;\n    /**\n    * 0x780e9d63 ===\n    *   bytes4(keccak256('totalSupply()')) ^\n    *   bytes4(keccak256('tokenOfOwnerByIndex(address,uint256)')) ^\n    *   bytes4(keccak256('tokenByIndex(uint256)'))\n    */\n\n    bytes4 internal constant InterfaceId_ERC721Metadata = 0x5b5e139f;\n    /**\n    * 0x5b5e139f ===\n    *   bytes4(keccak256('name()')) ^\n    *   bytes4(keccak256('symbol()')) ^\n    *   bytes4(keccak256('tokenURI(uint256)'))\n    */\n\n    event Transfer(\n      address indexed _from,\n      address indexed _to,\n      uint256 indexed _tokenId\n    );\n    event Approval(\n      address indexed _owner,\n      address indexed _approved,\n      uint256 indexed _tokenId\n    );\n    event ApprovalForAll(\n      address indexed _owner,\n      address indexed _operator,\n      bool _approved\n    );\n\n    function balanceOf(address _owner) public view returns (uint256 _balance);\n    function ownerOf(uint256 _tokenId) public view returns (address _owner);\n    function exists(uint256 _tokenId) public view returns (bool _exists);\n\n    function approve(address _to, uint256 _tokenId) public;\n    function getApproved(uint256 _tokenId) public view returns (address _operator);\n\n    function setApprovalForAll(address _operator, bool _approved) public;\n    function isApprovedForAll(address _owner, address _operator) public view returns (bool);\n\n    function transferFrom(address _from, address _to, uint256 _tokenId) public;\n    function safeTransferFrom(address _from, address _to, uint256 _tokenId) public;\n\n    function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data) public;\n}\n",
-  "sourcePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/ERC721Basic.sol",
+  "sourcePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/ERC721Basic.sol",
   "ast": {
     "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/ERC721Basic.sol",
     "exportedSymbols": {
@@ -1841,7 +1841,7 @@
     ],
     "src": "0:2693:8",
     "attributes": {
-      "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/ERC721Basic.sol",
+      "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/ERC721Basic.sol",
       "exportedSymbols": {
         "ERC721Basic": [
           3433
@@ -1865,7 +1865,7 @@
       {
         "attributes": {
           "SourceUnit": 3312,
-          "absolutePath": "/Users/wisdom/Documents/GitHub/populous-smartcontracts/contracts/ERC165.sol",
+          "absolutePath": "/Users/najienka/Desktop/populous-smartcontracts/contracts/ERC165.sol",
           "file": "./ERC165.sol",
           "scope": 3434,
           "symbolAliases": [
@@ -3421,5 +3421,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.0",
-  "updatedAt": "2018-11-16T16:09:49.598Z"
+  "updatedAt": "2018-11-20T13:35:38.231Z"
 }
