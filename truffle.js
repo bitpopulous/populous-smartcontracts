@@ -17,7 +17,7 @@ module.exports = {
         //test_timeout: 900000, //  <=== NEW
         gas: 7999900,
         //gasPrice: 100000000000
-        //from: '0x665b877206132e9aa943b3394fcaa24a11d83df4'
+        from: '0x5be17559324bdc79adb848dfcba2747055692d63'
       },
       live: {
         network_id: 1,
