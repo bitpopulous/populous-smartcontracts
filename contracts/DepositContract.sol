@@ -116,12 +116,10 @@ contract DepositContract is withAccessManager {
     {   
         require(this.balance >= _value);      
         require(_to.send(_value) == true);
-        
         uint256 pptBalance = iERC20Token(pptAddress).balanceOf(this);
         require(inCollateral <= pptBalance);
         require((pptBalance - inCollateral) >= pptFee);
         require(iERC20Token(pptAddress).transfer(adminExternalWallet, pptFee) == true);
-
         EventEtherTransfer(_to, _value, pptFee, adminExternalWallet);
     }
 
