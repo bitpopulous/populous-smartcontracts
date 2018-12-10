@@ -160,7 +160,6 @@ contract DepositContract is withAccessManager {
     */
     function balanceOfERC1155(address erc1155Token, uint256 _id) external view returns (uint256) {
         return ERC1155(erc1155Token).balanceOf(_id, this);
-        // returns items[_id].balances[_owner];
     }
 
     /** @dev Gets the version of this deposit contract

@@ -57,11 +57,13 @@ Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
 
 `truffle@v4.0.0-beta.2`
 
+for ppt transfer to `DepositContract.sol` on the livenet, `39-40 thousand GWei` is required for Gas Limit/Costs
+
 `gas:` 8000000
 `gasPrice:` 100000000000
 
 command to unlock account in truffle console - e.g., `web3.personal.unlockAccount(web3.eth.coinbase, 'password', '0x5460')` with time in hex `0x5460` = `21,600 seconds`
 
-note: before redeploying `Populous.sol`, delete Populous.json in the `build/contracts/` directory first and verify Access Manager `AM()` is set after deployment.
+note: before redeploying `Populous.sol`, delete `Populous.json and DepositContract.json` in the `build/contracts/` directory first and verify Access Manager `AM()` is set after deployment.
 
 if livenet deployment fails, check transaction queue and if queue is high, remove account and replace with a new one with an empty transaction queue.

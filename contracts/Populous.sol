@@ -53,7 +53,7 @@ contract Populous is withAccessManager {
         tokenDetails[0x584155]._precision = 0;
     }
 
-        /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
+    /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
       * @param _blockchainActionId the blockchain action id
       * @param _providerUserId the user id of the provider
       * @param _invoiceCompanyNumber the providers company number
