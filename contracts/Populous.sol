@@ -143,7 +143,7 @@ contract Populous is withAccessManager {
         if (dm.getDepositAddress(clientId) != 0x0) {
             dc = DepositContract(dm.getDepositAddress(clientId));
             newDepositContract = new DepositContract(clientId, AM);
-            require(!dc.call(bytes4(keccak256("getVersion()"))) || dc.getVersion() <= 2);
+            require(!dc.call(bytes4(keccak256("getVersion()"))));
             //require(dc.getVersion() < 2);
             address PXT = tokenDetails[0x505854]._token;
             address PPT = tokenDetails[0x505054]._token;
