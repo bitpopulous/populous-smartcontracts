@@ -19,8 +19,8 @@ AccessManager.sol - 0x0ebbaf0c3794ed23a0871e411a34be3a1679753a
 
 PopulousToken.sol - 0x0ff72e24af7c09a647865820d4477f98fcb72a2c, precision - 8     
 
-SafeMath.sol - 0x9ed4a5e4374894818345d711808f36bb21d2c23c          
-Populous.sol - 0xa26d388bf5bfc0a03558fc66d8276157904f0d04
+SafeMath.sol - 0x170ab674ee606c5949cf5a0dbfc6a10b67c89dff          
+Populous.sol - 0xdfba7d79ba9c0d26ffd5b45575bedcef26219846
 DataManager.sol -  0x0f8abf5f708f971bd9a994ec3af40988aa0f4873     
 Utils.sol - 0xc8d2eff467f8e9bd9d89a416b24b598afbfe8961
 ```

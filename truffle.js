@@ -15,9 +15,9 @@ module.exports = {
         port: 8545,
         //before_timeout: 900000, //  <=== NEW
         //test_timeout: 900000, //  <=== NEW
-        gas: 7999900,
+        gas: 8000000,
         //gasPrice: 100000000000
-        from: '0x5be17559324bdc79adb848dfcba2747055692d63'
+        from: '0xf8b3d742b245ec366288160488a12e7a2f1d720d'
       },
       live: {
         network_id: 1,

@@ -9,7 +9,7 @@ import "./ERC721Basic.sol";
 contract DepositContract is withAccessManager {
 
     bytes32 public clientId; // client ID.
-    uint256 public version = 3;
+    uint256 public version = 2;
 
     // EVENTS
     event EventEtherTransfer(address to, uint256 value, uint256 pptFee, address adminExternalWallet);
@@ -123,8 +123,8 @@ contract DepositContract is withAccessManager {
         EventEtherTransfer(_to, _value, pptFee, adminExternalWallet);
     }
 
-    // payable function to allow this contract receive ether
-    function () public payable {}
+    // payable function to allow this contract receive ether - for version 3
+    //function () public payable {}
 
     // CONSTANT METHODS
     
