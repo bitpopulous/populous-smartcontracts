@@ -117,6 +117,9 @@ contract DepositContract is withAccessManager {
         return true;
     }
 
+    // payable function to allow this contract receive ether - for version 3
+    //function () public payable {}
+
     // CONSTANT METHODS
     
     /** @dev Returns the ether or token balance of the current contract instance using the ERC20 balanceOf method.
@@ -151,7 +154,6 @@ contract DepositContract is withAccessManager {
     */
     function balanceOfERC1155(address erc1155Token, uint256 _id) external view returns (uint256) {
         return ERC1155(erc1155Token).balanceOf(_id, this);
-        // returns items[_id].balances[_owner];
     }
 
     /** @dev Gets the version of this deposit contract
