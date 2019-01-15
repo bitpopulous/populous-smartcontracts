@@ -5,6 +5,7 @@ import "./withAccessManager.sol";
 import "./ERC1155.sol";
 import "./ERC721Basic.sol";
 
+
 /// @title DepositContract contract
 contract DepositContract is withAccessManager {
 
@@ -12,7 +13,7 @@ contract DepositContract is withAccessManager {
     uint256 public version = 2;
 
     // EVENTS
-    event EventEtherTransfer(address to, uint256 value, uint256 pptFee, address adminExternalWallet);
+    event EtherTransfer(address to, uint256 value);
 
     // NON-CONSTANT METHODS 
 
@@ -107,20 +108,13 @@ contract DepositContract is withAccessManager {
       * @param _value The amount of ether to send in wei. 
       * @return bool Successful or unsuccessful transfer
       */
-    function transferEther(
-        address _to, uint256 _value,
-        uint256 inCollateral,
-        uint256 pptFee, address adminExternalWallet, address pptAddress) 
-        public 
-        onlyServerOrOnlyPopulous
-    {   
-        require(this.balance >= _value);      
+    function transferEther(address _to, uint256 _value) public 
+        onlyServerOrOnlyPopulous returns (bool success) 
+    {
+        require(this.balance >= _value);
         require(_to.send(_value) == true);
-        uint256 pptBalance = iERC20Token(pptAddress).balanceOf(this);
-        require(inCollateral <= pptBalance);
-        require((pptBalance - inCollateral) >= pptFee);
-        require(iERC20Token(pptAddress).transfer(adminExternalWallet, pptFee) == true);
-        EventEtherTransfer(_to, _value, pptFee, adminExternalWallet);
+        EtherTransfer(_to, _value);
+        return true;
     }
 
     // payable function to allow this contract receive ether - for version 3
