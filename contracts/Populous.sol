@@ -143,13 +143,8 @@ contract Populous is withAccessManager {
         if (dm.getDepositAddress(clientId) != 0x0) {
             dc = DepositContract(dm.getDepositAddress(clientId));
             newDepositContract = new DepositContract(clientId, AM);
-<<<<<<< HEAD
             require(!dc.call(bytes4(keccak256("getVersion()")))); 
             // only checking version 1 now to upgrade to version 2
-=======
-            require(!dc.call(bytes4(keccak256("getVersion()"))));
-            //require(dc.getVersion() < 2);
->>>>>>> master
             address PXT = tokenDetails[0x505854]._token;
             address PPT = tokenDetails[0x505054]._token;            
             if(dc.balanceOf(PXT) > 0){
