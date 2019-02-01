@@ -132,7 +132,7 @@ contract Populous is withAccessManager {
         onlyServer 
     {
         DataManager dm = DataManager(_dataManager);
-        ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
+        //ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
         require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && _value > 0);
         DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
@@ -140,7 +140,7 @@ contract Populous is withAccessManager {
         require(SafeMath.safeSub(o.balanceOf(tokenDetails[0x505054]._token), inCollateral) >= pptFee);
         require(o.transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
         // transfer xaup tokens to address from populous server allowance
-        xa.safeTransferFrom(msg.sender, _to, _id, _value, "");
+        ERC1155(tokenDetails[0x584155]._token).safeTransferFrom(msg.sender, _to, _id, _value, "");
         // set action status in dataManager
         require(dm.setBlockchainActionData(_blockchainActionId, 0x584155, _value, accountId, _to, pptFee) == true);
         // emit event 
