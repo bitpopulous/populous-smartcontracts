@@ -21,7 +21,7 @@ contract Populous is withAccessManager {
     event EventExchangeXAUp (bytes32 _blockchainActionId, address erc20_tokenAddress, uint256 erc20_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bytes32 USDC, uint amountUSD);
+    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bytes32 USDC, uint amountUSDC);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
     event EventTransferXAUp(bytes32 _blockchainActionId, address erc1155Token, uint amount, uint token_id, bytes32 accountId, uint pptFee);
@@ -234,7 +234,7 @@ contract Populous is withAccessManager {
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
         EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, 0x55534443, amountUSD);
     }
-    
+
     /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
       * @param _blockchainActionId the blockchain action id
       * @param pptAddress the address of the PPT smart contract
