@@ -21,7 +21,7 @@ contract Populous is withAccessManager {
     event EventExchangeXAUp (bytes32 _blockchainActionId, address erc20_tokenAddress, uint256 erc20_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
-    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
+    event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bytes32 USDC, uint amountUSD);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
     event EventTransferXAUp(bytes32 _blockchainActionId, address erc1155Token, uint amount, uint token_id, bytes32 accountId, uint pptFee);
@@ -215,27 +215,26 @@ contract Populous is withAccessManager {
         require(o.transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
         // WITHDRAW PART / DEBIT
         if(amount > CurrencyToken(DataManager(_dataManager).getCurrency(currency)).balanceOf(from)) {
-                // destroying total balance as user has less than pokens they want to withdraw
+            // destroying total balance as user has less than pokens they want to withdraw
             require(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).destroyTokensFrom(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).balanceOf(from), from) == true);
             //remaining ledger balance of deposit address is 0
         } else {
-                // destroy amount from balance as user has more than pokens they want to withdraw
+            // destroy amount from balance as user has more than pokens they want to withdraw
             require(CurrencyToken(DataManager(_dataManager).getCurrency(currency)).destroyTokensFrom(amount, from) == true);
             //left over balance is deposit address balance.
         }
         // TRANSFER PART / CREDIT
         // approve currency amount for populous for the next require to pass
-        
         if(amountUSD > 0) //give the user USDC
         {
-            CurrencyToken(DataManager(_dataManager).getCurrency(0x55534443)).transferFrom(msg.sender, to, amountUSD);
+            CurrencyToken(tokenDetails[0x55534443]._token).transferFrom(msg.sender, to, amountUSD);
         }else { //give the user GBP / poken currency
             CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
         }
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
-        EventWithdrawPoken(_blockchainActionId, accountId, currency, amount);
+        EventWithdrawPoken(_blockchainActionId, accountId, currency, amount, 0x55534443, amountUSD);
     }
-
+    
     /** @dev Withdraw an amount of PPT Populous tokens to a blockchain address 
       * @param _blockchainActionId the blockchain action id
       * @param pptAddress the address of the PPT smart contract
