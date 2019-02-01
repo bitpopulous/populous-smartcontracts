@@ -24,6 +24,7 @@ contract Populous is withAccessManager {
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
     event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+    event EventTransferXAUp(bytes32 _blockchainActionId, address erc1155Token, uint amount, uint token_id, bytes32 accountId, uint pptFee);
 
     // FIELDS
     struct tokens {   
@@ -119,6 +120,31 @@ contract Populous is withAccessManager {
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, erc20_amount, _clientId, _depositAddress, 0) == true);
         // emit event 
         EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _depositAddress);
+    }
+
+    // erc1155 withdraw function using transferFrom in erc1155 token contract
+    function withdrawERC1155(
+        address _dataManager, bytes32 _blockchainActionId,
+        address _to, uint256 _id, uint256 _value,
+        bytes32 accountId, uint256 inCollateral, uint256 pptFee, 
+        address adminExternalWallet) 
+        public
+        onlyServer 
+    {
+        DataManager dm = DataManager(_dataManager);
+        ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
+        require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
+        require(adminExternalWallet != 0x0 && pptFee > 0 && _value > 0);
+        DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
+        // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
+        require(SafeMath.safeSub(o.balanceOf(tokenDetails[0x505054]._token), inCollateral) >= pptFee);
+        require(o.transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
+        // transfer xaup tokens to address from populous server allowance
+        xa.safeTransferFrom(msg.sender, _to, _id, _value, "");
+        // set action status in dataManager
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x584155, _value, accountId, _to, pptFee) == true);
+        // emit event 
+        EventTransferXAUp(_blockchainActionId, tokenDetails[0x584155]._token, _value, _id, accountId, pptFee);
     }
 
     /// @notice Handle the receipt of an ERC1155 type
