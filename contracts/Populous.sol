@@ -197,7 +197,7 @@ contract Populous is withAccessManager {
       */
     function withdrawPoken(
         address _dataManager, bytes32 _blockchainActionId, 
-        bytes32 currency, uint256 amount,
+        bytes32 currency, uint256 amount, uint256 amountUSD,
         address from, address to, bytes32 accountId, 
         uint256 inCollateral,
         uint256 pptFee, address adminExternalWallet) 
@@ -225,7 +225,13 @@ contract Populous is withAccessManager {
         }
         // TRANSFER PART / CREDIT
         // approve currency amount for populous for the next require to pass
-        CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
+        
+        if(amountUSD > 0) //give the user USDC
+        {
+            CurrencyToken(DataManager(_dataManager).getCurrency(0x55534443)).transferFrom(msg.sender, to, amountUSD);
+        }else { //give the user GBP / poken currency
+            CurrencyToken(DataManager(_dataManager).getCurrency(currency)).transferFrom(msg.sender, to, amount);
+        }
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, currency, amount, accountId, to, pptFee) == true); 
         EventWithdrawPoken(_blockchainActionId, accountId, currency, amount);
     }
