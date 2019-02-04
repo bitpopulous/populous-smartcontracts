@@ -16,8 +16,9 @@ module.exports = {
         //before_timeout: 900000, //  <=== NEW
         //test_timeout: 900000, //  <=== NEW
         gas: 8000000,
-        //gasPrice: 100000000000
-        from: '0xf8b3d742b245ec366288160488a12e7a2f1d720d'
+        gasPrice: 100000000000,
+        //from: '0xf8b3d742b245ec366288160488a12e7a2f1d720d'
+        from: '0xcdf1377ff67572ea8c0e0748d5528a1f47bbbc5b'
       },
       live: {
         network_id: 1,
@@ -33,7 +34,8 @@ module.exports = {
         //parity
         //old host: "18.130.87.214",
         //old port: 8545,
-        // from: "0x093f653f337924ebc311599476b235dd937be5cc",
+        //from: "0x093f653f337924ebc311599476b235dd937be5cc",
+        from: "0xbf3e6b514c86049217ccfcbc1374a08a56c9d1ee",
         //gas: 4700036
         gas: 8000000,
         gasPrice: 100000000000

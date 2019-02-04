@@ -12,6 +12,6 @@ module.exports = function(deployer) {
             return Populous.deployed();
         }).then(function(P) {
             return AM.changePopulous(P.address); // comment when re-deploying to livenet
-        }) */;
+        });*/
     });
 };
