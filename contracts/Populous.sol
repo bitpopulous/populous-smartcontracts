@@ -23,7 +23,7 @@ contract Populous is withAccessManager {
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount, bytes32 USDC, uint amountUSDC);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
-    event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
+    //event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
     event EventWithdrawXAUp(bytes32 _blockchainActionId, address erc1155Token, uint amount, uint token_id, bytes32 accountId, uint pptFee);
 
     // FIELDS
@@ -54,14 +54,14 @@ contract Populous is withAccessManager {
         tokenDetails[0x584155]._precision = 0;
     }
 
-    /** @dev Add a new crowdsale invoice from an invoice provider to the platform  
-      * @param _blockchainActionId the blockchain action id
-      * @param _providerUserId the user id of the provider
-      * @param _invoiceCompanyNumber the providers company number
-      * @param _invoiceCompanyName the providers company name
-      * @param _invoiceCountryCode the providers country code
-      * @param _invoiceNumber the invoice identification number
-      */
+    /** @devAdd a new crowdsale invoice from an invoice provider to the platform  
+      * @param_blockchainActionId the blockchain action id
+      * @param_providerUserId the user id of the provider
+      * @param_invoiceCompanyNumber the providers company number
+      * @param_invoiceCompanyName the providers company name
+      * @param_invoiceCountryCode the providers country code
+      * @param_invoiceNumber the invoice identification number
+    
     function addInvoice(
         address _dataManager, bytes32 _blockchainActionId, 
         bytes32 _providerUserId, bytes2 _invoiceCountryCode, 
@@ -79,7 +79,7 @@ contract Populous is withAccessManager {
         require(dm.setInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber) == true);
         require(dm.setBlockchainActionData(_blockchainActionId, 0x0, 0, _providerUserId, 0x0, 0) == true);
         EventNewInvoice(_blockchainActionId, _providerUserId, _invoiceCountryCode, _invoiceCompanyNumber, _invoiceCompanyName, _invoiceNumber);
-    }
+    }*/
 
     /**
     BANK MODULE
