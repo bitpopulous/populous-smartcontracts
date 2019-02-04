@@ -57,7 +57,6 @@ Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
 
 
 
-
 ## Deployment
 
 Update populous in AccessManager smart contract for populous project
