@@ -122,31 +122,6 @@ contract Populous is withAccessManager {
         EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _depositAddress);
     }
 
-    // erc1155 withdraw function using transferFrom in erc1155 token contract
-    function withdrawERC1155(
-        address _dataManager, bytes32 _blockchainActionId,
-        address _to, uint256 _id, uint256 _value,
-        bytes32 accountId, uint256 inCollateral, uint256 pptFee, 
-        address adminExternalWallet) 
-        public
-        onlyServer 
-    {
-        DataManager dm = DataManager(_dataManager);
-        //ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
-        require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
-        require(adminExternalWallet != 0x0 && pptFee > 0 && _value > 0);
-        DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
-        // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
-        require(SafeMath.safeSub(o.balanceOf(tokenDetails[0x505054]._token), inCollateral) >= pptFee);
-        require(o.transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
-        // transfer xaup tokens to address from populous server allowance
-        require(o.transferERC1155(tokenDetails[0x584155]._token, _to, _id, _value) == true);
-        // set action status in dataManager
-        require(dm.setBlockchainActionData(_blockchainActionId, 0x584155, _value, accountId, _to, pptFee) == true);
-        // emit event 
-        EventWithdrawXAUp(_blockchainActionId, tokenDetails[0x584155]._token, _value, _id, accountId, pptFee);
-    }
-
     /// @notice Handle the receipt of an ERC1155 type
     function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) public returns(bytes4) {
         return 0xf23a6e61;
@@ -263,5 +238,30 @@ contract Populous is withAccessManager {
         bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();    
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
+    }
+
+    // erc1155 withdraw function using transferFrom in erc1155 token contract
+    function withdrawERC1155(
+        address _dataManager, bytes32 _blockchainActionId,
+        address _to, uint256 _id, uint256 _value,
+        bytes32 accountId, uint256 inCollateral, uint256 pptFee, 
+        address adminExternalWallet) 
+        public
+        onlyServer 
+    {
+        DataManager dm = DataManager(_dataManager);
+        //ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
+        require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
+        require(adminExternalWallet != 0x0 && pptFee > 0 && _value > 0);
+        DepositContract o = DepositContract(DataManager(_dataManager).getDepositAddress(accountId));
+        // check if pptbalance minus collateral held is more than pptFee then transfer pptFee from users ppt deposit to adminWallet
+        require(SafeMath.safeSub(o.balanceOf(tokenDetails[0x505054]._token), inCollateral) >= pptFee);
+        require(o.transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
+        // transfer xaup tokens to address from populous server allowance
+        require(o.transferERC1155(tokenDetails[0x584155]._token, _to, _id, _value) == true);
+        // set action status in dataManager
+        require(dm.setBlockchainActionData(_blockchainActionId, 0x584155, _value, accountId, _to, pptFee) == true);
+        // emit event 
+        EventWithdrawXAUp(_blockchainActionId, tokenDetails[0x584155]._token, _value, _id, accountId, pptFee);
     }
 }
