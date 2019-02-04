@@ -60,8 +60,11 @@ Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
 ## Deployment
 
 Update populous in AccessManager smart contract for populous project
+
 Update populous in GBP smart contract and GBP allowance from server wallet
+
 Update populous in XAUp AccessManager smart contract for XAU project
+
 Update populous allowance in USDC and TUSD smart contract
 
 
