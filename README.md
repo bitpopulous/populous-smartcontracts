@@ -19,7 +19,7 @@ AccessManager.sol - 0x0ebbaf0c3794ed23a0871e411a34be3a1679753a
 
 PopulousToken.sol - 0x0ff72e24af7c09a647865820d4477f98fcb72a2c, precision - 8     
 
-SafeMath.sol - 0x170ab674ee606c5949cf5a0dbfc6a10b67c89dff          
+SafeMath.sol - 0x424d497c158110adc0738c2d69fafff4d723a145          
 Populous.sol - 0xdfba7d79ba9c0d26ffd5b45575bedcef26219846
 DataManager.sol -  0x0f8abf5f708f971bd9a994ec3af40988aa0f4873     
 Utils.sol - 0xc8d2eff467f8e9bd9d89a416b24b598afbfe8961
@@ -43,17 +43,29 @@ GBPp token- `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`, precision - 6
 
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`      
-SafeMath.sol - `0x140088cafe35f269d739de277dbe40ba28b8edf1`          
-Populous.sol - `0x2428e9af9bc3d66e4ee9604da681c6e5493f8454`    
+SafeMath.sol - `0x4876424f0d50bfa34fff698332f89463685ff86c`          
+Populous.sol - `0xe5b5c56876bcbe42b35576da02f15284820ac542`    
 DataManager.sol - `0xcd565ca18f06e2e4d251b55dc49a4fe456c72052`       
 Utils.sol - `0xcab23f0118f87d01a6d2fd3d93aeeaca789c8fb7`
 
 Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
 
 
+## Note
+
+`withdrawERC1155()` function disable before livenet deployment
+
 
 
 ## Deployment
+
+Update populous in AccessManager smart contract for populous project
+Update populous in GBP smart contract and GBP allowance from server wallet
+Update populous in XAUp AccessManager smart contract for XAU project
+Update populous allowance in USDC and TUSD smart contract
+
+
+
 
 `truffle@v4.0.0-beta.2`
 
