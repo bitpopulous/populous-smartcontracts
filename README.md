@@ -43,17 +43,30 @@ GBPp token- `0xc1e50afcd71a09f81f1b4e4daa1d1a1a4d678d2a`, precision - 6
 
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`      
-SafeMath.sol - `0x140088cafe35f269d739de277dbe40ba28b8edf1`          
-Populous.sol - `0x2428e9af9bc3d66e4ee9604da681c6e5493f8454`    
+SafeMath.sol - `0x4876424f0d50bfa34fff698332f89463685ff86c`          
+Populous.sol - `0xe5b5c56876bcbe42b35576da02f15284820ac542`    
 DataManager.sol - `0xcd565ca18f06e2e4d251b55dc49a4fe456c72052`       
 Utils.sol - `0xcab23f0118f87d01a6d2fd3d93aeeaca789c8fb7`
 
 Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
 
 
+## Note
+
+`withdrawERC1155()` function disable before livenet deployment
+
+
 
 
 ## Deployment
+
+Update populous in AccessManager smart contract for populous project
+Update populous in GBP smart contract and GBP allowance from server wallet
+Update populous in XAUp AccessManager smart contract for XAU project
+Update populous allowance in USDC and TUSD smart contract
+
+
+
 
 `truffle@v4.0.0-beta.2`
 
