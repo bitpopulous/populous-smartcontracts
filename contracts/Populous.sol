@@ -202,10 +202,15 @@ contract Populous is withAccessManager {
         require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
         require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
         address depositContract = DataManager(_dataManager).getDepositAddress(accountId);
-        uint pptBalance = SafeMath.safeSub(DepositContract(depositContract).balanceOf(pptAddress), inCollateral);
-        require(pptBalance >= SafeMath.safeAdd(amount, pptFee));
+        if(pptAddress == tokenDetails[0x505054]._token) {
+            uint pptBalance = SafeMath.safeSub(DepositContract(depositContract).balanceOf(tokenDetails[0x505054]._token), inCollateral);
+            require(pptBalance >= SafeMath.safeAdd(amount, pptFee));
+        } else {
+            uint erc20Balance = DepositContract(depositContract).balanceOf(pptAddress);
+            require(erc20Balance >= amount);
+        }
+        require(DepositContract(depositContract).transfer(tokenDetails[0x505054]._token, adminExternalWallet, pptFee) == true);
         require(DepositContract(depositContract).transfer(pptAddress, to, amount) == true);
-        require(DepositContract(depositContract).transfer(pptAddress, adminExternalWallet, pptFee) == true); 
         bytes32 tokenSymbol = iERC20Token(pptAddress).symbol();    
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, tokenSymbol, amount, accountId, to, pptFee) == true);
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
