@@ -102,16 +102,6 @@ contract Populous is withAccessManager {
         emit EventUSDpToUSDC(_blockchainActionId, _clientId, amount);
     }
 
-    /// @notice Handle the receipt of an ERC1155 type
-    function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) public returns(bytes4) {
-        return 0xf23a6e61;
-    }
-
-    /// @notice Handle the receipt of an ERC721 type
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) public returns(bytes4) {
-        return 0x150b7a02; 
-    }
-
     // Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
     function createAddress(address _dataManager, bytes32 _blockchainActionId, bytes32 clientId) 
         public
