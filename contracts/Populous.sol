@@ -18,12 +18,12 @@ import "./withAccessManager.sol";
 contract Populous is withAccessManager {
     // EVENTS
     // Bank events
-    event EventExchangeXAUp (bytes32 _blockchainActionId, address erc20_tokenAddress, uint256 erc20_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
+    event EventUSDCToUSDp(bytes32 _blockchainActionId, bytes32 _clientId, uint amount);
+    event EventUSDpToUSDC(bytes32 _blockchainActionId, bytes32 _clientId, uint amount);
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
-    //event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
     event EventWithdrawXAUp(bytes32 _blockchainActionId, address erc1155Token, uint amount, uint token_id, bytes32 accountId, uint pptFee);
 
     // FIELDS
@@ -38,20 +38,23 @@ contract Populous is withAccessManager {
     // deployed with 'withAccessManager' modifier.
     function Populous(address _accessManager) public withAccessManager(_accessManager) {
         //pxt
-        tokenDetails[0x505854]._token = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
+        tokenDetails[0x505854]._token = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
         tokenDetails[0x505854]._precision = 8;
         //usdc
-        tokenDetails[0x55534443]._token = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        tokenDetails[0x55534443]._token = 0xF930f2C7Bc02F89D05468112520553FFc6D24801;
         tokenDetails[0x55534443]._precision = 6;
         //tusd
-        tokenDetails[0x54555344]._token = 0x8dd5fbCe2F6a956C3022bA3663759011Dd51e73E;
+        tokenDetails[0x54555344]._token = 0x78e7BEE398D66660bDF820DbDB415A33d011cD48;
         tokenDetails[0x54555344]._precision = 18;
         //ppt
-        tokenDetails[0x505054]._token = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;        
+        tokenDetails[0x505054]._token = 0x0ff72e24AF7c09A647865820D4477F98fcB72a2c;        
         tokenDetails[0x505054]._precision = 8;
         //xau
-        tokenDetails[0x584155]._token = 0x73a3b7DFFE9af119621f8467D8609771AB4BC33f;
+        tokenDetails[0x584155]._token = 0x9b935E3779098bC5E1ffc073CaF916F1E92A6145;
         tokenDetails[0x584155]._precision = 0;
+        //usdp
+        tokenDetails[0x55534470]._token = 0xc5923932C23EAA7c9E16B40d24EE4c5F426bF513;
+        tokenDetails[0x55534470]._precision = 6;
     }
 
     /**
@@ -59,50 +62,42 @@ contract Populous is withAccessManager {
     */
     // NON-CONSTANT METHODS
 
-    /// Ether to XAUP exchange between deposit contract and Populous.sol
-    function exchangeXAUP(
+    function usdcToUsdp(
         address _dataManager, bytes32 _blockchainActionId, 
-        address erc20_tokenAddress, uint erc20_amount, uint xaup_amount, 
-        uint _tokenId, bytes32 _clientId, address adminExternalWallet) 
-        public 
+        bytes32 _clientId, uint amount)
+        public
         onlyServer
-    {    
-        ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
+    {   
         // client deposit smart contract address
         address _depositAddress = DataManager(_dataManager).getDepositAddress(_clientId);
-        require(
-            // check dataManager contract is valid
-            _dataManager != 0x0 &&
-            // check deposit address of client
-            _depositAddress != 0x0 && 
-            // check xaup token address
-            // tokenDetails[0x584155]._token != 0x0 && 
-            erc20_tokenAddress != 0x0 &&
-            // check action id is unused
-            DataManager(_dataManager).getActionStatus(_blockchainActionId) == false &&
-            // deposit contract version >= 2
-            DepositContract(_depositAddress).getVersion() >= 2 &&
-            // populous server xaup balance
-            xa.balanceOf(_tokenId, msg.sender) >= xaup_amount
-        );
-        // transfer erc20 token balance from clients deposit contract to server/admin
-        require(DepositContract(_depositAddress).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true);
-        // transfer xaup tokens to clients deposit address from populous server allowance
-        xa.safeTransferFrom(msg.sender, _depositAddress, _tokenId, xaup_amount, "");
-        // set action status in dataManager
-        require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, 0x0, erc20_amount, _clientId, _depositAddress, 0) == true);
-        // emit event 
-        EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _depositAddress);
+        require(_dataManager != 0x0 && _depositAddress != 0x0 && amount > 0);
+        //transfer usdc from deposit contract to server
+        require(DepositContract(_depositAddress).transfer(tokenDetails[0x55534443]._token, msg.sender, amount) == true);
+        // transfer usdp from server to deposit contract
+        CurrencyToken(tokenDetails[0x55534470]._token).transferFrom(msg.sender, _depositAddress, amount);
+        //set action data
+        require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, 0x55534470, amount, _clientId, _depositAddress, 0) == true); 
+        //event
+        emit EventUSDCToUSDp(_blockchainActionId, _clientId, amount);
     }
 
-    /// @notice Handle the receipt of an ERC1155 type
-    function onERC1155Received(address _operator, address _from, uint256 _id, uint256 _value, bytes _data) public returns(bytes4) {
-        return 0xf23a6e61;
-    }
-
-    /// @notice Handle the receipt of an ERC721 type
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) public returns(bytes4) {
-        return 0x150b7a02; 
+    function usdpToUsdc(
+        address _dataManager, bytes32 _blockchainActionId, 
+        bytes32 _clientId, uint amount) 
+        public
+        onlyServer
+    {
+        // client deposit smart contract address
+        address _depositAddress = DataManager(_dataManager).getDepositAddress(_clientId);
+        require(_dataManager != 0x0 && _depositAddress != 0x0 && amount > 0);
+        //transfer usdp from deposit contract to server
+        require(DepositContract(_depositAddress).transfer(tokenDetails[0x55534470]._token, msg.sender, amount) == true);
+        // transfer udsc from server to deposit contract
+        CurrencyToken(tokenDetails[0x55534443]._token).transferFrom(msg.sender, _depositAddress, amount);
+        //set action data
+        require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, 0x55534470, amount, _clientId, _depositAddress, 0) == true); 
+        //event
+        emit EventUSDpToUSDC(_blockchainActionId, _clientId, amount);
     }
 
     // Creates a new 'depositAddress' gotten from deploying a deposit contract linked to a client ID
@@ -194,7 +189,8 @@ contract Populous is withAccessManager {
     function withdrawERC20(
         address _dataManager, bytes32 _blockchainActionId, 
         address pptAddress, bytes32 accountId, 
-        address to, uint256 amount, uint256 inCollateral, uint256 pptFee, address adminExternalWallet) 
+        address to, uint256 amount, uint256 inCollateral, 
+        uint256 pptFee, address adminExternalWallet) 
         public 
         onlyServer 
     {   
