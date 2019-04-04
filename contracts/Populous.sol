@@ -20,12 +20,10 @@ contract Populous is withAccessManager {
     // Bank events
     event EventUSDCToUSDp(bytes32 _blockchainActionId, bytes32 _clientId, uint amount);
     event EventUSDpToUSDC(bytes32 _blockchainActionId, bytes32 _clientId, uint amount);
-    //event EventExchangeXAUp (bytes32 _blockchainActionId, address erc20_tokenAddress, uint256 erc20_amount, uint256 xaup_amount, uint256 _tokenId, bytes32 _clientId, address _from);
     event EventDepositAddressUpgrade(bytes32 blockchainActionId, address oldDepositContract, address newDepositContract, bytes32 clientId, uint256 version);
     event EventWithdrawPPT(bytes32 blockchainActionId, bytes32 accountId, address depositContract, address to, uint amount);
     event EventWithdrawPoken(bytes32 _blockchainActionId, bytes32 accountId, bytes32 currency, uint amount);
     event EventNewDepositContract(bytes32 blockchainActionId, bytes32 clientId, address depositContractAddress, uint256 version);
-    //event EventNewInvoice(bytes32 _blockchainActionId, bytes32 _providerUserId, bytes2 invoiceCountryCode, bytes32 invoiceCompanyNumber, bytes32 invoiceCompanyName, bytes32 invoiceNumber);
     event EventWithdrawXAUp(bytes32 _blockchainActionId, address erc1155Token, uint amount, uint token_id, bytes32 accountId, uint pptFee);
 
     // FIELDS
