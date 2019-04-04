@@ -37,6 +37,8 @@ contract Populous is withAccessManager {
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
     function Populous(address _accessManager) public withAccessManager(_accessManager) {
+        /*ropsten*/
+        
         //pxt
         tokenDetails[0x505854]._token = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
         tokenDetails[0x505854]._precision = 8;
@@ -55,6 +57,28 @@ contract Populous is withAccessManager {
         //usdp
         tokenDetails[0x55534470]._token = 0xc5923932C23EAA7c9E16B40d24EE4c5F426bF513;
         tokenDetails[0x55534470]._precision = 6;
+        
+        
+        /*livenet
+
+        //pxt
+        tokenDetails[0x505854]._token = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
+        tokenDetails[0x505854]._precision = 8;
+        //usdc
+        tokenDetails[0x55534443]._token = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        tokenDetails[0x55534443]._precision = 6;
+        //tusd
+        tokenDetails[0x54555344]._token = 0x8dd5fbCe2F6a956C3022bA3663759011Dd51e73E;
+        tokenDetails[0x54555344]._precision = 18;
+        //ppt
+        tokenDetails[0x505054]._token = 0xd4fa1460F537bb9085d22C7bcCB5DD450Ef28e3a;        
+        tokenDetails[0x505054]._precision = 8;
+        //xau
+        tokenDetails[0x584155]._token = 0x73a3b7DFFE9af119621f8467D8609771AB4BC33f;
+        tokenDetails[0x584155]._precision = 0;
+        //usdp
+        tokenDetails[0x55534470]._token = ;
+        tokenDetails[0x55534470]._precision = 6;*/
     }
 
     /**
