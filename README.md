@@ -29,6 +29,12 @@ Utils.sol - 0xc8d2eff467f8e9bd9d89a416b24b598afbfe8961
 
 Platform Admin/Server Address - `0xf8b3d742b245ec366288160488a12e7a2f1d720d`
 
+## Note
+
+`exchangeXaup()` function disable
+
+
+
 ## Live Network Smart Contract Addresses
 
 

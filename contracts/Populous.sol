@@ -155,6 +155,43 @@ contract Populous is withAccessManager {
         }
     }
 
+    /* /// Ether to XAUP exchange between deposit contract and Populous.sol
+    function exchangeXAUP(
+        address _dataManager, bytes32 _blockchainActionId, 
+        address erc20_tokenAddress, uint erc20_amount, uint xaup_amount, 
+        uint _tokenId, bytes32 _clientId, address adminExternalWallet) 
+        public 
+        onlyServer
+    {    
+        ERC1155 xa = ERC1155(tokenDetails[0x584155]._token);
+        // client deposit smart contract address
+        address _depositAddress = DataManager(_dataManager).getDepositAddress(_clientId);
+        require(
+            // check dataManager contract is valid
+            _dataManager != 0x0 &&
+            // check deposit address of client
+            _depositAddress != 0x0 && 
+            // check xaup token address
+            // tokenDetails[0x584155]._token != 0x0 && 
+            erc20_tokenAddress != 0x0 &&
+            // check action id is unused
+            DataManager(_dataManager).getActionStatus(_blockchainActionId) == false &&
+            // deposit contract version >= 2
+            DepositContract(_depositAddress).getVersion() >= 2 &&
+            // populous server xaup balance
+            xa.balanceOf(_tokenId, msg.sender) >= xaup_amount
+        );
+        // transfer erc20 token balance from clients deposit contract to server/admin
+        require(DepositContract(_depositAddress).transfer(erc20_tokenAddress, adminExternalWallet, erc20_amount) == true);
+        // transfer xaup tokens to clients deposit address from populous server allowance
+        xa.safeTransferFrom(msg.sender, _depositAddress, _tokenId, xaup_amount, "");
+        // set action status in dataManager
+        require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, 0x0, erc20_amount, _clientId, _depositAddress, 0) == true);
+        // emit event 
+        EventExchangeXAUp(_blockchainActionId, erc20_tokenAddress, erc20_amount, xaup_amount, _tokenId, _clientId, _depositAddress);
+    } */
+
+
     /** dev Import an amount of pokens of a particular currency from an ethereum wallet/address to bank
       * @param _blockchainActionId the blockchain action id
       * @param accountId the account id of the client
