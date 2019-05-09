@@ -95,10 +95,10 @@ contract Populous is withAccessManager {
         // client deposit smart contract address
         address _depositAddress = DataManager(_dataManager).getDepositAddress(_clientId);
         require(_dataManager != 0x0 && _depositAddress != 0x0 && amount > 0);
-        //transfer usdc from deposit contract to server
+        //transfer usdc from deposit contract to server/admin
         require(DepositContract(_depositAddress).transfer(tokenDetails[0x55534443]._token, msg.sender, amount) == true);
-        // transfer usdp from server to deposit contract
-        CurrencyToken(tokenDetails[0x55534470]._token).transferFrom(msg.sender, _depositAddress, amount);
+        // mint USDp into depositAddress with amount
+        require(CurrencyToken(tokenDetails[0x55534470]._token).mint(amount, _depositAddress) == true);     
         //set action data
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, 0x55534470, amount, _clientId, _depositAddress, 0) == true); 
         //event
@@ -114,10 +114,10 @@ contract Populous is withAccessManager {
         // client deposit smart contract address
         address _depositAddress = DataManager(_dataManager).getDepositAddress(_clientId);
         require(_dataManager != 0x0 && _depositAddress != 0x0 && amount > 0);
-        //transfer usdp from deposit contract to server
-        require(DepositContract(_depositAddress).transfer(tokenDetails[0x55534470]._token, msg.sender, amount) == true);
-        // transfer udsc from server to deposit contract
-        CurrencyToken(tokenDetails[0x55534443]._token).transferFrom(msg.sender, _depositAddress, amount);
+        //destroyFrom depositAddress USDp amount
+        require(CurrencyToken(tokenDetails[0x55534470]._token).destroyTokensFrom(amount, _depositAddress) == true);
+        //transferFrom USDC from server to depositAddress
+        require(CurrencyToken(tokenDetails[0x55534443]._token).transferFrom(msg.sender, _depositAddress, amount) == true);
         //set action data
         require(DataManager(_dataManager).setBlockchainActionData(_blockchainActionId, 0x55534470, amount, _clientId, _depositAddress, 0) == true); 
         //event
