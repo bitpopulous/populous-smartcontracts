@@ -15,14 +15,14 @@ XAU (ERC1155Mintable.sol) token - 0x9b935e3779098bc5e1ffc073caf916f1e92a6145, pr
 
 GBPp token - 0xe92d265dbe35613468a9ec14a321624faf7653dd, precision - 6
 
-USDp token - 0xc5923932C23EAA7c9E16B40d24EE4c5F426bF513, precision - 6
+USDp token - 0xf4b1533b6F45fAC936fA508F7e5db6d4BbC4c8bd, precision - 6
 
 AccessManager.sol - 0x0ebbaf0c3794ed23a0871e411a34be3a1679753a   
 
 PopulousToken.sol - 0x0ff72e24af7c09a647865820d4477f98fcb72a2c, precision - 8     
 
 SafeMath.sol - 0x424d497c158110adc0738c2d69fafff4d723a145          
-Populous.sol - 0x3b53790058da76c2f5bb28c0a63c1a3b6c0169bb
+Populous.sol - 0xa955ff42c6ebd1598ae2eadf714ebed59ca7a585
 DataManager.sol -  0x0f8abf5f708f971bd9a994ec3af40988aa0f4873     
 Utils.sol - 0xc8d2eff467f8e9bd9d89a416b24b598afbfe8961
 ```
