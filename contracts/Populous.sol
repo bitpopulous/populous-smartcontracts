@@ -55,7 +55,7 @@ contract Populous is withAccessManager {
         tokenDetails[0x584155]._token = 0x9b935E3779098bC5E1ffc073CaF916F1E92A6145;
         tokenDetails[0x584155]._precision = 0;
         //usdp
-        tokenDetails[0x55534470]._token = 0xc5923932C23EAA7c9E16B40d24EE4c5F426bF513;
+        tokenDetails[0x55534470]._token = 0xf4b1533b6F45fAC936fA508F7e5db6d4BbC4c8bd;
         tokenDetails[0x55534470]._precision = 6;
         
         
