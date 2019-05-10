@@ -29,7 +29,9 @@ contract CurrencyToken {
         address indexed _spender, 
         uint256 _value
     );
-    // event EventMintTokens(bytes32 currency, uint amount);
+    event EventMintTokens(bytes32 currency, address owner, uint amount);
+    event EventDestroyTokens(bytes32 currency, address owner, uint amount);
+
 
     // MODIFIERS
 
@@ -69,37 +71,41 @@ contract CurrencyToken {
 
     // ERC20
 
-    //Note.. Need to emit event, Pokens destroyed... from system
+    /** @dev Mints a specified amount of tokens 
+      * @param owner The token owner.
+      * @param amount The amount of tokens to create.
+      */
+    function mint(uint amount, address owner) public onlyServerOrOnlyPopulous returns (bool success) {
+        balances[owner] = safeAdd(balances[owner], amount);
+        totalSupply = safeAdd(totalSupply, amount);
+        emit EventMintTokens(symbol, owner, amount);
+        return true;
+    }
+
     /** @dev Destroys a specified amount of tokens 
       * @dev The method uses a modifier from withAccessManager contract to only permit populous to use it.
       * @dev The method uses SafeMath to carry out safe token deductions/subtraction.
       * @param amount The amount of tokens to create.
       */
-
-    function destroyTokens(uint amount) public onlyPopulous returns (bool success) {
-        if (balances[populous] < amount) {
-            return false;
-        } else {
-            balances[populous] = safeSub(balances[populous], amount);
-            totalSupply = safeSub(totalSupply, amount);
-            return true;
-        }
+    function destroyTokens(uint amount) public onlyServerOrOnlyPopulous returns (bool success) {
+        require(balances[msg.sender] >= amount);
+        balances[msg.sender] = safeSub(balances[msg.sender], amount);
+        totalSupply = safeSub(totalSupply, amount);
+        emit EventDestroyTokens(symbol, populous, amount);
+        return true;
     }
-
     
     /** @dev Destroys a specified amount of tokens, from a user.
       * @dev The method uses a modifier from withAccessManager contract to only permit populous to use it.
       * @dev The method uses SafeMath to carry out safe token deductions/subtraction.
       * @param amount The amount of tokens to create.
       */
-    function destroyTokensFrom(uint amount, address from) public onlyPopulous returns (bool success) {
-        if (balances[from] < amount) {
-            return false;
-        } else {
-            balances[from] = safeSub(balances[from], amount);
-            totalSupply = safeSub(totalSupply, amount);
-            return true;
-        }
+    function destroyTokensFrom(uint amount, address from) public onlyServerOrOnlyPopulous returns (bool success) {
+        require(balances[from] >= amount);
+        balances[from] = safeSub(balances[from], amount);
+        totalSupply = safeSub(totalSupply, amount);
+        emit EventDestroyTokens(symbol, from, amount);
+        return true;
     }
 
     function transfer(address _to, uint256 _value) public returns (bool success) {
