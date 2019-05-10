@@ -54,7 +54,7 @@ USDp token - ``, precision - 6
 AccessManager.sol - `0x98ca4bf7e522cd6d2f69cf843dfab327a1e26497`   
 PopulousToken.sol - `0xd4fa1460f537bb9085d22c7bccb5dd450ef28e3a`     
 SafeMath.sol - `0xe7538ddb703d8d75aa279a130ce1bc1ac8c29ea0`          
-Populous.sol - `0x0109c97e1f6916d596a973a2701e27406a7b8bc4`    
+Populous.sol - `0xcda4c0eb3a2eab9ed29b37284249a89688cbc9b6`    
 DataManager.sol - `0xcd565ca18f06e2e4d251b55dc49a4fe456c72052`       
 Utils.sol - `0xcab23f0118f87d01a6d2fd3d93aeeaca789c8fb7`
 
