@@ -258,7 +258,7 @@ contract Populous is withAccessManager {
     {   
         require(_dataManager != 0x0);
         require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
-        require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
+        require(adminExternalWallet != 0x0 && pptFee >= 0 && amount > 0);
         address depositContract = DataManager(_dataManager).getDepositAddress(accountId);
         if(pptAddress == tokenDetails[0x505054]._token) {
             uint pptBalance = SafeMath.safeSub(DepositContract(depositContract).balanceOf(tokenDetails[0x505054]._token), inCollateral);
