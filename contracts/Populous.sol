@@ -274,7 +274,7 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
 
-    // erc1155 withdraw function using transferFrom in erc1155 token contract
+    // erc1155 withdraw function from deposit contract
 /*     function withdrawERC1155(
         address _dataManager, bytes32 _blockchainActionId,
         address _to, uint256 _id, uint256 _value,
