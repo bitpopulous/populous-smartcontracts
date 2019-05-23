@@ -258,7 +258,7 @@ contract Populous is withAccessManager {
     {   
         require(_dataManager != 0x0);
         require(DataManager(_dataManager).getActionStatus(_blockchainActionId) == false && DataManager(_dataManager).getDepositAddress(accountId) != 0x0);
-        require(adminExternalWallet != 0x0 && pptFee > 0 && amount > 0);
+        require(adminExternalWallet != 0x0 && pptFee >= 0 && amount > 0);
         address depositContract = DataManager(_dataManager).getDepositAddress(accountId);
         if(pptAddress == tokenDetails[0x505054]._token) {
             uint pptBalance = SafeMath.safeSub(DepositContract(depositContract).balanceOf(tokenDetails[0x505054]._token), inCollateral);
@@ -274,7 +274,7 @@ contract Populous is withAccessManager {
         EventWithdrawPPT(_blockchainActionId, accountId, DataManager(_dataManager).getDepositAddress(accountId), to, amount);
     }
 
-    // erc1155 withdraw function using transferFrom in erc1155 token contract
+    // erc1155 withdraw function from deposit contract
 /*     function withdrawERC1155(
         address _dataManager, bytes32 _blockchainActionId,
         address _to, uint256 _id, uint256 _value,
