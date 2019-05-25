@@ -13,7 +13,7 @@ TUSD token - 0x78e7BEE398D66660bDF820DbDB415A33d011cD48, precision - 18
 
 XAU (ERC1155Mintable.sol) token - 0x9b935e3779098bc5e1ffc073caf916f1e92a6145, precision - 0
 
-GBPp token - 0xe92d265dbe35613468a9ec14a321624faf7653dd, precision - 6
+GBPp token - 0xc2312cd69db8b07b1f541ebca8a52d52997da2aa, precision - 6
 
 USDp token - 0xf4b1533b6F45fAC936fA508F7e5db6d4BbC4c8bd, precision - 6
 
@@ -31,7 +31,7 @@ Platform Admin/Server Address - `0xf8b3d742b245ec366288160488a12e7a2f1d720d`
 
 ## Note
 
-`exchangeXaup()` function disable
+`exchangeXaup()` function disabled in `Populous.sol`
 
 
 
