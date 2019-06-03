@@ -37,7 +37,7 @@ contract Populous is withAccessManager {
     // Constructor method called when contract instance is 
     // deployed with 'withAccessManager' modifier.
     function Populous(address _accessManager) public withAccessManager(_accessManager) {
-        /*ropsten*/
+        /*ropsten
         
         //pxt
         tokenDetails[0x505854]._token = 0xD8A7C588f8DC19f49dAFd8ecf08eec58e64d4cC9;
@@ -57,9 +57,9 @@ contract Populous is withAccessManager {
         //usdp
         tokenDetails[0x55534470]._token = 0xf4b1533b6F45fAC936fA508F7e5db6d4BbC4c8bd;
         tokenDetails[0x55534470]._precision = 6;
+        */
         
-        
-        /*livenet
+        /*livenet*/
 
         //pxt
         tokenDetails[0x505854]._token = 0xc14830E53aA344E8c14603A91229A0b925b0B262;
@@ -79,7 +79,7 @@ contract Populous is withAccessManager {
         //usdp
         tokenDetails[0x55534470]._token = 0xBaB5D0f110Be6f4a5b70a2FA22eD17324bFF6576;
         tokenDetails[0x55534470]._precision = 6;
-        */
+        
     }
 
     /**
@@ -156,7 +156,7 @@ contract Populous is withAccessManager {
         }
     }
 
-    /* /// Ether to XAUP exchange between deposit contract and Populous.sol
+    /* /// Ether to XAUp exchange between deposit contract and Populous.sol
     function exchangeXAUP(
         address _dataManager, bytes32 _blockchainActionId, 
         address erc20_tokenAddress, uint erc20_amount, uint xaup_amount, 
