@@ -71,9 +71,11 @@ Platform Admin/Server Address - `0x63d509f7152769ddf162ed048b83719fe1e31080`
 
 Update populous in AccessManager smart contract for populous project (this is the same as the XAUp AccessManager smart contract)
 
-Update populous in GBP smart contract and update populous allowance in GBP to 10 billion (6 decimals)
+Update populous in GBPp smart contract and update populous allowance in GBPp to 10 billion (6 decimals)
 
-Update populous allowance in USDC smart contract to 10 billion (6 decimals)
+Update populous in USDp smart contract and update populous allowance in USDp to 10 billion (6 decimals)
+
+Update populous allowance in USDC smart contract (6 decimals)
 
 
 
